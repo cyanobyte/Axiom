@@ -98,7 +98,7 @@ A small set of end-to-end fixture specs should anchor the whole design. Those fi
 
 ## Intent-Aware Debugging
 
-Axiom should treat intent-aware debugging as a first-class design goal, but implement it in V1 through structured diagnostics and source mapping rather than a custom live debugger.
+Axiom V1 should make intent-aware debugging first-class through stable clause identities, source mapping, verification events, and structured diagnostics, while relying on standard Node.js tooling for raw code execution debugging.
 
 Engineers should be able to use normal JavaScript debugging tools for execution-level issues, while Axiom provides the missing layer: mapping runtime and verification outcomes back to intent clauses, authored source locations, coverage state, and evidence.
 
