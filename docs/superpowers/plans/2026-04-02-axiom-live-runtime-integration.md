@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the current tested runtime skeleton into a usable MVP by loading sibling `axiom.config.js` files, constructing real adapters from config, exposing a runnable CLI, and supporting one live model provider path plus local shell/workspace/artifact execution.
+**Goal:** Turn the current tested runtime skeleton into a usable MVP by loading sibling `axiom.config.js` files, constructing real adapters from config, exposing a runnable CLI, and supporting one live model provider path through local AI CLIs plus local shell/workspace/artifact execution.
 
 **Architecture:** `axiom run <file.axiom.js>` should load the intent file, load `axiom.config.js` from the same directory by default, validate both, build adapters from that config, run preflight readiness checks, execute the workflow, and return structured results. The intent file remains provider-agnostic; all provider, shell, workspace, and artifact wiring lives in config and adapter factories.
 
@@ -900,13 +900,14 @@ Add to `README.md`:
 ## Live Smoke Path
 
 When a real provider adapter is wired, copy or adapt `examples/basic/axiom.live.config.js`
-to `examples/basic/axiom.config.js`, set `OPENAI_API_KEY`, and run:
+to `examples/basic/axiom.config.js` and run:
 
 ```bash
 node bin/axiom.js run examples/basic/counter-webapp.axiom.js
 ```
 
-This path is manual-only and should not be part of the default automated suite.
+This path is manual-only and should not be part of the default automated suite. The live config
+should prefer `codex-cli` or `claude-cli` so the runtime can reuse an existing local CLI session.
 ```
 
 - [ ] **Step 2: Re-run the full suite**
@@ -921,85 +922,70 @@ git add README.md examples/basic/README.md
 git commit -m "docs: add live smoke path documentation"
 ```
 
-## Task 12: Implement real live provider execution
+## Task 12: Implement real live provider execution through local AI CLIs
 
 **Files:**
-- Modify: `src/adapters/providers/create-openai-agent-adapter.js`
-- Create: `test/adapters/create-openai-agent-adapter.integration.test.js`
+- Create: `src/adapters/providers/create-codex-cli-agent-adapter.js`
+- Create: `src/adapters/providers/create-claude-cli-agent-adapter.js`
+- Create: `src/adapters/providers/run-cli-command.js`
+- Modify: `src/adapters/create-configured-adapters.js`
+- Create: `test/adapters/create-codex-cli-agent-adapter.test.js`
+- Create: `test/adapters/create-claude-cli-agent-adapter.test.js`
 - Modify: `README.md`
-- Test: `test/adapters/create-openai-agent-adapter.integration.test.js`
+- Test: `test/adapters/create-codex-cli-agent-adapter.test.js`
+- Test: `test/adapters/create-claude-cli-agent-adapter.test.js`
 
-- [ ] **Step 1: Write the failing live execution test behind an env guard**
+- [ ] **Step 1: Write the failing CLI-provider adapter tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
-import { createOpenAIAgentAdapter } from '../../src/adapters/providers/create-openai-agent-adapter.js';
+import { createCodexCliAgentAdapter } from '../../src/adapters/providers/create-codex-cli-agent-adapter.js';
 
-const hasLiveConfig = Boolean(process.env.OPENAI_API_KEY);
-
-describe('createOpenAIAgentAdapter live execution', () => {
-  it.skipIf(!hasLiveConfig)('calls the live provider and returns text output', async () => {
-    const adapter = createOpenAIAgentAdapter('planner', {
-      apiKey: process.env.OPENAI_API_KEY,
-      model: 'gpt-5.4'
+describe('createCodexCliAgentAdapter', () => {
+  it('runs codex exec with stdin prompt content and returns stdout text', async () => {
+    const calls = [];
+    const adapter = createCodexCliAgentAdapter('planner', {
+      model: 'gpt-5.4-codex',
+      runner: async (spec) => {
+        calls.push(spec);
+        return { stdout: 'READY\n', stderr: '', exitCode: 0 };
+      }
     });
 
     const result = await adapter.run({
-      prompt: 'Return exactly the word READY.'
+      prompt: 'Return READY.'
     });
 
-    expect(typeof result).toBe('string');
-    expect(result).toContain('READY');
+    expect(result).toBe('READY');
+    expect(calls[0].command).toBe('codex');
   });
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it is skipped without config and fails once enabled**
+- [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `npm test -- test/adapters/create-openai-agent-adapter.integration.test.js`
-Expected: SKIP when `OPENAI_API_KEY` is absent
+Run: `npm test -- test/adapters/create-codex-cli-agent-adapter.test.js test/adapters/create-claude-cli-agent-adapter.test.js`
+Expected: FAIL because the CLI provider modules do not exist yet
 
-Manual check:
-
-```bash
-OPENAI_API_KEY=... npm test -- test/adapters/create-openai-agent-adapter.integration.test.js
-```
-
-Expected: FAIL because live request execution is not implemented yet
-
-- [ ] **Step 3: Implement the real provider call**
+- [ ] **Step 3: Implement the real CLI provider calls**
 
 ```js
-// src/adapters/providers/create-openai-agent-adapter.js
-export function createOpenAIAgentAdapter(agentName, config = {}) {
+// src/adapters/providers/create-codex-cli-agent-adapter.js
+export function createCodexCliAgentAdapter(agentName, config = {}) {
   return {
     async run(input) {
-      if (!config.apiKey) {
-        throw new Error(`Missing OpenAI API key for ${agentName}`);
-      }
-
-      if (!config.model) {
-        throw new Error(`Missing OpenAI model for ${agentName}`);
-      }
-
-      const response = await fetch('https://api.openai.com/v1/responses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${config.apiKey}`
-        },
-        body: JSON.stringify({
-          model: config.model,
-          input: typeof input === 'string' ? input : JSON.stringify(input, null, 2)
-        })
+      const result = await (config.runner ?? runCliCommand)({
+        command: config.command ?? 'codex',
+        args: ['exec', '-', '--skip-git-repo-check', '--model', config.model],
+        cwd: config.cwd ?? process.cwd(),
+        input: serializeInput(input)
       });
 
-      if (!response.ok) {
-        throw new Error(`OpenAI request failed for ${agentName}: ${response.status}`);
+      if (result.exitCode !== 0) {
+        throw new Error(`codex CLI request failed for ${agentName}: ${result.stderr || result.exitCode}`);
       }
 
-      const data = await response.json();
-      return data.output_text ?? '';
+      return result.stdout.trim();
     }
   };
 }
@@ -1008,25 +994,25 @@ export function createOpenAIAgentAdapter(agentName, config = {}) {
 - [ ] **Step 4: Run the automated suite and the manual live smoke test**
 
 Run: `npm test`
-Expected: PASS with the integration test skipped by default
+Expected: PASS with no live-provider calls in the default suite
 
 Manual smoke:
 
 ```bash
 cp examples/basic/axiom.live.config.js examples/basic/axiom.config.js
-OPENAI_API_KEY=... node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+node bin/axiom.js run examples/basic/counter-webapp.axiom.js
 ```
 
 Expected:
 - runtime starts successfully
-- live adapter is invoked
+- local AI CLI adapter is invoked
 - the run reaches real planning/coding calls instead of throwing "not implemented yet"
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/adapters/providers/create-openai-agent-adapter.js test/adapters/create-openai-agent-adapter.integration.test.js README.md
-git commit -m "feat: execute live provider requests"
+git add src/adapters/providers/run-cli-command.js src/adapters/providers/create-codex-cli-agent-adapter.js src/adapters/providers/create-claude-cli-agent-adapter.js src/adapters/create-configured-adapters.js test/adapters/create-codex-cli-agent-adapter.test.js test/adapters/create-claude-cli-agent-adapter.test.js README.md examples/basic/axiom.live.config.js examples/basic/README.md
+git commit -m "feat: execute live provider requests through local ai clis"
 ```
 
 ## Task 13: Prove the MVP is fully functional end to end
@@ -1049,7 +1035,7 @@ The MVP is considered fully functional only when all of the following are true:
 1. `node bin/axiom.js run <file.axiom.js>` works.
 2. The runtime loads sibling `axiom.config.js` automatically.
 3. The runtime builds adapters from config successfully.
-4. The runtime can call a real provider for at least one configured agent capability.
+4. The runtime can call a real local AI CLI provider for at least one configured agent capability.
 5. The runtime can execute a real local shell command.
 6. The runtime can read artifact files from disk.
 7. The runtime can execute verification and return structured results.
@@ -1060,7 +1046,7 @@ The MVP is considered fully functional only when all of the following are true:
 - [ ] **Step 2: Run the default suite**
 
 Run: `npm test`
-Expected: PASS with all tests green and live-provider integration tests skipped by default
+Expected: PASS with all tests green and no live-provider calls in the default suite
 
 - [ ] **Step 3: Run the real end-to-end manual smoke**
 
@@ -1068,12 +1054,12 @@ Manual smoke command:
 
 ```bash
 cp examples/basic/axiom.live.config.js examples/basic/axiom.config.js
-OPENAI_API_KEY=... node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+node bin/axiom.js run examples/basic/counter-webapp.axiom.js
 ```
 
 Expected:
 - the CLI loads the example and sibling config
-- the live provider adapter is invoked successfully
+- the local AI CLI adapter is invoked successfully
 - the shell adapter executes the configured test command
 - artifact-backed verification executes
 - the run finishes with a structured result instead of throwing a provider placeholder error
@@ -1103,6 +1089,197 @@ git add README.md examples/basic/README.md docs/superpowers/specs/axiom-mvp-acce
 git commit -m "docs: define full MVP acceptance criteria"
 ```
 
+## Task 14: Add structured live agent output contracts
+
+**Files:**
+- Modify: `src/adapters/providers/create-codex-cli-agent-adapter.js`
+- Modify: `src/adapters/providers/create-claude-cli-agent-adapter.js`
+- Create: `src/adapters/providers/parse-json-output.js`
+- Create: `test/adapters/parse-json-output.test.js`
+- Modify: `test/adapters/create-codex-cli-agent-adapter.test.js`
+- Modify: `test/adapters/create-claude-cli-agent-adapter.test.js`
+- Test: `test/adapters/parse-json-output.test.js`
+
+- [ ] **Step 1: Write the failing parser tests**
+
+```js
+import { describe, expect, it } from 'vitest';
+import { parseJsonOutput } from '../../src/adapters/providers/parse-json-output.js';
+
+describe('parseJsonOutput', () => {
+  it('returns parsed JSON objects from provider stdout', () => {
+    expect(parseJsonOutput('{"ok":true}')).toEqual({ ok: true });
+  });
+
+  it('throws a clear error for non-JSON output', () => {
+    expect(() => parseJsonOutput('not json', 'planner')).toThrow(
+      'Provider output for planner was not valid JSON'
+    );
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npm test -- test/adapters/parse-json-output.test.js`
+Expected: FAIL with missing module `src/adapters/providers/parse-json-output.js`
+
+- [ ] **Step 3: Implement the minimal JSON output contract**
+
+```js
+// src/adapters/providers/parse-json-output.js
+export function parseJsonOutput(output, agentName = 'agent') {
+  try {
+    return JSON.parse(output.trim());
+  } catch {
+    throw new Error(`Provider output for ${agentName} was not valid JSON`);
+  }
+}
+```
+
+Update the CLI adapters so `config.output === 'json'` parses stdout through `parseJsonOutput(...)`.
+
+- [ ] **Step 4: Run the targeted adapter tests**
+
+Run: `npm test -- test/adapters/parse-json-output.test.js test/adapters/create-codex-cli-agent-adapter.test.js test/adapters/create-claude-cli-agent-adapter.test.js`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/adapters/providers/parse-json-output.js src/adapters/providers/create-codex-cli-agent-adapter.js src/adapters/providers/create-claude-cli-agent-adapter.js test/adapters/parse-json-output.test.js test/adapters/create-codex-cli-agent-adapter.test.js test/adapters/create-claude-cli-agent-adapter.test.js
+git commit -m "feat: add structured output contracts for cli providers"
+```
+
+## Task 15: Materialize generated files into the workspace
+
+**Files:**
+- Modify: `src/adapters/create-local-workspace-adapter.js`
+- Create: `src/runtime/materialize-files.js`
+- Modify: `examples/basic/counter-webapp.axiom.js`
+- Create: `test/runtime/materialize-files.test.js`
+- Modify: `test/examples/counter-webapp-runtime.test.js`
+- Test: `test/runtime/materialize-files.test.js`
+
+- [ ] **Step 1: Write the failing file-materialization tests**
+
+```js
+import { describe, expect, it } from 'vitest';
+import os from 'node:os';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { materializeFiles } from '../../src/runtime/materialize-files.js';
+
+describe('materializeFiles', () => {
+  it('writes generated files into the workspace root', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'axiom-materialize-'));
+
+    await materializeFiles(
+      {
+        write: (filePath, content) => fs.writeFile(path.join(root, filePath), content, 'utf8')
+      },
+      [
+        { path: 'app/index.html', content: '<h1>Hello</h1>' }
+      ]
+    );
+
+    expect(await fs.readFile(path.join(root, 'app/index.html'), 'utf8')).toContain('Hello');
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npm test -- test/runtime/materialize-files.test.js`
+Expected: FAIL with missing module `src/runtime/materialize-files.js`
+
+- [ ] **Step 3: Implement the minimal file writer**
+
+```js
+// src/runtime/materialize-files.js
+export async function materializeFiles(workspace, files = []) {
+  for (const file of files) {
+    await workspace.write(file.path, file.content);
+  }
+}
+```
+
+Update `examples/basic/counter-webapp.axiom.js` so the `implement` step expects `{ files: [...] }`
+from the `coder` capability and writes them into the workspace before the `test` step runs.
+
+- [ ] **Step 4: Run the targeted runtime tests**
+
+Run: `npm test -- test/runtime/materialize-files.test.js test/examples/counter-webapp-runtime.test.js`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/runtime/materialize-files.js src/adapters/create-local-workspace-adapter.js examples/basic/counter-webapp.axiom.js test/runtime/materialize-files.test.js test/examples/counter-webapp-runtime.test.js
+git commit -m "feat: materialize generated files into workspaces"
+```
+
+## Task 16: Create a real live smoke workspace and acceptance run
+
+**Files:**
+- Create: `examples/live-counter/README.md`
+- Create: `examples/live-counter/counter-webapp.axiom.js`
+- Create: `examples/live-counter/axiom.config.js`
+- Modify: `README.md`
+- Modify: `examples/basic/README.md`
+- Modify: `docs/superpowers/specs/axiom-mvp-acceptance.md`
+- Test: `npm test`
+
+- [ ] **Step 1: Create a dedicated live-smoke example**
+
+Add a separate `examples/live-counter/` example so the manual live path can generate files into its
+own workspace without mutating the deterministic beginner example used by the automated suite.
+
+- [ ] **Step 2: Configure live agents for structured JSON output**
+
+Set `examples/live-counter/axiom.config.js` to use `codex-cli` with `output: 'json'` for:
+- `briefing`
+- `planner`
+- `coder`
+
+The `coder` capability should be prompted to return:
+
+```json
+{
+  "files": [
+    { "path": "package.json", "content": "..." },
+    { "path": "server.js", "content": "..." }
+  ]
+}
+```
+
+- [ ] **Step 3: Run the default automated suite**
+
+Run: `npm test`
+Expected: PASS with no live-provider calls in the default suite
+
+- [ ] **Step 4: Run the real manual acceptance smoke**
+
+Manual smoke command:
+
+```bash
+node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js
+```
+
+Expected:
+- the live CLI provider returns structured JSON
+- generated files are written into `examples/live-counter/`
+- the shell adapter executes the generated test command successfully
+- artifact-backed verification passes
+- the run returns a structured passing result
+
+- [ ] **Step 5: Document and commit**
+
+```bash
+git add README.md examples/basic/README.md examples/live-counter docs/superpowers/specs/axiom-mvp-acceptance.md
+git commit -m "docs: add live smoke workspace for full mvp acceptance"
+```
+
 ## Spec Coverage Check
 
 - Sibling `axiom.config.js` loading: covered by Tasks 1 and 5
@@ -1118,9 +1295,12 @@ git commit -m "docs: define full MVP acceptance criteria"
 - Manual live smoke documentation: covered by Task 11
 - Actual live provider execution: covered by Task 12
 - Full MVP acceptance proof: covered by Task 13
+- Structured live provider outputs: covered by Task 14
+- Workspace file materialization: covered by Task 15
+- Real generated live smoke workspace: covered by Task 16
 
 ## Self-Review Notes
 
 - Placeholder scan: complete; every task includes exact files, tests, commands, and commit points.
 - Type consistency: this plan consistently uses `loadRuntimeConfig`, `validateRuntimeConfig`, `createConfiguredAdapters`, `runIntentFile`, and `runCommand`.
-- Scope check: this plan now carries the runtime from deterministic local execution through actual live provider requests and an explicit end-to-end acceptance proof. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.
+- Scope check: this plan now carries the runtime from deterministic local execution through actual local AI CLI provider execution, structured provider outputs, workspace materialization, and an explicit end-to-end acceptance proof. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.

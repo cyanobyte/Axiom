@@ -21,7 +21,6 @@ describe('local adapters', () => {
 
   it('maps capability names to configured agent providers', async () => {
     const adapters = createConfiguredAdapters({
-      intentFilePath: 'examples/basic/counter-webapp.axiom.js',
       runtimeConfig: {
         agents: {
           planner: { provider: 'fake', responses: { planner: { ok: true } } }
@@ -34,5 +33,31 @@ describe('local adapters', () => {
 
     const planner = adapters.ai.agent('planner');
     expect(await planner.run({ value: 1 })).toEqual({ ok: true });
+  });
+
+  it('maps CLI-backed providers for live runtime execution', async () => {
+    const calls = [];
+    const adapters = createConfiguredAdapters({
+      runtimeConfig: {
+        agents: {
+          planner: {
+            provider: 'codex-cli',
+            model: 'gpt-5.4-codex',
+            runner: async (spec) => {
+              calls.push(spec);
+              return { stdout: 'PLANNED', stderr: '', exitCode: 0 };
+            }
+          }
+        },
+        workers: { shell: { type: 'fake-shell' } },
+        artifacts: { root: './reports' },
+        workspace: { root: process.cwd() }
+      }
+    });
+
+    const planner = adapters.ai.agent('planner');
+    expect(await planner.run({ prompt: 'Plan the app.' })).toBe('PLANNED');
+    expect(calls).toHaveLength(1);
+    expect(calls[0].command).toBe('codex');
   });
 });

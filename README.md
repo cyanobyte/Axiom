@@ -32,10 +32,12 @@ When a live provider adapter is implemented, replace the fake agent entries in `
 ## Live Smoke Path
 
 For a manual live-provider smoke run, copy or adapt `examples/basic/axiom.live.config.js`
-to `examples/basic/axiom.config.js`, set `OPENAI_API_KEY`, and run:
+to `examples/basic/axiom.config.js` and run:
 
 ```bash
 node bin/axiom.js run examples/basic/counter-webapp.axiom.js
 ```
 
-This path is manual-only and should not be part of the default automated suite.
+The provided live config uses the local `codex` CLI, so it reuses your existing CLI login
+instead of requiring a separate API key. This path is manual-only and should not be part of
+the default automated suite.

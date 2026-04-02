@@ -7,6 +7,8 @@
  */
 import { createFakeAgentAdapter } from './providers/create-fake-agent-adapter.js';
 import { createOpenAIAgentAdapter } from './providers/create-openai-agent-adapter.js';
+import { createCodexCliAgentAdapter } from './providers/create-codex-cli-agent-adapter.js';
+import { createClaudeCliAgentAdapter } from './providers/create-claude-cli-agent-adapter.js';
 import { createLocalWorkspaceAdapter } from './create-local-workspace-adapter.js';
 import { createLocalArtifactAdapter } from './create-local-artifact-adapter.js';
 import { createLocalShellAdapter } from './create-local-shell-adapter.js';
@@ -39,6 +41,14 @@ export function createConfiguredAdapters({ runtimeConfig }) {
 
         if (config.provider === 'codex' || config.provider === 'openai') {
           return createOpenAIAgentAdapter(name, config);
+        }
+
+        if (config.provider === 'codex-cli') {
+          return createCodexCliAgentAdapter(name, config);
+        }
+
+        if (config.provider === 'claude-cli') {
+          return createClaudeCliAgentAdapter(name, config);
         }
 
         throw new Error(`Unsupported provider: ${config.provider}`);
