@@ -120,42 +120,37 @@ These types should be stable, machine-readable, and suitable for later editor in
 
 ### Public API
 
-V1 should expose a small public API centered on two top-level entry points:
+V1 should expose a small public API centered on one top-level definition entry point:
 
-- `intent(name, defineFn)`
-- `run(definition, adapters, options?)`
+- `intent(definition, runFn)`
 
-`intent(name, defineFn)` builds and returns an immutable `IntentDefinition`. It is definition-only and performs no execution. Authoring uses an explicit builder object passed into `defineFn`, rather than ambient global authoring state.
+`intent(definition, runFn)` combines a declarative intent object with an executable runtime callback. The definition object is static and inspectable. The runtime callback is where workflow execution happens through `ctx.step(...)`, `ctx.verify.*(...)`, `ctx.checkpoint...(...)`, and agent or tool calls.
 
-`run(definition, adapters, options?)` starts execution separately. The caller must provide explicit runtime adapters. `@axiom/core` may ship simple development and test adapter factories, but it should not hide default execution behavior.
+The runtime still requires explicit adapters, but those should be supplied when the intent file is executed by the runtime rather than by a separate `run(definition, adapters)` export hidden inside the authored file.
 
 Conceptually, the public API is:
 
 ```ts
 type IntentDefinition = Readonly<{
   kind: "intent-definition";
-  name: string;
+  id: string;
   meta: Meta;
-  intent: IntentBody;
-  stages: StageDefinition[];
+  what: WhatDefinition;
+  why: WhyDefinition;
+  scope: ScopeDefinition;
+  stack?: StackDefinition;
+  assumptions?: string[];
+  constraints: ConstraintDefinition[];
+  outcomes: OutcomeDefinition[];
+  domain_model?: DomainModelDefinition;
+  api_contract?: ApiContractDefinition;
+  ui_contract?: UiContractDefinition;
   verification: {
-    intent: IntentVerificationDefinition[];
-    outcome: OutcomeVerificationDefinition[];
+    intent: VerificationDeclaration[];
+    outcome: VerificationDeclaration[];
   };
+  docs?: DocsDefinition;
 }>;
-
-type RunAdapters = {
-  llm: LlmAdapter;
-  exec: ExecAdapter;
-  workspace: WorkspaceAdapter;
-  artifacts?: ArtifactAdapter;
-  trace?: TraceSink;
-};
-
-type RunOptions = {
-  cwd?: string;
-  failFast?: boolean;
-};
 ```
 
 ### Definition Model
@@ -167,15 +162,21 @@ It should include:
 - `meta`
 - `what`
 - `why`
-- `includes`
-- `excludes`
+- `scope`
+- `stack`
+- `assumptions`
 - `constraints`
 - `outcomes`
-- `stages`
+- `domain_model`
+- `api_contract`
+- `ui_contract`
 - `verification.intent`
 - `verification.outcome`
+- `docs`
 
-Constraints and outcomes remain separate first-class clause sets. Verification declarations stay split under `d.verify.intent(...)` and `d.verify.outcome(...)`, preserving the distinction between proving alignment with intent and proving the resulting system satisfies declared outcomes.
+Constraints and outcomes remain separate first-class clause sets. Verification declarations stay split into `verification.intent` and `verification.outcome`, preserving the distinction between proving alignment with intent and proving the resulting system satisfies declared outcomes.
+
+Verification identity and coverage should be declarative in the definition. Runtime proof execution should reference those declared IDs rather than inventing ad hoc checks with no static declaration.
 
 Conceptually, the core definition records are:
 
@@ -186,44 +187,45 @@ type Meta = {
 };
 
 type ClauseId = string;
-type StageId = string;
+type StepId = string;
 type VerificationId = string;
 
-type IntentBody = {
-  what?: string;
-  why?: string;
-  includes: string[];
-  excludes: string[];
-  constraints: ClauseDefinition[];
-  outcomes: ClauseDefinition[];
+type WhatDefinition = {
+  capability: string;
+  actor: string;
+  action: string;
+  target: string;
+  description: string;
 };
 
-type ClauseDefinition = {
+type WhyDefinition = {
+  problem: string;
+  business_value?: string;
+  success_story?: string;
+};
+
+type ScopeDefinition = {
+  includes: string[];
+  excludes: string[];
+};
+
+type ConstraintDefinition = {
+  id: ClauseId;
+  text: string;
+  severity?: "error" | "warn" | "info";
+  source?: SourceLocation;
+};
+
+type OutcomeDefinition = {
   id: ClauseId;
   text: string;
   source?: SourceLocation;
 };
 
-type StageDefinition = {
-  id: StageId;
+type VerificationDeclaration = {
+  id: VerificationId;
+  covers: ClauseId[];
   description?: string;
-  run: (ctx: StageContext) => Promise<StageAuthorResult> | StageAuthorResult;
-  source?: SourceLocation;
-};
-
-type IntentVerificationDefinition = {
-  id: VerificationId;
-  kind: "intent";
-  clauses: ClauseId[];
-  check: (ctx: VerificationContext) => Promise<VerificationCheckResult> | VerificationCheckResult;
-  source?: SourceLocation;
-};
-
-type OutcomeVerificationDefinition = {
-  id: VerificationId;
-  kind: "outcome";
-  clauses: ClauseId[];
-  check: (ctx: VerificationContext) => Promise<VerificationCheckResult> | VerificationCheckResult;
   source?: SourceLocation;
 };
 
@@ -236,23 +238,23 @@ type SourceLocation = {
 
 ### Runtime Architecture
 
-Execution begins only when `run(definition, adapters, options?)` is called.
+Execution begins when the authored intent file is run and the runtime invokes the `runFn` with a live `ctx`.
 
 Running a definition should:
 
 1. Create a `RunSession`
-2. Execute stages in strict declared order
-3. Normalize each stage result into a standard result envelope
-4. Record mutations, artifacts, diagnostics, and stage output
-5. Run eligible verification checks after each stage
-6. Run the full final verification pass after the last stage
+2. Execute `ctx.step(...)` calls in source order as they are encountered
+3. Normalize each step result into a standard result envelope
+4. Record mutations, artifacts, diagnostics, and step output
+5. Run verification checks when `ctx.verify.intent(...)` or `ctx.verify.outcome(...)` is invoked
+6. Support checkpoints and pauses through `ctx.checkpoint...(...)`
 7. Return a structured `RunResult`
 
-V1 should prefer readability and predictability over graph scheduling. Dependency-based stage ordering may be added later, but it is not part of the V1 execution model.
+V1 should prefer readability and predictability over graph scheduling. Source order is the execution order unless the runtime later gains an explicit extension for alternate control flow.
 
 ### Stage Results
 
-Axiom should use a structured stage result envelope with a flexible `output` field.
+Axiom should use a structured step result envelope with a flexible `output` field.
 
 For V1:
 
@@ -263,7 +265,7 @@ For V1:
   - `artifacts`
   - `diagnostics`
 
-So a stage may return an arbitrary JavaScript value, and Axiom will normalize it to the standard structure. This keeps stage-to-stage data passing predictable without forcing ceremony on authors.
+So a step may return an arbitrary JavaScript value, and Axiom will normalize it to the standard structure. This keeps step-to-step data passing predictable without forcing ceremony on authors.
 
 Conceptually:
 
@@ -276,8 +278,8 @@ type StageAuthorResult =
       diagnostics?: Diagnostic[];
     };
 
-type StageResult = {
-  stageId: StageId;
+type StepResult = {
+  stepId: StepId;
   status: "passed" | "failed" | "error";
   startedAt: string;
   finishedAt: string;
@@ -290,17 +292,18 @@ type StageResult = {
 
 ### Execution Context and Adapters
 
-The live execution API is the stage or verification `ctx`, but `ctx` should be a facade over session state and explicit adapters rather than the owner of those implementations.
+The live execution API is `ctx`, and `ctx` should be a facade over session state and explicit adapters rather than the owner of those implementations.
 
-The caller must provide explicit adapters to `run()`. `@axiom/core` may ship simple dev/test adapters and factories, but runtime behavior must remain explicit and injected.
+The runtime must use explicit adapters. `@science451/intent-runtime` may ship simple dev/test adapters and factories, but runtime behavior must remain explicit and injected.
 
 Conceptually:
 
 ```ts
 type StageContext = {
   meta: Meta;
-  intent: IntentBody;
-  stageResult<T = unknown>(stageId: StageId): T | undefined;
+  intent: IntentDefinition;
+  step<T = unknown>(stepId: StepId, run: () => Promise<T> | T): Promise<T>;
+  stepResult<T = unknown>(stepId: StepId): T | undefined;
   workspace: {
     root(): string;
     read(path: string): Promise<string>;
@@ -309,49 +312,39 @@ type StageContext = {
     list(path?: string): Promise<string[]>;
   };
   artifact(path: string): Promise<unknown>;
-  llm(name: string): LlmSession;
-  exec(command: string, options?: { cwd?: string }): Promise<ExecResult>;
-};
-
-type VerificationContext = StageContext & {
-  currentVerificationId: VerificationId;
-};
-
-type LlmAdapter = {
-  session(name: string, session: RunSession): LlmSession;
-};
-
-type ExecAdapter = {
-  run(command: string, options: { cwd: string }, session: RunSession): Promise<ExecResult>;
-};
-
-type WorkspaceAdapter = {
-  root(session: RunSession): string;
-  read(path: string, session: RunSession): Promise<string>;
-  write(path: string, content: string, session: RunSession): Promise<MutationRecord>;
-  patch(path: string, diff: string, session: RunSession): Promise<MutationRecord>;
-  list(path: string | undefined, session: RunSession): Promise<string[]>;
+  agent(name: string): AgentSession;
+  worker(name: string): WorkerSession;
+  verify: {
+    intent(
+      verificationId: VerificationId,
+      spec: RuntimeVerificationSpec
+    ): Promise<VerificationRecord>;
+    outcome(
+      verificationId: VerificationId,
+      spec: RuntimeVerificationSpec
+    ): Promise<VerificationRecord>;
+  };
+  checkpoint: CheckpointApi;
 };
 ```
 
 ### Workspace Control and Traceability
 
-A stage's `run(ctx)` should not perform arbitrary direct file mutation, but it should be allowed to mutate files through explicit Axiom-managed workspace APIs or injected tools. This ensures all changes remain traceable, observable, and attributable.
+A step should not perform arbitrary direct file mutation, but it should be allowed to mutate files through explicit runtime-managed workspace APIs or injected tools. This ensures all changes remain traceable, observable, and attributable.
 
 That means:
 
-- direct uncontrolled file writes are outside the stage contract
+- direct uncontrolled file writes are outside the step contract
 - file changes must flow through Axiom-managed workspace operations or injected tools
-- the runtime should record what changed, which stage caused it, and what evidence followed
+- the runtime should record what changed, which step caused it, and what evidence followed
 
 ### Verification Lifecycle
 
-V1 should run verification in two moments:
+V1 should support verification as an explicit runtime action through `ctx.verify.intent(...)` and `ctx.verify.outcome(...)`, with the option for the runtime to schedule additional finalization or summary passes at completion.
 
-- incremental verification after each stage, running checks that are now eligible
-- final verification after the last stage, producing the authoritative proof result
+Verification identity and coverage come from the static definition. The runtime call supplies the actual proof logic, evidence gathering, and execution timing.
 
-This implies verification status is first-class. A verification check may move through states such as:
+Verification status is still first-class. A verification check may move through states such as:
 
 - `pending`
 - `eligible`
@@ -381,14 +374,14 @@ type VerificationRecord = {
   verificationId: VerificationId;
   kind: "intent" | "outcome";
   status: VerificationStatus;
-  clauses: ClauseId[];
+  covers: ClauseId[];
   evidence: unknown[];
   diagnostics: Diagnostic[];
 };
 
 type RunResult = {
   status: "passed" | "failed" | "error";
-  stageResults: StageResult[];
+  stepResults: StepResult[];
   verification: VerificationRecord[];
   diagnostics: Diagnostic[];
   artifacts: ArtifactRecord[];
@@ -397,11 +390,11 @@ type RunResult = {
 
 ### Human Checkpoints
 
-Human input should be first-class through explicit checkpoints rather than hidden inside arbitrary stage code.
+Human input should be first-class through explicit checkpoints rather than hidden inside arbitrary workflow code.
 
 V1 should distinguish clearly between:
 
-- `stage`
+- `step`
   Performs automated work
 - `checkpoint`
   Pauses execution and requests human judgment or input
@@ -469,26 +462,23 @@ src/
   public/
     index.js
     intent.js
-    run.js
   definition/
-    intent-builder.js
+    definition-schema.js
     definition-types.js
     finalize-definition.js
     validate-definition.js
   runtime/
     run-engine.js
     run-session.js
-    stage-runner.js
-    stage-result-normalizer.js
+    step-runner.js
+    step-result-normalizer.js
   context/
-    create-stage-context.js
-    create-verification-context.js
+    create-run-context.js
   workspace/
     workspace-service.js
     artifact-service.js
   verification/
     verification-engine.js
-    verification-eligibility.js
     verification-record.js
   diagnostics/
     diagnostic.js
@@ -509,19 +499,17 @@ The public surface should remain small and stable. Everything outside `src/publi
 
 The main runtime path should be:
 
-1. User imports `intent` and `run`
-2. `intent(name, defineFn)` creates a builder
-3. `defineFn(builder)` records metadata, clauses, stages, and verification declarations
-4. Axiom finalizes and freezes an `IntentDefinition`
-5. User calls `run(definition, adapters, options?)`
-6. Axiom creates a `RunSession`
-7. Axiom executes stages in declared order
-8. Each stage receives `ctx` and returns a value or explicit envelope
-9. Axiom normalizes the stage result
-10. Axiom records mutations, artifacts, diagnostics, and stage output
-11. Axiom runs eligible verification checks
-12. Axiom performs final verification
-13. Axiom returns `RunResult`
+1. User imports `intent`
+2. `intent(definition, runFn)` finalizes and freezes an `IntentDefinition`
+3. The runtime loads the file and creates a `RunSession`
+4. The runtime invokes `runFn(ctx)`
+5. `ctx.step(...)` executes workflow steps in source order
+6. Each step returns a value or explicit envelope
+7. The runtime normalizes the step result
+8. The runtime records mutations, artifacts, diagnostics, and step output
+9. `ctx.verify.intent(...)` and `ctx.verify.outcome(...)` execute declared checks by ID
+10. Checkpoints pause the run when human input is required
+11. The runtime finalizes proof state and returns `RunResult`
 
 ## Scope Boundary for V1
 

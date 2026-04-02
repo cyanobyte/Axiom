@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the first Axiom JavaScript core API so engineers can author intent as executable spec-like modules and normalize that authoring into a stable, traceable intent model.
+**Goal:** Build the first intent runtime API so engineers can author a declarative intent object plus runtime workflow callback in a single executable JavaScript file.
 
-**Architecture:** The implementation starts with a small JavaScript authoring surface, then adds a normalization pipeline that converts authored declarations into a canonical model with stable clause identities and source locations. The plan keeps verification and diagnostics at the contract level by defining shared types and normalization outputs now, without building a full proof engine.
+**Architecture:** The implementation centers on `intent(definition, runFn)`, where the definition object stays declarative and inspectable while the runtime callback executes `ctx.step(...)`, `ctx.verify.*(...)`, and `ctx.checkpoint...(...)`. Verification IDs and coverage are declared statically, while proof execution happens dynamically by referencing those declarations during the run.
 
 **Tech Stack:** Node.js, JavaScript (ES modules), Vitest
 
