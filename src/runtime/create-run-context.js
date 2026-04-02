@@ -31,6 +31,19 @@ export function createRunContext(file, adapters, state, result) {
         return executeVerification(file.definition, result, 'outcome', verificationId, spec);
       }
     },
+    verification: {
+      summary() {
+        const total = result.verification.length;
+        const passed = result.verification.filter((item) => item.status === 'passed').length;
+        const failed = result.verification.filter((item) => item.status === 'failed').length;
+
+        return {
+          total,
+          passed,
+          failed
+        };
+      }
+    },
     checkpoint: {
       approval(checkpointId, spec) {
         return requestApproval(result, adapters, checkpointId, spec);

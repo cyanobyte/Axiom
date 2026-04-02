@@ -1,0 +1,113 @@
+import { describe, expect, it } from 'vitest';
+import { loadIntentFile, runIntent } from '../../src/index.js';
+
+function createExampleAdapters() {
+  return {
+    workspace: {
+      root() {
+        return '/tmp/counter-webapp';
+      },
+      async read() {
+        return '';
+      },
+      async write() {},
+      async patch() {}
+    },
+    artifacts: {
+      async read(path) {
+        if (path === 'reports/counter-ui.json') {
+          return {
+            loads: true,
+            increments: true,
+            resets: true
+          };
+        }
+        return null;
+      }
+    },
+    ai: {
+      agent(name) {
+        return {
+          async run(input) {
+            if (name === 'briefing') {
+              return {
+                kind: 'brief',
+                summary: input.intent.meta.summary
+              };
+            }
+
+            if (name === 'planner') {
+              return {
+                includesLoadCounter: true,
+                includesIncrementCounter: true,
+                includesResetCounter: true
+              };
+            }
+
+            if (name === 'coder') {
+              return {
+                generated: true
+              };
+            }
+
+            throw new Error(`Unexpected agent: ${name}`);
+          }
+        };
+      }
+    },
+    workers: {
+      worker(name) {
+        return {
+          async exec(spec) {
+            return {
+              worker: name,
+              ...spec,
+              exitCode: 0
+            };
+          }
+        };
+      }
+    },
+    checkpoint: {
+      async approval() {
+        return { accepted: true };
+      },
+      async choice() {
+        return { value: null };
+      },
+      async input() {
+        return { value: null };
+      }
+    }
+  };
+}
+
+describe('basic counter webapp example', () => {
+  it('runs end to end with deterministic adapters', async () => {
+    const file = await loadIntentFile('examples/basic/counter-webapp.axiom.js');
+    const result = await runIntent(file, createExampleAdapters());
+
+    expect(result.status).toBe('passed');
+    expect(result.stepResults.map((step) => step.stepId)).toEqual([
+      'brief',
+      'plan',
+      'implement',
+      'test'
+    ]);
+    expect(result.verification.map((item) => item.verificationId)).toEqual([
+      'plan-covers-counter-flow',
+      'counter-ui-flow',
+      'counter-report-exists'
+    ]);
+    expect(result.verification.every((item) => item.status === 'passed')).toBe(true);
+    expect(result.finalValue).toEqual({
+      ok: true,
+      app: 'counter-webapp',
+      verifiedOutcomes: {
+        total: 3,
+        passed: 3,
+        failed: 0
+      }
+    });
+  });
+});
