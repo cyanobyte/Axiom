@@ -3,6 +3,7 @@
  * Responsibilities:
  * - Require at least one named agent capability.
  * - Require local worker and artifact configuration for MVP execution.
+ * - Require an explicit workspace root for local runtime execution.
  * - Fail early with clear runtime-config errors.
  */
 
@@ -23,6 +24,10 @@ export function validateRuntimeConfig(config) {
 
   if (!config?.artifacts?.root) {
     throw new Error('Runtime config must define artifacts.root');
+  }
+
+  if (!config?.workspace?.root) {
+    throw new Error('Runtime config must define workspace.root');
   }
 
   return config;

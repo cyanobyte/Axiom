@@ -17,10 +17,14 @@ import fs from 'node:fs/promises';
  */
 export function createLocalArtifactAdapter(workspaceRoot, artifactRoot) {
   const resolvedRoot = path.join(workspaceRoot, artifactRoot);
+  const normalizedArtifactRoot = artifactRoot.replace(/^[.][/\\]/, '');
 
   return {
     async read(relativePath) {
-      const content = await fs.readFile(path.join(resolvedRoot, relativePath), 'utf8');
+      const normalizedPath = relativePath.startsWith(`${normalizedArtifactRoot}/`)
+        ? relativePath.slice(normalizedArtifactRoot.length + 1)
+        : relativePath;
+      const content = await fs.readFile(path.join(resolvedRoot, normalizedPath), 'utf8');
       return JSON.parse(content);
     }
   };

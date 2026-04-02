@@ -10,6 +10,9 @@ describe('validateRuntimeConfig', () => {
       workers: {
         shell: { type: 'local-shell' }
       },
+      workspace: {
+        root: './examples/basic'
+      },
       artifacts: {
         root: './reports'
       }
@@ -21,6 +24,7 @@ describe('validateRuntimeConfig', () => {
   it('rejects configs without any agent mappings', () => {
     expect(() => validateRuntimeConfig({
       workers: { shell: { type: 'local-shell' } },
+      workspace: { root: './examples/basic' },
       artifacts: { root: './reports' }
     })).toThrow('Runtime config must define at least one agent');
   });

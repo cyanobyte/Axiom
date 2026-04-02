@@ -7,9 +7,40 @@
  */
 export default {
   agents: {
-    briefing: { provider: "claude", model: "sonnet" },
-    planner: { provider: "codex", model: "gpt-5.4" },
-    coder: { provider: "codex", model: "gpt-5.4-codex" }
+    briefing: {
+      provider: "fake",
+      responses: {
+        briefing: {
+          kind: "brief",
+          summary: "counter"
+        }
+      }
+    },
+    planner: {
+      provider: "fake",
+      responses: {
+        planner: {
+          includesLoadCounter: true,
+          includesIncrementCounter: true,
+          includesResetCounter: true,
+          usesExpress: true,
+          usesInMemoryState: true,
+          returnsJsonCount: true,
+          servesSinglePage: true
+        }
+      }
+    },
+    coder: {
+      provider: "fake",
+      responses: {
+        coder: {
+          generated: true
+        }
+      }
+    }
+  },
+  workspace: {
+    root: "./examples/basic"
   },
   workers: {
     shell: { type: "local-shell" }

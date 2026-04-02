@@ -1,0 +1,6 @@
+{
+  "loads": true,
+  "increments": true,
+  "resets": true,
+  "apiReturnsJsonCount": true
+}
