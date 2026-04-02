@@ -1280,6 +1280,85 @@ git add README.md examples/basic/README.md examples/live-counter docs/superpower
 git commit -m "docs: add live smoke workspace for full mvp acceptance"
 ```
 
+## Task 17: Add explicit structured-output prompts for live CLI providers
+
+**Files:**
+- Modify: `examples/live-counter/counter-webapp.axiom.js`
+- Modify: `examples/live-counter/axiom.config.js`
+- Create: `src/runtime/output-contracts.js`
+- Create: `test/runtime/output-contracts.test.js`
+- Modify: `test/examples/counter-webapp-runtime.test.js`
+- Test: `test/runtime/output-contracts.test.js`
+
+- [ ] **Step 1: Write the failing output-contract tests**
+
+```js
+import { describe, expect, it } from 'vitest';
+import { buildJsonContractPrompt } from '../../src/runtime/output-contracts.js';
+
+describe('buildJsonContractPrompt', () => {
+  it('appends explicit JSON-only instructions and the expected shape', () => {
+    const prompt = buildJsonContractPrompt('Return a planner result.', {
+      includesLoadCounter: 'boolean',
+      includesIncrementCounter: 'boolean'
+    });
+
+    expect(prompt).toContain('Return only valid JSON');
+    expect(prompt).toContain('"includesLoadCounter"');
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npm test -- test/runtime/output-contracts.test.js`
+Expected: FAIL with missing module `src/runtime/output-contracts.js`
+
+- [ ] **Step 3: Implement minimal prompt-contract helpers**
+
+```js
+// src/runtime/output-contracts.js
+export function buildJsonContractPrompt(instructions, shape) {
+  return [
+    instructions,
+    '',
+    'Return only valid JSON. Do not include markdown, prose, or code fences.',
+    'Expected shape:',
+    JSON.stringify(shape, null, 2)
+  ].join('\n');
+}
+```
+
+Update `examples/live-counter/counter-webapp.axiom.js` so:
+- `planner` receives a `prompt` string built with `buildJsonContractPrompt(...)`
+- `coder` receives a `prompt` string built with `buildJsonContractPrompt(...)`
+- the expected planner fields and coder `{ files: [...] }` shape are explicit in those prompts
+
+- [ ] **Step 4: Run the targeted tests**
+
+Run: `npm test -- test/runtime/output-contracts.test.js test/examples/counter-webapp-runtime.test.js`
+Expected: PASS
+
+- [ ] **Step 5: Re-run the manual live smoke**
+
+Run:
+
+```bash
+node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js
+```
+
+Expected:
+- `planner` returns valid JSON
+- `coder` returns valid JSON with a `files` array
+- the run progresses past the planning step
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add examples/live-counter/counter-webapp.axiom.js examples/live-counter/axiom.config.js src/runtime/output-contracts.js test/runtime/output-contracts.test.js test/examples/counter-webapp-runtime.test.js
+git commit -m "feat: add explicit json output contracts for live smoke"
+```
+
 ## Spec Coverage Check
 
 - Sibling `axiom.config.js` loading: covered by Tasks 1 and 5
@@ -1298,9 +1377,10 @@ git commit -m "docs: add live smoke workspace for full mvp acceptance"
 - Structured live provider outputs: covered by Task 14
 - Workspace file materialization: covered by Task 15
 - Real generated live smoke workspace: covered by Task 16
+- Explicit JSON output prompting for live smoke: covered by Task 17
 
 ## Self-Review Notes
 
 - Placeholder scan: complete; every task includes exact files, tests, commands, and commit points.
 - Type consistency: this plan consistently uses `loadRuntimeConfig`, `validateRuntimeConfig`, `createConfiguredAdapters`, `runIntentFile`, and `runCommand`.
-- Scope check: this plan now carries the runtime from deterministic local execution through actual local AI CLI provider execution, structured provider outputs, workspace materialization, and an explicit end-to-end acceptance proof. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.
+- Scope check: this plan now carries the runtime from deterministic local execution through actual local AI CLI provider execution, structured provider outputs, explicit JSON prompting, workspace materialization, and an explicit end-to-end acceptance proof. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.
