@@ -10,6 +10,32 @@
 
 ---
 
+## Testing Strategy
+
+The implementation must be testable without spending significant AI tokens.
+
+Default rule:
+
+- the standard automated suite must not call live AI services
+- AI behavior should be exercised through deterministic fake adapters in unit and integration tests
+- canonical example files should load and run against test adapters
+- live AI usage, if any, should be limited to optional manual smoke tests outside the normal suite
+
+This means the MVP test surface should be split into:
+
+- `unit tests`
+  No AI calls; validate helpers, schema rules, result shaping, and error behavior
+- `runtime integration tests`
+  Use fake adapters for `ctx.agent(...)`, `ctx.worker(...)`, `ctx.artifact(...)`, and checkpoints
+- `example contract tests`
+  Load and execute canonical `.axiom.js` files with fake adapters
+- `optional live smoke tests`
+  Manual-only verification of real adapter wiring, not required for CI or local default runs
+
+Every implementation task that touches runtime behavior should preserve this rule: the core runtime must remain deterministic and cheap to test through explicit adapter boundaries.
+
+---
+
 ## File Structure
 
 ### Package and Tooling
@@ -1208,6 +1234,7 @@ git commit -m "test: verify canonical intent examples load successfully"
 - Intent revision plus rerun boundary: covered by Task 7
 - Structured run result model: covered by Tasks 5 and 7
 - Canonical examples as contract fixtures: covered by Tasks 4 and 8
+- Deterministic low-token testing through fake adapters: covered by Tasks 5, 6, 7, and 8
 
 ## Self-Review Notes
 
