@@ -11,6 +11,7 @@ import {
   outcome,
   verify
 } from "@science451/intent-runtime";
+import { materializeFiles } from "../../src/runtime/materialize-files.js";
 
 export default intent(
   {
@@ -269,12 +270,14 @@ export default intent(
     });
 
     // Generate the tiny app implementation
-    await ctx.step("implement", () =>
+    const implementation = await ctx.step("implement", () =>
       ctx.agent("coder").run({
         intent: ctx.intent,
         plan
       })
     );
+
+    await materializeFiles(ctx.workspace, implementation?.files ?? []);
 
     // Run the generated tests
     await ctx.step("test", () =>

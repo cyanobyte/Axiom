@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { loadIntentFile, runIntent } from '../../src/index.js';
 
 function createExampleAdapters() {
+  const writes = [];
+
   return {
     workspace: {
       root() {
@@ -10,7 +12,9 @@ function createExampleAdapters() {
       async read() {
         return '';
       },
-      async write() {},
+      async write(filePath, content) {
+        writes.push({ filePath, content });
+      },
       async patch() {}
     },
     artifacts: {
@@ -51,7 +55,16 @@ function createExampleAdapters() {
 
             if (name === 'coder') {
               return {
-                generated: true
+                files: [
+                  {
+                    path: 'app/index.html',
+                    content: '<h1>Counter</h1>'
+                  },
+                  {
+                    path: 'package.json',
+                    content: '{"name":"counter-webapp"}'
+                  }
+                ]
               };
             }
 
@@ -83,14 +96,16 @@ function createExampleAdapters() {
       async input() {
         return { value: null };
       }
-    }
+    },
+    writes
   };
 }
 
 describe('basic counter webapp example', () => {
   it('runs end to end with deterministic adapters', async () => {
     const file = await loadIntentFile('examples/basic/counter-webapp.axiom.js');
-    const result = await runIntent(file, createExampleAdapters());
+    const adapters = createExampleAdapters();
+    const result = await runIntent(file, adapters);
 
     expect(result.status).toBe('passed');
     expect(result.stepResults.map((step) => step.stepId)).toEqual([
@@ -115,5 +130,15 @@ describe('basic counter webapp example', () => {
         failed: 0
       }
     });
+    expect(adapters.writes).toEqual([
+      {
+        filePath: 'app/index.html',
+        content: '<h1>Counter</h1>'
+      },
+      {
+        filePath: 'package.json',
+        content: '{"name":"counter-webapp"}'
+      }
+    ]);
   });
 });
