@@ -143,3 +143,5 @@ vite.config.ts.timestamp-*
 
 # Local Codex state
 .codex
+node_modules/
+coverage/
