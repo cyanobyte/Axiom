@@ -39,4 +39,51 @@ describe('intent helpers', () => {
       covers: ['must-exist']
     });
   });
+
+  it('fails when an unknown top-level section is present', () => {
+    expect(() =>
+      intent(
+        {
+          id: 'broken',
+          meta: { title: 'Broken' },
+          what: { capability: 'sample', description: 'Broken app' },
+          why: { problem: 'Need sample', value: 'Demonstrate runtime' },
+          scope: { includes: [], excludes: [] },
+          runtime: { languages: ['javascript'], targets: ['node'], platforms: ['linux'] },
+          constraints: [must('must-exist', 'Constraint exists')],
+          outcomes: [outcome('works', 'It works')],
+          verification: {
+            intent: [verify('plan-covers-core', ['must-exist'])],
+            outcome: []
+          },
+          library: { kind: 'package' },
+          mystery: true
+        },
+        async () => ({ ok: true })
+      )
+    ).toThrow(/Unknown top-level section: mystery/);
+  });
+
+  it('fails when verification covers an unknown clause id', () => {
+    expect(() =>
+      intent(
+        {
+          id: 'broken-coverage',
+          meta: { title: 'Broken Coverage' },
+          what: { capability: 'sample', description: 'Broken app' },
+          why: { problem: 'Need sample', value: 'Demonstrate runtime' },
+          scope: { includes: [], excludes: [] },
+          runtime: { languages: ['javascript'], targets: ['node'], platforms: ['linux'] },
+          constraints: [must('must-exist', 'Constraint exists')],
+          outcomes: [outcome('works', 'It works')],
+          verification: {
+            intent: [verify('plan-covers-core', ['missing-clause'])],
+            outcome: []
+          },
+          library: { kind: 'package' }
+        },
+        async () => ({ ok: true })
+      )
+    ).toThrow(/Unknown verification coverage id: missing-clause/);
+  });
 });

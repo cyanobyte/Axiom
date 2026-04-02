@@ -1,3 +1,5 @@
+import { validateDefinition } from '../definition/validate-definition.js';
+
 function deepFreeze(value) {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
     Object.freeze(value);
@@ -9,9 +11,10 @@ function deepFreeze(value) {
 }
 
 export function intent(definition, runFn) {
+  const validated = validateDefinition(structuredClone(definition));
   return {
     kind: 'intent-file',
-    definition: deepFreeze(structuredClone(definition)),
+    definition: deepFreeze(validated),
     runFn
   };
 }
