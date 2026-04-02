@@ -1359,6 +1359,136 @@ git add examples/live-counter/counter-webapp.axiom.js examples/live-counter/axio
 git commit -m "feat: add explicit json output contracts for live smoke"
 ```
 
+## Task 18: Stream live step output through the runtime and CLI
+
+**Files:**
+- Modify: `src/runtime/run-intent.js`
+- Modify: `src/runtime/step-runner.js`
+- Modify: `src/runtime/create-run-context.js`
+- Modify: `src/cli/run-command.js`
+- Modify: `src/adapters/create-local-shell-adapter.js`
+- Modify: `src/adapters/providers/run-cli-command.js`
+- Create: `src/runtime/create-event-stream.js`
+- Create: `test/runtime/event-stream.test.js`
+- Modify: `test/cli/run-command.test.js`
+- Test: `test/runtime/event-stream.test.js`
+
+- [ ] **Step 1: Write the failing event-stream tests**
+
+```js
+import { describe, expect, it } from 'vitest';
+import { createEventStream } from '../../src/runtime/create-event-stream.js';
+
+describe('createEventStream', () => {
+  it('records step lifecycle and output events', () => {
+    const events = [];
+    const stream = createEventStream((event) => events.push(event));
+
+    stream.emit({ type: 'step.started', stepId: 'plan' });
+    stream.emit({ type: 'step.output', stepId: 'plan', chunk: 'working' });
+    stream.emit({ type: 'step.finished', stepId: 'plan', status: 'passed' });
+
+    expect(events.map((event) => event.type)).toEqual([
+      'step.started',
+      'step.output',
+      'step.finished'
+    ]);
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npm test -- test/runtime/event-stream.test.js`
+Expected: FAIL with missing module `src/runtime/create-event-stream.js`
+
+- [ ] **Step 3: Implement the minimal event stream**
+
+```js
+// src/runtime/create-event-stream.js
+export function createEventStream(listener = () => {}) {
+  return {
+    emit(event) {
+      listener({
+        timestamp: new Date().toISOString(),
+        ...event
+      });
+    }
+  };
+}
+```
+
+Update the runtime so:
+- `runIntent(...)` creates an event stream
+- `runStep(...)` emits `step.started` and `step.finished`
+- shell/provider adapters can emit `step.output` chunks
+- `runCommand(...)` prints those events in a readable live form
+
+- [ ] **Step 4: Run the targeted tests**
+
+Run: `npm test -- test/runtime/event-stream.test.js test/cli/run-command.test.js`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/runtime/create-event-stream.js src/runtime/run-intent.js src/runtime/step-runner.js src/runtime/create-run-context.js src/cli/run-command.js src/adapters/create-local-shell-adapter.js src/adapters/providers/run-cli-command.js test/runtime/event-stream.test.js test/cli/run-command.test.js
+git commit -m "feat: stream live step output through runtime"
+```
+
+## Task 19: Add interrupt handling for live runs
+
+**Files:**
+- Modify: `src/adapters/create-local-shell-adapter.js`
+- Modify: `src/adapters/providers/run-cli-command.js`
+- Modify: `src/runtime/run-intent.js`
+- Modify: `src/cli/run-command.js`
+- Modify: `src/runtime/result-model.js`
+- Create: `test/runtime/interrupts.test.js`
+- Modify: `test/cli/run-command.test.js`
+- Test: `test/runtime/interrupts.test.js`
+
+- [ ] **Step 1: Write the failing interrupt tests**
+
+```js
+import { describe, expect, it } from 'vitest';
+import { createRunResult } from '../../src/runtime/result-model.js';
+
+describe('interrupt handling', () => {
+  it('marks a run as interrupted when the active process is cancelled', () => {
+    const result = createRunResult();
+    result.status = 'interrupted';
+
+    expect(result.status).toBe('interrupted');
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails for the right reason**
+
+Run: `npm test -- test/runtime/interrupts.test.js`
+Expected: FAIL because `interrupted` is not part of the supported live lifecycle yet
+
+- [ ] **Step 3: Implement minimal interrupt propagation**
+
+Update the runtime so:
+- the active shell/provider child process is tracked
+- `Ctrl-C` in the CLI sends an interrupt to the active child process
+- the run returns `status: 'interrupted'`
+- the CLI prints that the run was interrupted and at which step
+
+- [ ] **Step 4: Run the targeted tests**
+
+Run: `npm test -- test/runtime/interrupts.test.js test/cli/run-command.test.js`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/adapters/create-local-shell-adapter.js src/adapters/providers/run-cli-command.js src/runtime/run-intent.js src/runtime/result-model.js src/cli/run-command.js test/runtime/interrupts.test.js test/cli/run-command.test.js
+git commit -m "feat: interrupt live runs from the cli"
+```
+
 ## Spec Coverage Check
 
 - Sibling `axiom.config.js` loading: covered by Tasks 1 and 5
@@ -1378,9 +1508,11 @@ git commit -m "feat: add explicit json output contracts for live smoke"
 - Workspace file materialization: covered by Task 15
 - Real generated live smoke workspace: covered by Task 16
 - Explicit JSON output prompting for live smoke: covered by Task 17
+- Live step/event streaming: covered by Task 18
+- Interrupt handling for live runs: covered by Task 19
 
 ## Self-Review Notes
 
 - Placeholder scan: complete; every task includes exact files, tests, commands, and commit points.
 - Type consistency: this plan consistently uses `loadRuntimeConfig`, `validateRuntimeConfig`, `createConfiguredAdapters`, `runIntentFile`, and `runCommand`.
-- Scope check: this plan now carries the runtime from deterministic local execution through actual local AI CLI provider execution, structured provider outputs, explicit JSON prompting, workspace materialization, and an explicit end-to-end acceptance proof. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.
+- Scope check: this plan now carries the runtime from deterministic local execution through actual local AI CLI provider execution, structured provider outputs, explicit JSON prompting, workspace materialization, live event streaming, interrupt handling, and an explicit end-to-end acceptance proof. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.

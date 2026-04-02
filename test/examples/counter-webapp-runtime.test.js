@@ -42,6 +42,8 @@ function createExampleAdapters() {
             }
 
             if (name === 'planner') {
+              expect(typeof input.prompt).toBe('string');
+              expect(input.prompt).toContain('Return only valid JSON');
               return {
                 includesLoadCounter: true,
                 includesIncrementCounter: true,
@@ -54,6 +56,8 @@ function createExampleAdapters() {
             }
 
             if (name === 'coder') {
+              expect(typeof input.prompt).toBe('string');
+              expect(input.prompt).toContain('Return only valid JSON');
               return {
                 files: [
                   {

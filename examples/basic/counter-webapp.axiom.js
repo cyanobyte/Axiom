@@ -12,6 +12,7 @@ import {
   verify
 } from "@science451/intent-runtime";
 import { materializeFiles } from "../../src/runtime/materialize-files.js";
+import { buildJsonContractPrompt } from "../../src/runtime/output-contracts.js";
 
 export default intent(
   {
@@ -242,8 +243,18 @@ export default intent(
     // Produce a plan from the brief
     const plan = await ctx.step("plan", () =>
       ctx.agent("planner").run({
-        intent: ctx.intent,
-        brief
+        prompt: buildJsonContractPrompt(
+          `Create a concise implementation plan for this counter web app.\n\nIntent:\n${JSON.stringify(ctx.intent, null, 2)}\n\nBrief:\n${JSON.stringify(brief, null, 2)}`,
+          {
+            includesLoadCounter: true,
+            includesIncrementCounter: true,
+            includesResetCounter: true,
+            usesExpress: true,
+            usesInMemoryState: true,
+            returnsJsonCount: true,
+            servesSinglePage: true
+          }
+        )
       })
     );
 
@@ -272,8 +283,25 @@ export default intent(
     // Generate the tiny app implementation
     const implementation = await ctx.step("implement", () =>
       ctx.agent("coder").run({
-        intent: ctx.intent,
-        plan
+        prompt: buildJsonContractPrompt(
+          `Generate the minimal files for this counter web app.\n\nIntent:\n${JSON.stringify(ctx.intent, null, 2)}\n\nPlan:\n${JSON.stringify(plan, null, 2)}`,
+          {
+            files: [
+              {
+                path: "package.json",
+                content: "string"
+              },
+              {
+                path: "server.js",
+                content: "string"
+              },
+              {
+                path: "public/index.html",
+                content: "string"
+              }
+            ]
+          }
+        )
       })
     );
 
