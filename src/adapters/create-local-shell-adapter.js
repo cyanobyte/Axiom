@@ -2,9 +2,10 @@
  * Purpose: Provide a local shell worker surface for runtime commands.
  * Responsibilities:
  * - Act as the runtime boundary for command execution.
- * - Normalize command results into a simple worker response.
- * - Preserve the shell adapter seam for later real process execution.
+ * - Normalize local process results into a simple worker response.
+ * - Preserve stdout, stderr, and exit codes for runtime diagnostics.
  */
+import { spawn } from 'node:child_process';
 
 /**
  * Create a shell adapter for local command execution.
@@ -14,10 +15,33 @@
 export function createLocalShellAdapter() {
   return {
     async exec(spec) {
-      return {
-        ...spec,
-        exitCode: 0
-      };
+      return new Promise((resolve, reject) => {
+        const child = spawn(spec.command, {
+          cwd: spec.cwd,
+          shell: true
+        });
+
+        let stdout = '';
+        let stderr = '';
+
+        child.stdout.on('data', (chunk) => {
+          stdout += String(chunk);
+        });
+
+        child.stderr.on('data', (chunk) => {
+          stderr += String(chunk);
+        });
+
+        child.on('error', reject);
+        child.on('close', (exitCode) => {
+          resolve({
+            ...spec,
+            stdout,
+            stderr,
+            exitCode: exitCode ?? 1
+          });
+        });
+      });
     }
   };
 }

@@ -21,6 +21,7 @@ import { createLocalShellAdapter } from './create-local-shell-adapter.js';
 export function createConfiguredAdapters({ runtimeConfig }) {
   const workspace = createLocalWorkspaceAdapter(runtimeConfig.workspace.root);
   const artifacts = createLocalArtifactAdapter(runtimeConfig.workspace.root, runtimeConfig.artifacts.root);
+  const shellType = runtimeConfig.workers?.shell?.type;
 
   return {
     workspace,
@@ -45,7 +46,24 @@ export function createConfiguredAdapters({ runtimeConfig }) {
     },
     workers: {
       worker() {
-        return createLocalShellAdapter();
+        if (shellType === 'local-shell') {
+          return createLocalShellAdapter();
+        }
+
+        if (shellType === 'fake-shell') {
+          return {
+            async exec(spec) {
+              return {
+                ...spec,
+                stdout: '',
+                stderr: '',
+                exitCode: 0
+              };
+            }
+          };
+        }
+
+        throw new Error(`Unsupported worker type: ${shellType}`);
       }
     },
     checkpoint: {

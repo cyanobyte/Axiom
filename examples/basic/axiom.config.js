@@ -43,7 +43,7 @@ export default {
     root: "./examples/basic"
   },
   workers: {
-    shell: { type: "local-shell" }
+    shell: { type: "fake-shell" }
   },
   artifacts: {
     root: "./reports"
