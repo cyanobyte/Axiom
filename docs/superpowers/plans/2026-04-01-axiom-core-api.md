@@ -10,6 +10,15 @@
 
 **Canonical Example:** [`docs/superpowers/examples/todo-app.axiom.js`](/mnt/d/Science451/Axiom/docs/superpowers/examples/todo-app.axiom.js) is the reference authored file for this plan. API and runtime changes should remain consistent with it.
 
+**Simplicity Guardrails:**
+- Treat Axiom as a library used from a single user-authored `.axiom.js` file.
+- Model only two real actors in V1: the human programmer and the AI collaborator.
+- Do not invent additional product-level actors for planner/coder/verifier/shell roles; those are runtime capabilities or tool modes, not users.
+- Prefer a small set of recognized top-level sections and runtime capabilities over deep role hierarchies or framework-like abstractions.
+- Keep the authoring model understandable to an experienced engineer reading one file top-to-bottom.
+
+**Planning Note:** The implementation tasks below predate the current `intent(definition, runFn)` architecture and canonical example. They should be rewritten before implementation resumes so file layout, tests, and API slices match the current design.
+
 ---
 
 ## File Structure
