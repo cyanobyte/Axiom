@@ -921,6 +921,188 @@ git add README.md examples/basic/README.md
 git commit -m "docs: add live smoke path documentation"
 ```
 
+## Task 12: Implement real live provider execution
+
+**Files:**
+- Modify: `src/adapters/providers/create-openai-agent-adapter.js`
+- Create: `test/adapters/create-openai-agent-adapter.integration.test.js`
+- Modify: `README.md`
+- Test: `test/adapters/create-openai-agent-adapter.integration.test.js`
+
+- [ ] **Step 1: Write the failing live execution test behind an env guard**
+
+```js
+import { describe, expect, it } from 'vitest';
+import { createOpenAIAgentAdapter } from '../../src/adapters/providers/create-openai-agent-adapter.js';
+
+const hasLiveConfig = Boolean(process.env.OPENAI_API_KEY);
+
+describe('createOpenAIAgentAdapter live execution', () => {
+  it.skipIf(!hasLiveConfig)('calls the live provider and returns text output', async () => {
+    const adapter = createOpenAIAgentAdapter('planner', {
+      apiKey: process.env.OPENAI_API_KEY,
+      model: 'gpt-5.4'
+    });
+
+    const result = await adapter.run({
+      prompt: 'Return exactly the word READY.'
+    });
+
+    expect(typeof result).toBe('string');
+    expect(result).toContain('READY');
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it is skipped without config and fails once enabled**
+
+Run: `npm test -- test/adapters/create-openai-agent-adapter.integration.test.js`
+Expected: SKIP when `OPENAI_API_KEY` is absent
+
+Manual check:
+
+```bash
+OPENAI_API_KEY=... npm test -- test/adapters/create-openai-agent-adapter.integration.test.js
+```
+
+Expected: FAIL because live request execution is not implemented yet
+
+- [ ] **Step 3: Implement the real provider call**
+
+```js
+// src/adapters/providers/create-openai-agent-adapter.js
+export function createOpenAIAgentAdapter(agentName, config = {}) {
+  return {
+    async run(input) {
+      if (!config.apiKey) {
+        throw new Error(`Missing OpenAI API key for ${agentName}`);
+      }
+
+      if (!config.model) {
+        throw new Error(`Missing OpenAI model for ${agentName}`);
+      }
+
+      const response = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.apiKey}`
+        },
+        body: JSON.stringify({
+          model: config.model,
+          input: typeof input === 'string' ? input : JSON.stringify(input, null, 2)
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI request failed for ${agentName}: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.output_text ?? '';
+    }
+  };
+}
+```
+
+- [ ] **Step 4: Run the automated suite and the manual live smoke test**
+
+Run: `npm test`
+Expected: PASS with the integration test skipped by default
+
+Manual smoke:
+
+```bash
+cp examples/basic/axiom.live.config.js examples/basic/axiom.config.js
+OPENAI_API_KEY=... node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+```
+
+Expected:
+- runtime starts successfully
+- live adapter is invoked
+- the run reaches real planning/coding calls instead of throwing "not implemented yet"
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/adapters/providers/create-openai-agent-adapter.js test/adapters/create-openai-agent-adapter.integration.test.js README.md
+git commit -m "feat: execute live provider requests"
+```
+
+## Task 13: Prove the MVP is fully functional end to end
+
+**Files:**
+- Modify: `README.md`
+- Modify: `examples/basic/README.md`
+- Create: `docs/superpowers/specs/axiom-mvp-acceptance.md`
+- Test: `npm test`
+
+- [ ] **Step 1: Write explicit MVP acceptance criteria**
+
+Create `docs/superpowers/specs/axiom-mvp-acceptance.md`:
+
+```md
+# Axiom MVP Acceptance
+
+The MVP is considered fully functional only when all of the following are true:
+
+1. `node bin/axiom.js run <file.axiom.js>` works.
+2. The runtime loads sibling `axiom.config.js` automatically.
+3. The runtime builds adapters from config successfully.
+4. The runtime can call a real provider for at least one configured agent capability.
+5. The runtime can execute a real local shell command.
+6. The runtime can read artifact files from disk.
+7. The runtime can execute verification and return structured results.
+8. The beginner example can be run through the CLI with a live provider config.
+9. The default automated suite still passes without calling live AI.
+```
+
+- [ ] **Step 2: Run the default suite**
+
+Run: `npm test`
+Expected: PASS with all tests green and live-provider integration tests skipped by default
+
+- [ ] **Step 3: Run the real end-to-end manual smoke**
+
+Manual smoke command:
+
+```bash
+cp examples/basic/axiom.live.config.js examples/basic/axiom.config.js
+OPENAI_API_KEY=... node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+```
+
+Expected:
+- the CLI loads the example and sibling config
+- the live provider adapter is invoked successfully
+- the shell adapter executes the configured test command
+- artifact-backed verification executes
+- the run finishes with a structured result instead of throwing a provider placeholder error
+
+- [ ] **Step 4: Restore the deterministic example config after the smoke**
+
+```bash
+git checkout -- examples/basic/axiom.config.js
+```
+
+Expected: the beginner example returns to the deterministic fake-agent config used by the default suite
+
+- [ ] **Step 5: Document the completion state**
+
+Add to `README.md` and `examples/basic/README.md`:
+
+```md
+The MVP is fully functional when:
+- the automated suite passes without live AI
+- the live smoke path succeeds with a real provider configuration
+```
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add README.md examples/basic/README.md docs/superpowers/specs/axiom-mvp-acceptance.md
+git commit -m "docs: define full MVP acceptance criteria"
+```
+
 ## Spec Coverage Check
 
 - Sibling `axiom.config.js` loading: covered by Tasks 1 and 5
@@ -934,9 +1116,11 @@ git commit -m "docs: add live smoke path documentation"
 - Real local shell execution: covered by Task 9
 - Live provider-backed agent path: covered by Task 10
 - Manual live smoke documentation: covered by Task 11
+- Actual live provider execution: covered by Task 12
+- Full MVP acceptance proof: covered by Task 13
 
 ## Self-Review Notes
 
 - Placeholder scan: complete; every task includes exact files, tests, commands, and commit points.
 - Type consistency: this plan consistently uses `loadRuntimeConfig`, `validateRuntimeConfig`, `createConfiguredAdapters`, `runIntentFile`, and `runCommand`.
-- Scope check: this plan now carries the runtime from deterministic local execution through a minimal live-provider path and documented smoke test. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.
+- Scope check: this plan now carries the runtime from deterministic local execution through actual live provider requests and an explicit end-to-end acceptance proof. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.
