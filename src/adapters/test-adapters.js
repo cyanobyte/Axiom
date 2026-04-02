@@ -1,4 +1,4 @@
-export function createTestAdapters() {
+export function createTestAdapters(options = {}) {
   return {
     workspace: {
       root() {
@@ -42,8 +42,8 @@ export function createTestAdapters() {
       }
     },
     checkpoint: {
-      async approval() {
-        return { accepted: true };
+      async approval(_id, _spec) {
+        return options.checkpointApprovalResult ?? { accepted: true };
       },
       async choice() {
         return { value: null };

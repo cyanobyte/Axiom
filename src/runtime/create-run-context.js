@@ -1,3 +1,5 @@
+import { requestApproval } from './checkpoints.js';
+import { applyIntentRevision } from './intent-revision.js';
 import { executeVerification } from '../verification/execute-verification.js';
 import { runStep } from './step-runner.js';
 
@@ -29,6 +31,19 @@ export function createRunContext(file, adapters, state, result) {
         return executeVerification(file.definition, result, 'outcome', verificationId, spec);
       }
     },
-    checkpoint: adapters.checkpoint
+    checkpoint: {
+      approval(checkpointId, spec) {
+        return requestApproval(result, adapters, checkpointId, spec);
+      },
+      choice(checkpointId, spec) {
+        return adapters.checkpoint.choice(checkpointId, spec);
+      },
+      input(checkpointId, spec) {
+        return adapters.checkpoint.input(checkpointId, spec);
+      }
+    },
+    reviseIntent(revision) {
+      return applyIntentRevision(result, revision);
+    }
   };
 }

@@ -5,6 +5,8 @@ export function createRunResult() {
     verification: [],
     diagnostics: [],
     artifacts: [],
-    finalValue: undefined
+    finalValue: undefined,
+    pendingCheckpoint: undefined,
+    intentRevision: undefined
   };
 }
