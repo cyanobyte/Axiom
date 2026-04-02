@@ -66,6 +66,17 @@ export default intent(
       test_runner: "vitest"
     },
 
+    // Reference artifacts used to guide planning and generation
+    references: {
+      examples: [
+        {
+          id: "todo-webapp",
+          path: "docs/superpowers/examples/todo-app.axiom.js",
+          purpose: "Shows a complete non-trivial product intent file using the current schema."
+        }
+      ]
+    },
+
     // Operating assumptions around the runtime
     assumptions: [
       "A human programmer authors and reviews the intent file.",

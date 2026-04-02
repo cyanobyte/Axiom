@@ -140,6 +140,7 @@ type IntentDefinition = Readonly<{
   scope: ScopeDefinition;
   runtime: RuntimeDefinition;
   build?: BuildDefinition;
+  references?: ReferencesDefinition;
   assumptions?: string[];
   architecture?: ArchitectureDefinition;
   policies?: PolicyDefinition[];
@@ -171,6 +172,7 @@ It should include:
 - `scope`
 - `runtime`
 - `build`
+- `references`
 - `assumptions`
 - `architecture`
 - `policies`
@@ -225,6 +227,14 @@ type WhyDefinition = {
 type ScopeDefinition = {
   includes: string[];
   excludes: string[];
+};
+
+type ReferencesDefinition = {
+  examples?: Array<{
+    id: string;
+    path: string;
+    purpose?: string;
+  }>;
 };
 
 type ArchitectureDefinition = {
@@ -514,6 +524,40 @@ Examples:
 - simplicity
 
 These sections are especially important when Axiom is describing itself, because many of its central requirements are behavioral and qualitative rather than purely feature-oriented.
+
+### References Section
+
+V1 should support a declarative `references` section so example files and other guiding artifacts can be part of the executable intent definition rather than only living in surrounding Markdown documentation.
+
+Examples are not assumptions. They are intentional reference artifacts used to guide generation, review, or verification.
+
+Conceptually:
+
+```ts
+type ReferencesDefinition = {
+  examples?: Array<{
+    id: string;
+    path: string;
+    purpose?: string;
+  }>;
+};
+```
+
+This allows the runtime, prompts, and tooling to access examples as first-class context.
+
+Typical use:
+
+```js
+references: {
+  examples: [
+    {
+      id: "todo-webapp",
+      path: "docs/superpowers/examples/todo-app.axiom.js",
+      purpose: "Shows a complete web app intent file using the current schema."
+    }
+  ]
+}
+```
 
 ### Architecture Section
 
