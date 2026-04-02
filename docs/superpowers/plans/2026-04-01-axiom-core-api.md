@@ -8,6 +8,8 @@
 
 **Tech Stack:** Node.js, JavaScript (ES modules), Vitest
 
+**Canonical Example:** [`docs/superpowers/examples/todo-app.axiom.js`](/mnt/d/Science451/Axiom/docs/superpowers/examples/todo-app.axiom.js) is the reference authored file for this plan. API and runtime changes should remain consistent with it.
+
 ---
 
 ## File Structure

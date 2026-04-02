@@ -7,6 +7,8 @@ Status: Draft approved for planning
 
 Axiom is a development system where engineers define intent as executable code, and LLMs generate implementations and plans that are continuously verified against that intent. Intent includes what a system must do, why it exists, its constraints, and its success criteria.
 
+The canonical concrete example for this spec is [`docs/superpowers/examples/todo-app.axiom.js`](/mnt/d/Science451/Axiom/docs/superpowers/examples/todo-app.axiom.js). Changes to the public API or runtime model should be reflected in that file so the example remains valid to the project.
+
 V1 focuses on the core JavaScript authoring API. Engineers should be able to write intent in a way that feels like writing a spec, not a framework. The surface should feel like JavaScript, not a DSL; it should feel like declaring truth, not wiring plumbing; and it should feel like tests and requirements merged into one. The API must stay predictable, minimal, and easy to reason about.
 
 The authoring model is declarative modules with a small authored vocabulary, not giant nested objects. Authors should write concise, intentional declarations with small executable hooks where proof requires real logic. Internally, Axiom may normalize authored modules into a richer model, but the surface should remain readable source code with clear boundaries and names.
@@ -392,6 +394,69 @@ type RunResult = {
   artifacts: ArtifactRecord[];
 };
 ```
+
+### Human Checkpoints
+
+Human input should be first-class through explicit checkpoints rather than hidden inside arbitrary stage code.
+
+V1 should distinguish clearly between:
+
+- `stage`
+  Performs automated work
+- `checkpoint`
+  Pauses execution and requests human judgment or input
+- `verify`
+  Proves correctness or alignment against the current intent
+
+The preferred V1 shape is first-class checkpoints such as:
+
+- `d.checkpoint.approval(...)`
+- `d.checkpoint.choice(...)`
+- `d.checkpoint.input(...)`
+
+When a checkpoint is reached:
+
+1. The run status becomes `waiting-for-input`
+2. Axiom emits a structured checkpoint request
+3. Execution pauses until a response is supplied
+4. The response is stored in run state and becomes available through `ctx`
+
+This keeps workflow control distinct from proof logic and stage execution.
+
+### Intent Revision Lifecycle
+
+If the declared intent is wrong, incomplete, or no longer appropriate, Axiom should treat that as a definition problem rather than silently mutating intent in memory during execution.
+
+V1 should support intent revision through explicit source-file edits to the `.axiom.js` definition file, but those edits must not take effect in the current run.
+
+The lifecycle should be:
+
+1. A run detects that intent needs revision, or a human decides that the current intent is wrong
+2. Axiom proposes a patch or edit to the intent source file
+3. The human reviews and approves or rejects that edit
+4. If approved, the intent file is updated on disk
+5. The current run terminates with a `requires-rerun` outcome
+6. A new run starts from the revised file
+
+This means:
+
+- AI may propose intent edits
+- humans approve whether intent changes become real
+- intent changes are reviewable and versionable as source edits
+- the current run never silently continues under mutated intent
+- verification always applies to the immutable intent definition the current run started with
+
+This preserves trust, reproducibility, and debuggability.
+
+Conceptually, the runtime should support statuses such as:
+
+- `running`
+- `waiting-for-input`
+- `intent-revision-proposed`
+- `intent-revision-applied`
+- `terminated-requires-rerun`
+- `completed`
+- `failed`
 
 ### Internal Module Layout
 
