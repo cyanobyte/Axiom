@@ -4,7 +4,7 @@
 
 **Goal:** Build the first working Axiom runtime so a single `.axiom.js` file can define intent declaratively and execute a top-to-bottom workflow with explicit checkpoints, verification, and structured run results.
 
-**Architecture:** The implementation is centered on `intent(definition, runFn)`. The declarative definition is validated and frozen, then the runtime loads a module, resolves explicit adapters, creates `ctx`, executes `ctx.step(...)` in normal JavaScript order, and records checkpoints, verification, artifacts, diagnostics, and rerun-required outcomes. Canonical examples in `docs/superpowers/examples/` are treated as contract fixtures for the API surface.
+**Architecture:** The implementation is centered on `intent(definition, runFn)`. The declarative definition is validated and frozen, then the runtime loads a module, looks for a sibling `axiom.config.js` by default, resolves explicit adapters from that config, creates `ctx`, executes `ctx.step(...)` in normal JavaScript order, and records checkpoints, verification, artifacts, diagnostics, and rerun-required outcomes. Canonical examples in `docs/superpowers/examples/` are treated as contract fixtures for the API surface.
 
 **Tech Stack:** Node.js, JavaScript (ES modules), Vitest
 
@@ -49,6 +49,7 @@ Every implementation task that touches runtime behavior should preserve this rul
 - Create: `src/index.js`
 - Create: `src/public/intent.js`
 - Create: `src/public/load-intent-file.js`
+- Create: `src/public/load-runtime-config.js`
 - Create: `src/public/run-intent-file.js`
 
 ### Definition and Validation

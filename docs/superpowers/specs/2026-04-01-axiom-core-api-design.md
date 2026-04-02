@@ -128,6 +128,40 @@ V1 should expose a small public API centered on one top-level definition entry p
 
 The runtime still requires explicit adapters, but those should be supplied when the intent file is executed by the runtime rather than by a separate `run(definition, adapters)` export hidden inside the authored file.
 
+### Runtime Configuration
+
+Provider and tool wiring should not live inside the `.axiom.js` file. The intent file should stay provider-agnostic and name capabilities like `briefing`, `planner`, `coder`, and `shell`. V1 should load runtime configuration from a sibling `axiom.config.js` file by default.
+
+The execution model should be:
+
+1. load `project.axiom.js`
+2. look for `axiom.config.js` in the same directory
+3. load provider, worker, workspace, and artifact configuration from that file
+4. build adapters from the config
+5. execute the intent file with those adapters
+
+This keeps project intent separate from environment wiring. The same `.axiom.js` file should be able to run against test adapters, Codex/OpenAI, Claude, or other providers without changing the project definition itself.
+
+Conceptually, the config shape should be small and explicit:
+
+```js
+export default {
+  agents: {
+    briefing: { provider: "claude", model: "sonnet" },
+    planner: { provider: "codex", model: "gpt-5.4" },
+    coder: { provider: "codex", model: "gpt-5.4-codex" }
+  },
+  workers: {
+    shell: { type: "local-shell" }
+  },
+  artifacts: {
+    root: "./reports"
+  }
+};
+```
+
+If `axiom.config.js` is missing, the runtime should fail clearly unless adapters were supplied explicitly by another entrypoint.
+
 Conceptually, the public API is:
 
 ```ts
