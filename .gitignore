@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 # Local git worktrees
 .worktrees/
+
+# Local Codex state
+.codex
