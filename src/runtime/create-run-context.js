@@ -1,6 +1,7 @@
+import { executeVerification } from '../verification/execute-verification.js';
 import { runStep } from './step-runner.js';
 
-export function createRunContext(file, adapters, state) {
+export function createRunContext(file, adapters, state, result) {
   return {
     meta: file.definition.meta,
     intent: file.definition,
@@ -20,7 +21,14 @@ export function createRunContext(file, adapters, state) {
     worker(name) {
       return adapters.workers.worker(name);
     },
-    verify: adapters.verify,
+    verify: {
+      intent(verificationId, spec) {
+        return executeVerification(file.definition, result, 'intent', verificationId, spec);
+      },
+      outcome(verificationId, spec) {
+        return executeVerification(file.definition, result, 'outcome', verificationId, spec);
+      }
+    },
     checkpoint: adapters.checkpoint
   };
 }

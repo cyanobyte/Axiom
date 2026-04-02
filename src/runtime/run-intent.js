@@ -8,7 +8,7 @@ export async function runIntent(file, adapters) {
     stepMap: new Map()
   };
 
-  const ctx = createRunContext(file, adapters, state);
+  const ctx = createRunContext(file, adapters, state, result);
   result.finalValue = await file.runFn(ctx);
   return result;
 }
