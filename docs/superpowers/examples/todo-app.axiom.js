@@ -44,9 +44,42 @@ export default intent(
       ]
     },
 
-    stack: {
-      backend: { language: "Go", framework: "Gin", database: "SQLite" },
-      frontend: { framework: "React", styling: "Bootstrap" }
+    runtime: {
+      languages: ["go", "javascript"],
+      targets: ["native", "browser"],
+      platforms: ["linux", "macos", "windows", "web"]
+    },
+
+    build: {
+      system: "make",
+      test_runner: "make"
+    },
+
+    web: {
+      kind: "full-stack",
+      frontend: {
+        framework: "react",
+        styling: "bootstrap"
+      },
+      api: {
+        style: "rest",
+        endpoints: [
+          { method: "GET", path: "/api/todos" },
+          { method: "POST", path: "/api/todos" },
+          { method: "PUT", path: "/api/todos/:id" },
+          { method: "PATCH", path: "/api/todos/:id/toggle" },
+          { method: "DELETE", path: "/api/todos/:id" }
+        ]
+      },
+      interactions: [
+        "list todos on load",
+        "create todo",
+        "edit todo",
+        "toggle todo",
+        "delete todo",
+        "show validation errors",
+        "show empty state"
+      ]
     },
 
     constraints: [
@@ -73,29 +106,6 @@ export default intent(
             updated_at: "datetime"
           }
         }
-      ]
-    },
-
-    api: {
-      endpoints: [
-        { method: "GET", path: "/api/todos" },
-        { method: "POST", path: "/api/todos" },
-        { method: "PUT", path: "/api/todos/:id" },
-        { method: "PATCH", path: "/api/todos/:id/toggle" },
-        { method: "DELETE", path: "/api/todos/:id" }
-      ]
-    },
-
-    ui: {
-      screens: ["todo-main"],
-      interactions: [
-        "list todos on load",
-        "create todo",
-        "edit todo",
-        "toggle todo",
-        "delete todo",
-        "show validation errors",
-        "show empty state"
       ]
     },
 
@@ -155,7 +165,9 @@ export default intent(
         what: ctx.intent.what,
         why: ctx.intent.why,
         scope: ctx.intent.scope,
-        stack: ctx.intent.stack,
+        runtime: ctx.intent.runtime,
+        build: ctx.intent.build,
+        web: ctx.intent.web,
         constraints: ctx.intent.constraints
       })
     );
@@ -164,8 +176,7 @@ export default intent(
       ctx.agent("planner").run({
         brief,
         model: ctx.intent.model,
-        api: ctx.intent.api,
-        ui: ctx.intent.ui
+        web: ctx.intent.web
       })
     );
 

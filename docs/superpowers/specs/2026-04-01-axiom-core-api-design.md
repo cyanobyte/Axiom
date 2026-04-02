@@ -178,6 +178,17 @@ Constraints and outcomes remain separate first-class clause sets. Verification d
 
 Verification identity and coverage should be declarative in the definition. Runtime proof execution should reference those declared IDs rather than inventing ad hoc checks with no static declaration.
 
+V1 should use a small set of recognized top-level sections rather than fully free-form author-defined sections. This keeps the schema inspectable, validatable, and toolable across different software domains.
+
+The architecture should distinguish:
+
+- `domain sections`
+  What kind of software is being built
+- `runtime/build sections`
+  What language, target, platform, and toolchain it uses
+
+Languages are not domain sections. Axiom should support multiple languages through shared `runtime` and `build` metadata rather than separate top-level schema families per language.
+
 Conceptually, the core definition records are:
 
 ```ts
@@ -229,12 +240,216 @@ type VerificationDeclaration = {
   source?: SourceLocation;
 };
 
+type RuntimeDefinition = {
+  languages: RuntimeLanguage[];
+  targets: RuntimeTarget[];
+  platforms: RuntimePlatform[];
+};
+
+type BuildDefinition = {
+  system: BuildSystem;
+  test_runner?: string | null;
+  package_manager?: string | null;
+};
+
+type RuntimeLanguage =
+  | "javascript"
+  | "typescript"
+  | "python"
+  | "c"
+  | "c++"
+  | "rust"
+  | "go"
+  | "zig"
+  | "swift"
+  | "objective-c"
+  | "java"
+  | "scala"
+  | "kotlin"
+  | "c#"
+  | "php"
+  | "ruby"
+  | "dart"
+  | "elixir"
+  | "shell";
+
+type RuntimeTarget =
+  | "node"
+  | "browser"
+  | "native"
+  | "jvm"
+  | "dotnet"
+  | "ios"
+  | "android"
+  | "webassembly";
+
+type RuntimePlatform =
+  | "linux"
+  | "macos"
+  | "windows"
+  | "ios"
+  | "android"
+  | "web";
+
+type BuildSystem =
+  | "npm"
+  | "pnpm"
+  | "yarn"
+  | "pip"
+  | "poetry"
+  | "setuptools"
+  | "cargo"
+  | "go"
+  | "cmake"
+  | "make"
+  | "gradle"
+  | "maven"
+  | "dotnet"
+  | "xcodebuild"
+  | "swiftpm"
+  | "zig"
+  | "mix"
+  | "composer"
+  | "bundler";
+
 type SourceLocation = {
   file?: string;
   line?: number;
   column?: number;
 };
 ```
+
+### Recognized Domain Sections
+
+V1 should support a fixed set of recognized domain sections:
+
+- `web`
+- `cli`
+- `service`
+- `library`
+- `desktop`
+- `mobile`
+
+These sections describe what kind of software is being built. They may coexist when appropriate, such as a library with a CLI wrapper or a desktop app with an embedded local service.
+
+Shared cross-cutting metadata should live in:
+
+- `runtime`
+- `build`
+
+This separation allows Axiom to support many languages and platforms without multiplying top-level schema families.
+
+Conceptually:
+
+```ts
+type WebDefinition = {
+  kind: "spa" | "mpa" | "api" | "full-stack";
+  frontend?: {
+    framework?: string;
+    styling?: string;
+  };
+  api?: {
+    style?: "rest" | "graphql" | "rpc";
+    endpoints?: Array<{
+      method: string;
+      path: string;
+    }>;
+  };
+  interactions?: string[];
+};
+
+type CliDefinition = {
+  command: string;
+  arguments?: string[];
+  subcommands?: string[];
+  behaviors?: string[];
+};
+
+type LibraryDefinition = {
+  kind: "shared" | "static" | "package" | "module";
+  public_api?: string[];
+  consumers?: string[];
+};
+
+type ServiceDefinition = {
+  protocol: "http" | "grpc" | "tcp" | "queue";
+  endpoints?: Array<{
+    method?: string;
+    path?: string;
+    name?: string;
+  }>;
+  behaviors?: string[];
+};
+
+type DesktopDefinition = {
+  framework?: string;
+  screens?: string[];
+  interactions?: string[];
+};
+
+type MobileDefinition = {
+  platforms: Array<"ios" | "android">;
+  framework?: string;
+  screens?: string[];
+  interactions?: string[];
+};
+```
+
+Examples:
+
+```js
+runtime: {
+  languages: ["typescript"],
+  targets: ["node", "browser"],
+  platforms: ["web"]
+},
+build: {
+  system: "pnpm",
+  test_runner: "playwright"
+},
+web: {
+  kind: "spa"
+}
+```
+
+```js
+runtime: {
+  languages: ["c++"],
+  targets: ["native"],
+  platforms: ["linux", "macos", "windows"]
+},
+build: {
+  system: "cmake",
+  test_runner: "ctest"
+},
+cli: {
+  command: "csv-stats"
+}
+```
+
+```js
+runtime: {
+  languages: ["kotlin"],
+  targets: ["jvm"],
+  platforms: ["linux", "macos", "windows"]
+},
+build: {
+  system: "gradle",
+  test_runner: "junit"
+},
+library: {
+  kind: "package"
+}
+```
+
+Validation rules for V1:
+
+- core sections are required
+- `runtime` is required
+- at least one recognized domain section must be present
+- `build` is optional but strongly expected for buildable software projects
+- multiple domain sections are allowed when intentional
+- unknown top-level sections should fail validation in V1
 
 ### Runtime Architecture
 
