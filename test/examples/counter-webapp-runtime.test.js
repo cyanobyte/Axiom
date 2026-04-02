@@ -19,7 +19,8 @@ function createExampleAdapters() {
           return {
             loads: true,
             increments: true,
-            resets: true
+            resets: true,
+            apiReturnsJsonCount: true
           };
         }
         return null;
@@ -40,7 +41,11 @@ function createExampleAdapters() {
               return {
                 includesLoadCounter: true,
                 includesIncrementCounter: true,
-                includesResetCounter: true
+                includesResetCounter: true,
+                usesExpress: true,
+                usesInMemoryState: true,
+                returnsJsonCount: true,
+                servesSinglePage: true
               };
             }
 
@@ -97,6 +102,7 @@ describe('basic counter webapp example', () => {
     expect(result.verification.map((item) => item.verificationId)).toEqual([
       'plan-covers-counter-flow',
       'counter-ui-flow',
+      'counter-api-json',
       'counter-report-exists'
     ]);
     expect(result.verification.every((item) => item.status === 'passed')).toBe(true);
@@ -104,8 +110,8 @@ describe('basic counter webapp example', () => {
       ok: true,
       app: 'counter-webapp',
       verifiedOutcomes: {
-        total: 3,
-        passed: 3,
+        total: 4,
+        passed: 4,
         failed: 0
       }
     });

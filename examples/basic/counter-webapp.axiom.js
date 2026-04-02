@@ -35,6 +35,10 @@ export default intent(
         "single counter screen",
         "increment action",
         "reset action",
+        "Express backend",
+        "in-memory counter state",
+        "JSON API responses with count payloads",
+        "single served browser page",
         "human plan approval",
         "machine-readable test report"
       ],
@@ -56,7 +60,12 @@ export default intent(
     // Build and test toolchain
     build: {
       system: "npm",
-      test_runner: "npm"
+      test_runner: "npm",
+      commands: {
+        install: "npm install",
+        dev: "npm run dev",
+        test: "npm test"
+      }
     },
 
     // Minimal operating assumptions
@@ -71,11 +80,25 @@ export default intent(
       components: [
         {
           id: "counter-ui",
-          responsibility: "Render the counter value and expose increment and reset actions."
+          responsibility: "Render the counter value and expose increment and reset actions.",
+          implementation: {
+            serving: "static-html-js"
+          }
         },
         {
           id: "counter-api",
-          responsibility: "Serve the current count and handle increment and reset requests."
+          responsibility: "Serve the current count and handle increment and reset requests.",
+          implementation: {
+            runtime: "node",
+            framework: "express"
+          }
+        },
+        {
+          id: "counter-store",
+          responsibility: "Hold the current counter value for the running process.",
+          implementation: {
+            storage: "in-memory"
+          }
         }
       ]
     },
@@ -115,18 +138,37 @@ export default intent(
       kind: "full-stack",
       frontend: {
         framework: "vanilla",
-        styling: "minimal"
+        styling: "minimal",
+        entry: "/"
       },
       api: {
         style: "rest",
         endpoints: [
-          { method: "GET", path: "/api/counter" },
-          { method: "POST", path: "/api/counter/increment" },
-          { method: "POST", path: "/api/counter/reset" }
+          {
+            method: "GET",
+            path: "/api/counter",
+            response: { count: "number" }
+          },
+          {
+            method: "POST",
+            path: "/api/counter/increment",
+            response: { count: "number" }
+          },
+          {
+            method: "POST",
+            path: "/api/counter/reset",
+            response: { count: "number" }
+          }
         ]
       },
+      screens: [
+        {
+          id: "counter-home",
+          purpose: "Display the count and the increment/reset actions."
+        }
+      ],
       interactions: [
-        "show current count",
+        "show current count on page load",
         "increment counter",
         "reset counter"
       ]
@@ -136,14 +178,19 @@ export default intent(
     constraints: [
       must("must-show-counter", "The app shows the current counter value"),
       must("must-increment-counter", "The app increments the counter from the UI"),
-      must("must-reset-counter", "The app resets the counter from the UI")
+      must("must-reset-counter", "The app resets the counter from the UI"),
+      must("must-use-express", "The backend uses Node.js with Express"),
+      must("must-use-in-memory-state", "The counter state is stored in memory for MVP"),
+      must("must-return-json-count", "All counter API endpoints return JSON with a count field"),
+      must("must-serve-single-page", "The app serves a single browser page for the UI")
     ],
 
     // User-visible success conditions
     outcomes: [
-      outcome("counter-loads", "The current counter value loads in the UI"),
-      outcome("counter-increments", "The user can increment the counter"),
-      outcome("counter-resets", "The user can reset the counter"),
+      outcome("counter-loads", "Page load shows count 0"),
+      outcome("counter-increments", "Increment changes the visible count from 0 to 1"),
+      outcome("counter-resets", "Reset changes the visible count back to 0"),
+      outcome("api-returns-json", "Counter endpoints return JSON with the current count"),
       outcome("report-is-produced", "The test run produces a machine-readable report")
     ],
 
@@ -153,7 +200,11 @@ export default intent(
         verify("plan-covers-counter-flow", [
           "must-show-counter",
           "must-increment-counter",
-          "must-reset-counter"
+          "must-reset-counter",
+          "must-use-express",
+          "must-use-in-memory-state",
+          "must-return-json-count",
+          "must-serve-single-page"
         ])
       ],
       outcome: [
@@ -161,6 +212,9 @@ export default intent(
           "counter-loads",
           "counter-increments",
           "counter-resets"
+        ]),
+        verify("counter-api-json", [
+          "api-returns-json"
         ]),
         verify("counter-report-exists", [
           "report-is-produced"
@@ -192,7 +246,11 @@ export default intent(
         passed:
           plan.includesLoadCounter === true &&
           plan.includesIncrementCounter === true &&
-          plan.includesResetCounter === true,
+          plan.includesResetCounter === true &&
+          plan.usesExpress === true &&
+          plan.usesInMemoryState === true &&
+          plan.returnsJsonCount === true &&
+          plan.servesSinglePage === true,
         evidence: plan
       })
     });
@@ -229,6 +287,17 @@ export default intent(
             report?.loads === true &&
             report?.increments === true &&
             report?.resets === true,
+          evidence: report
+        };
+      }
+    });
+
+    await ctx.verify.outcome("counter-api-json", {
+      severity: "error",
+      run: async () => {
+        const report = await ctx.artifact("reports/counter-ui.json");
+        return {
+          passed: report?.apiReturnsJsonCount === true,
           evidence: report
         };
       }

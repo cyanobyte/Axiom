@@ -39,4 +39,46 @@ describe('runIntent', () => {
     expect(result.stepResults.map((item) => item.stepId)).toEqual(['first', 'second']);
     expect(result.finalValue).toEqual({ ok: true });
   });
+
+  it('fails preflight before execution when a full-stack web app is underspecified', async () => {
+    let executed = false;
+
+    const file = intent(
+      {
+        id: 'underspecified-webapp',
+        meta: { title: 'Underspecified Web App' },
+        what: { capability: 'webapp', description: 'A web app missing execution details' },
+        why: { problem: 'Need preflight', value: 'Avoid invented architecture' },
+        scope: { includes: [], excludes: [] },
+        runtime: { languages: ['javascript'], targets: ['node', 'browser'], platforms: ['web'] },
+        build: { system: 'npm', test_runner: 'npm' },
+        constraints: [must('must-exist', 'Constraint exists')],
+        outcomes: [outcome('works', 'It works')],
+        verification: { intent: [], outcome: [] },
+        web: {
+          kind: 'full-stack',
+          frontend: {},
+          api: { style: 'rest', endpoints: [] }
+        }
+      },
+      async (ctx) => {
+        executed = true;
+        await ctx.step('should-not-run', () => ({ ok: true }));
+        return { ok: true };
+      }
+    );
+
+    const result = await runIntent(file, createTestAdapters());
+
+    expect(executed).toBe(false);
+    expect(result.status).toBe('invalid');
+    expect(result.stepResults).toEqual([]);
+    expect(result.finalValue).toBeUndefined();
+    expect(result.diagnostics.map((item) => item.message)).toEqual([
+      'Missing build.commands.test for full-stack web app execution.',
+      'Missing web.frontend.framework for full-stack web app execution.',
+      'Missing web.api.endpoints for full-stack web app execution.',
+      'Missing architecture.components for full-stack web app execution.'
+    ]);
+  });
 });

@@ -6,6 +6,8 @@ describe('canonical examples', () => {
     const file = await loadIntentFile('examples/basic/counter-webapp.axiom.js');
     expect(file.definition.id).toBe('counter-webapp-basic');
     expect(file.definition.web.kind).toBe('full-stack');
+    expect(file.definition.build.commands.test).toBe('npm test');
+    expect(file.definition.web.api.endpoints[0].response).toEqual({ count: 'number' });
     expect(file.runFn).toBeTypeOf('function');
   });
 
