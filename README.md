@@ -5,6 +5,7 @@ Intent based programming
 
 - Beginner example: `examples/basic/counter-webapp.axiom.js`
 - Example runtime config: `examples/basic/axiom.config.js`
+- Live smoke example: `examples/live-counter/counter-webapp.axiom.js`
 - Richer examples: `docs/superpowers/examples/`
 
 ## Running Axiom
@@ -31,13 +32,12 @@ When a live provider adapter is implemented, replace the fake agent entries in `
 
 ## Live Smoke Path
 
-For a manual live-provider smoke run, copy or adapt `examples/basic/axiom.live.config.js`
-to `examples/basic/axiom.config.js` and run:
+For a manual live-provider smoke run, use the dedicated live workspace and run:
 
 ```bash
-node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js
 ```
 
-The provided live config uses the local `codex` CLI, so it reuses your existing CLI login
-instead of requiring a separate API key. This path is manual-only and should not be part of
-the default automated suite.
+The live config under `examples/live-counter/` uses the local `codex` CLI, so it reuses your
+existing CLI login instead of requiring a separate API key. This path is manual-only and should
+not be part of the default automated suite.

@@ -20,12 +20,12 @@ It shows the minimum useful flow:
 
 `counter-webapp.axiom.js` stays provider-agnostic. `axiom.config.js` is where runtime wiring lives, such as which provider/model handles `briefing`, `planner`, and `coder`.
 
-For a manual live-provider smoke run, start from `axiom.live.config.js`, adapt it into
-`axiom.config.js`, and run:
+For a manual live-provider smoke run, use the dedicated live workspace instead:
 
 ```bash
-node ../../bin/axiom.js run counter-webapp.axiom.js
+node ../../bin/axiom.js run ../live-counter/counter-webapp.axiom.js
 ```
 
-The provided live config uses the local `codex` CLI so it can reuse your existing CLI session.
-Keep the default `axiom.config.js` deterministic for automated tests. The live path is manual-only.
+The live workspace has its own `axiom.config.js` and uses the local `codex` CLI so it can reuse
+your existing CLI session. Keep the default `axiom.config.js` here deterministic for automated
+tests. The live path is manual-only.

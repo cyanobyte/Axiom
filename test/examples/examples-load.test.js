@@ -11,6 +11,14 @@ describe('canonical examples', () => {
     expect(file.runFn).toBeTypeOf('function');
   });
 
+  it('loads the live counter web app example', async () => {
+    const file = await loadIntentFile('examples/live-counter/counter-webapp.axiom.js');
+    expect(file.definition.id).toBe('counter-webapp-live');
+    expect(file.definition.web.kind).toBe('full-stack');
+    expect(file.definition.build.commands.test).toBe('npm test');
+    expect(file.runFn).toBeTypeOf('function');
+  });
+
   it('loads the todo app example', async () => {
     const file = await loadIntentFile('docs/superpowers/examples/todo-app.axiom.js');
     expect(file.definition.id).toBe('todo-webapp-mvp');
