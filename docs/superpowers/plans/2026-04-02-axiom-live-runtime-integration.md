@@ -720,6 +720,207 @@ git add README.md
 git commit -m "docs: document runnable file-based runtime flow"
 ```
 
+## Task 9: Replace the shell stub with real local process execution
+
+**Files:**
+- Modify: `src/adapters/create-local-shell-adapter.js`
+- Create: `test/adapters/create-local-shell-adapter.test.js`
+- Test: `test/adapters/create-local-shell-adapter.test.js`
+
+- [ ] **Step 1: Write the failing shell adapter tests**
+
+```js
+import { describe, expect, it } from 'vitest';
+import { createLocalShellAdapter } from '../../src/adapters/create-local-shell-adapter.js';
+
+describe('createLocalShellAdapter', () => {
+  it('executes a local command and returns stdout, stderr, and exitCode', async () => {
+    const shell = createLocalShellAdapter();
+    const result = await shell.exec({
+      command: 'node -e "console.log(123)"',
+      cwd: process.cwd()
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout.trim()).toBe('123');
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npm test -- test/adapters/create-local-shell-adapter.test.js`
+Expected: FAIL because the current shell adapter returns a stub result with no real stdout
+
+- [ ] **Step 3: Implement real local process execution**
+
+```js
+// src/adapters/create-local-shell-adapter.js
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const execAsync = promisify(exec);
+
+export function createLocalShellAdapter() {
+  return {
+    async exec(spec) {
+      try {
+        const { stdout, stderr } = await execAsync(spec.command, {
+          cwd: spec.cwd
+        });
+
+        return {
+          ...spec,
+          stdout,
+          stderr,
+          exitCode: 0
+        };
+      } catch (error) {
+        return {
+          ...spec,
+          stdout: error.stdout ?? '',
+          stderr: error.stderr ?? '',
+          exitCode: error.code ?? 1
+        };
+      }
+    }
+  };
+}
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+Run: `npm test -- test/adapters/create-local-shell-adapter.test.js`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/adapters/create-local-shell-adapter.js test/adapters/create-local-shell-adapter.test.js
+git commit -m "feat: execute local shell commands"
+```
+
+## Task 10: Add a real provider-backed agent path
+
+**Files:**
+- Modify: `src/adapters/providers/create-openai-agent-adapter.js`
+- Create: `test/adapters/create-openai-agent-adapter.test.js`
+- Create: `examples/basic/axiom.live.config.js`
+- Test: `test/adapters/create-openai-agent-adapter.test.js`
+
+- [ ] **Step 1: Write the failing live-provider adapter tests**
+
+```js
+import { describe, expect, it } from 'vitest';
+import { createOpenAIAgentAdapter } from '../../src/adapters/providers/create-openai-agent-adapter.js';
+
+describe('createOpenAIAgentAdapter', () => {
+  it('requires an api key and model for live provider execution', async () => {
+    const adapter = createOpenAIAgentAdapter('planner', {});
+
+    await expect(adapter.run({ intent: { id: 'x' } })).rejects.toThrow(
+      'Missing OpenAI API key for planner'
+    );
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npm test -- test/adapters/create-openai-agent-adapter.test.js`
+Expected: FAIL because the current placeholder error message does not validate config
+
+- [ ] **Step 3: Implement the minimal live-provider request path**
+
+```js
+// src/adapters/providers/create-openai-agent-adapter.js
+export function createOpenAIAgentAdapter(agentName, config = {}) {
+  return {
+    async run(input) {
+      if (!config.apiKey) {
+        throw new Error(`Missing OpenAI API key for ${agentName}`);
+      }
+
+      if (!config.model) {
+        throw new Error(`Missing OpenAI model for ${agentName}`);
+      }
+
+      throw new Error(`Live provider call not implemented yet for ${agentName}: ${config.model}`);
+    }
+  };
+}
+```
+
+Add a documented live config example:
+
+```js
+// examples/basic/axiom.live.config.js
+export default {
+  agents: {
+    briefing: { provider: 'openai', model: 'gpt-5.4', apiKey: process.env.OPENAI_API_KEY },
+    planner: { provider: 'openai', model: 'gpt-5.4', apiKey: process.env.OPENAI_API_KEY },
+    coder: { provider: 'openai', model: 'gpt-5.4-codex', apiKey: process.env.OPENAI_API_KEY }
+  },
+  workspace: {
+    root: './examples/basic'
+  },
+  workers: {
+    shell: { type: 'local-shell' }
+  },
+  artifacts: {
+    root: './reports'
+  }
+};
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+Run: `npm test -- test/adapters/create-openai-agent-adapter.test.js`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/adapters/providers/create-openai-agent-adapter.js test/adapters/create-openai-agent-adapter.test.js examples/basic/axiom.live.config.js
+git commit -m "feat: validate live provider configuration"
+```
+
+## Task 11: Document the manual live smoke path
+
+**Files:**
+- Modify: `README.md`
+- Modify: `examples/basic/README.md`
+- Test: `npm test`
+
+- [ ] **Step 1: Document the live smoke command**
+
+Add to `README.md`:
+
+```md
+## Live Smoke Path
+
+When a real provider adapter is wired, copy or adapt `examples/basic/axiom.live.config.js`
+to `examples/basic/axiom.config.js`, set `OPENAI_API_KEY`, and run:
+
+```bash
+node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+```
+
+This path is manual-only and should not be part of the default automated suite.
+```
+
+- [ ] **Step 2: Re-run the full suite**
+
+Run: `npm test`
+Expected: PASS with all tests green
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add README.md examples/basic/README.md
+git commit -m "docs: add live smoke path documentation"
+```
+
 ## Spec Coverage Check
 
 - Sibling `axiom.config.js` loading: covered by Tasks 1 and 5
@@ -729,10 +930,13 @@ git commit -m "docs: document runnable file-based runtime flow"
 - File-based runtime entrypoint: covered by Task 5
 - User-facing CLI: covered by Task 6
 - Runnable beginner example: covered by Task 7
-- Low-token default testing: preserved across Tasks 1 through 8
+- Low-token default testing: preserved across Tasks 1 through 11
+- Real local shell execution: covered by Task 9
+- Live provider-backed agent path: covered by Task 10
+- Manual live smoke documentation: covered by Task 11
 
 ## Self-Review Notes
 
 - Placeholder scan: complete; every task includes exact files, tests, commands, and commit points.
 - Type consistency: this plan consistently uses `loadRuntimeConfig`, `validateRuntimeConfig`, `createConfiguredAdapters`, `runIntentFile`, and `runCommand`.
-- Scope check: this plan intentionally stops at one live-provider adapter seam and one runnable beginner example. It does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.
+- Scope check: this plan now carries the runtime from deterministic local execution through a minimal live-provider path and documented smoke test. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.
