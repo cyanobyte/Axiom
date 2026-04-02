@@ -1,5 +1,7 @@
 # Axiom Core API Implementation Plan
 
+> **Status:** Superseded by [`docs/superpowers/plans/2026-04-02-axiom-runtime-mvp.md`](/mnt/d/Science451/Axiom/docs/superpowers/plans/2026-04-02-axiom-runtime-mvp.md). Do not use this file for implementation. It reflects an older architecture that predates the current `intent(definition, runFn)` runtime model.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the first intent runtime API so engineers can author a declarative intent object plus runtime workflow callback in a single executable JavaScript file.
