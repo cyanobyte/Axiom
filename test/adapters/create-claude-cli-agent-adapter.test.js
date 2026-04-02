@@ -26,4 +26,13 @@ describe('createClaudeCliAgentAdapter', () => {
       }
     ]);
   });
+
+  it('parses JSON output when the provider is configured for structured responses', async () => {
+    const adapter = createClaudeCliAgentAdapter('coder', {
+      output: 'json',
+      runner: async () => ({ stdout: '{"ok":true}\n', stderr: '', exitCode: 0 })
+    });
+
+    await expect(adapter.run({ prompt: 'Return JSON.' })).resolves.toEqual({ ok: true });
+  });
 });

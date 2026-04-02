@@ -6,6 +6,7 @@
  * - Normalize CLI output into plain runtime step results.
  */
 import { runCliCommand } from './run-cli-command.js';
+import { parseJsonOutput } from './parse-json-output.js';
 
 /**
  * Create a Claude CLI-backed adapter for a named capability.
@@ -28,7 +29,7 @@ export function createClaudeCliAgentAdapter(agentName, config = {}) {
         throw new Error(`claude CLI request failed for ${agentName}: ${result.stderr || result.exitCode}`);
       }
 
-      return result.stdout.trim();
+      return normalizeOutput(result.stdout, agentName, config);
     }
   };
 }
@@ -67,4 +68,20 @@ function serializeInput(input) {
   }
 
   return JSON.stringify(input, null, 2);
+}
+
+/**
+ * Normalize provider stdout into the configured runtime output shape.
+ *
+ * @param {string} output
+ * @param {string} agentName
+ * @param {object} config
+ * @returns {unknown}
+ */
+function normalizeOutput(output, agentName, config) {
+  if (config.output === 'json') {
+    return parseJsonOutput(output, agentName);
+  }
+
+  return output.trim();
 }

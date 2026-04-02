@@ -36,4 +36,13 @@ describe('createCodexCliAgentAdapter', () => {
       'codex CLI request failed for coder: boom'
     );
   });
+
+  it('parses JSON output when the provider is configured for structured responses', async () => {
+    const adapter = createCodexCliAgentAdapter('planner', {
+      output: 'json',
+      runner: async () => ({ stdout: '{"files":[]}\n', stderr: '', exitCode: 0 })
+    });
+
+    await expect(adapter.run({ prompt: 'Return JSON.' })).resolves.toEqual({ files: [] });
+  });
 });
