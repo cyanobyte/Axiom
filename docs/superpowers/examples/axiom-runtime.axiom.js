@@ -10,6 +10,7 @@ export default intent(
   {
     id: "axiom-runtime-mvp",
 
+    // Basic project identity
     meta: {
       title: "Axiom Runtime MVP",
       summary: "A library that executes a single user-authored intent file to drive AI-assisted project generation and verification.",
@@ -17,16 +18,19 @@ export default intent(
       tags: ["axiom", "runtime", "library", "node", "mvp"]
     },
 
+    // What the runtime does
     what: {
       capability: "intent_runtime_library",
       description: "A human authors one .axiom.js file and Axiom executes it top-to-bottom with checkpoints, verification, and rerun-safe intent revision."
     },
 
+    // Why the runtime exists
     why: {
       problem: "Markdown specs are descriptive but not executable, enforceable, or directly verifiable.",
       value: "Axiom turns declared project intent into structured runtime behavior, AI orchestration, and concrete proof."
     },
 
+    // Scope boundaries for the MVP
     scope: {
       includes: [
         "single-file intent authoring",
@@ -49,17 +53,20 @@ export default intent(
       ]
     },
 
+    // Runtime language and platform
     runtime: {
       languages: ["javascript"],
       targets: ["node"],
       platforms: ["linux", "macos", "windows"]
     },
 
+    // Build and test toolchain
     build: {
       system: "npm",
       test_runner: "vitest"
     },
 
+    // Operating assumptions around the runtime
     assumptions: [
       "A human programmer authors and reviews the intent file.",
       "The runtime may collaborate with one AI system through explicit runtime capabilities.",
@@ -68,6 +75,7 @@ export default intent(
       "Generated files and reports are stored in a managed writable workspace."
     ],
 
+    // Major runtime subsystems
     architecture: {
       components: [
         {
@@ -101,6 +109,7 @@ export default intent(
       ]
     },
 
+    // Rules the runtime must obey
     policies: [
       {
         id: "two-real-actors-only",
@@ -129,6 +138,7 @@ export default intent(
       }
     ],
 
+    // Important non-functional properties
     quality_attributes: [
       {
         id: "simple",
@@ -162,6 +172,7 @@ export default intent(
       }
     ],
 
+    // Domain-specific structure for a library product
     library: {
       kind: "package",
       public_api: [
@@ -176,6 +187,7 @@ export default intent(
       ]
     },
 
+    // Core requirements the runtime must satisfy
     constraints: [
       must("must-be-single-file-first", "V1 centers on one user-authored .axiom.js file"),
       must("must-load-validate-and-execute", "The runtime loads a file, validates its definition, and executes its workflow callback"),
@@ -188,6 +200,7 @@ export default intent(
       should("must-remain-small-and-readable", "The MVP should avoid unnecessary framework ceremony")
     ],
 
+    // Observable MVP outcomes
     outcomes: [
       outcome("can-load-and-validate-intent-file", "Axiom loads a .axiom.js file and validates its schema"),
       outcome("can-run-steps-in-order", "Axiom executes workflow steps in normal JavaScript order"),
@@ -198,6 +211,7 @@ export default intent(
       outcome("can-propose-intent-revision", "Axiom can propose an intent source edit and require rerun")
     ],
 
+    // Declare what must be proved; runtime code supplies how
     verification: {
       intent: [
         verify("plan-covers-runtime-boundaries", [
@@ -235,12 +249,14 @@ export default intent(
   },
 
   async (ctx) => {
+    // Summarize the raw intent into a planning-oriented brief
     const brief = await ctx.step("brief", () =>
       ctx.agent("briefing").run({
         intent: ctx.intent
       })
     );
 
+    // Produce the implementation plan for the runtime itself
     const implementationPlan = await ctx.step("plan", () =>
       ctx.agent("planner").run({
         intent: ctx.intent,
@@ -248,6 +264,7 @@ export default intent(
       })
     );
 
+    // Verify the plan still respects the runtime boundaries
     await ctx.verify.intent("plan-covers-runtime-boundaries", {
       severity: "error",
       run: async () => ({
@@ -261,11 +278,13 @@ export default intent(
       })
     });
 
+    // Human gate before implementation begins
     await ctx.checkpoint.approval("approve-plan", {
       message: "Approve the Axiom runtime implementation plan?",
       data: implementationPlan
     });
 
+    // Generate the runtime implementation from the approved plan
     await ctx.step("implement", () =>
       ctx.agent("coder").run({
         intent: ctx.intent,
@@ -273,6 +292,7 @@ export default intent(
       })
     );
 
+    // Execute the runtime test suite
     await ctx.step("test", () =>
       ctx.worker("shell").exec({
         command: "npm test",
@@ -280,6 +300,7 @@ export default intent(
       })
     );
 
+    // Verify the runtime delivers the declared MVP outcomes
     await ctx.verify.outcome("loads-and-validates-file", {
       severity: "error",
       run: async () => {
@@ -341,6 +362,7 @@ export default intent(
       }
     });
 
+    // Return a final structured value for the run
     return {
       ok: true,
       app: "axiom-runtime",

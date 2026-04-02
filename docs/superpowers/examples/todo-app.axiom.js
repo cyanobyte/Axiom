@@ -10,6 +10,7 @@ export default intent(
   {
     id: "todo-webapp-mvp",
 
+    // Basic project identity
     meta: {
       title: "Todo List Web App",
       summary: "Simple full-stack todo app with Go/Gin/SQLite and React/Bootstrap.",
@@ -17,16 +18,19 @@ export default intent(
       tags: ["todo", "webapp", "go", "gin", "sqlite", "react", "bootstrap", "mvp"]
     },
 
+    // What the software does
     what: {
       capability: "todo_web_application",
       description: "Users can create, edit, complete, and delete todos in a web UI."
     },
 
+    // Why this project exists
     why: {
       problem: "Users need a lightweight browser-based task tracker.",
       value: "Provides a small verifiable reference app for the intent runtime."
     },
 
+    // Scope boundaries
     scope: {
       includes: [
         "Go + Gin backend",
@@ -48,17 +52,20 @@ export default intent(
       ]
     },
 
+    // Target language/runtime environment
     runtime: {
       languages: ["go", "javascript"],
       targets: ["native", "browser"],
       platforms: ["linux", "macos", "windows", "web"]
     },
 
+    // Build and test toolchain
     build: {
       system: "make",
       test_runner: "make"
     },
 
+    // Operating assumptions around the run
     assumptions: [
       "The app is single-user and local-first for MVP purposes.",
       "A writable project workspace is available during generation and testing.",
@@ -67,6 +74,7 @@ export default intent(
       "The generated app can emit machine-readable test reports under a managed reports directory."
     ],
 
+    // Major system parts and boundaries
     architecture: {
       components: [
         {
@@ -90,6 +98,7 @@ export default intent(
       ]
     },
 
+    // Rules the runtime and workflow should obey
     policies: [
       {
         id: "plan-must-be-approved",
@@ -118,6 +127,7 @@ export default intent(
       }
     ],
 
+    // Important non-functional qualities
     quality_attributes: [
       {
         id: "traceable",
@@ -151,6 +161,7 @@ export default intent(
       }
     ],
 
+    // Domain-specific structure for a web application
     web: {
       kind: "full-stack",
       frontend: {
@@ -178,6 +189,7 @@ export default intent(
       ]
     },
 
+    // Hard requirements and softer guardrails
     constraints: [
       must("backend-must-use-go-gin", "Backend uses Go and Gin"),
       must("database-must-use-sqlite", "Persistence uses SQLite"),
@@ -190,6 +202,7 @@ export default intent(
       should("must-remain-simple", "Keep the MVP straightforward and low-abstraction")
     ],
 
+    // Minimal domain model for planning and implementation
     model: {
       entities: [
         {
@@ -206,6 +219,7 @@ export default intent(
       ]
     },
 
+    // User-visible outcomes the project should satisfy
     outcomes: [
       outcome("todo-can-be-created", "User can create a todo from the UI"),
       outcome("todo-list-loads", "Todo list loads when the page opens"),
@@ -217,6 +231,7 @@ export default intent(
       outcome("reports-are-produced", "Tests and verification steps produce machine-readable reports")
     ],
 
+    // Declare what must be proved; runtime code supplies how
     verification: {
       intent: [
         verify("plan-covers-stack", [
@@ -260,12 +275,14 @@ export default intent(
   },
 
   async (ctx) => {
+    // Summarize the raw intent into a planning-oriented brief
     const brief = await ctx.step("brief", () =>
       ctx.agent("briefing").run({
         intent: ctx.intent
       })
     );
 
+    // Produce an implementation plan from the brief and full intent
     const plan = await ctx.step("plan", () =>
       ctx.agent("planner").run({
         brief,
@@ -273,6 +290,7 @@ export default intent(
       })
     );
 
+    // Verify the plan still matches the declared technical requirements
     await ctx.verify.intent("plan-covers-stack", {
       severity: "error",
       run: async () => ({
@@ -310,11 +328,13 @@ export default intent(
       })
     });
 
+    // Human gate before code generation begins
     await ctx.checkpoint.approval("approve-plan", {
       message: "Approve this implementation plan?",
       data: plan
     });
 
+    // Generate the application and supporting files
     const implementation = await ctx.step("implement", () =>
       ctx.agent("coder").run({
         plan,
@@ -322,6 +342,7 @@ export default intent(
       })
     );
 
+    // Run the produced verification suites
     await ctx.step("unit-test", () =>
       ctx.worker("shell").exec({
         command: "make test-unit",
@@ -343,6 +364,7 @@ export default intent(
       })
     );
 
+    // Verify the generated system satisfies the declared outcomes
     await ctx.verify.outcome("backend-api-contract-test", {
       severity: "error",
       run: async () => {
@@ -398,6 +420,7 @@ export default intent(
       }
     });
 
+    // Return a final structured value for the run
     return {
       ok: true,
       app: "todo-webapp",
