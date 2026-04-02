@@ -1,3 +1,10 @@
+/**
+ * Purpose: Demonstrate a small but complete Axiom-authored web app.
+ * Responsibilities:
+ * - Show declarative product intent with a minimal full-stack target.
+ * - Show a top-to-bottom workflow with planning, approval, testing, and verification.
+ * - Stay readable enough for new users to understand quickly.
+ */
 import {
   intent,
   must,

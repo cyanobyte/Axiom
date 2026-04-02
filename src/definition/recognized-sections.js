@@ -1,3 +1,16 @@
+/**
+ * Purpose: Define the recognized top-level sections of an intent definition.
+ * Responsibilities:
+ * - Separate required sections from optional sections.
+ * - Declare which sections count as software-domain sections.
+ * - Keep definition validation and schema evolution centralized.
+ */
+
+/**
+ * Required top-level definition sections.
+ *
+ * @type {string[]}
+ */
 export const REQUIRED_SECTIONS = [
   'id',
   'meta',
@@ -10,6 +23,11 @@ export const REQUIRED_SECTIONS = [
   'verification'
 ];
 
+/**
+ * Optional top-level definition sections.
+ *
+ * @type {string[]}
+ */
 export const OPTIONAL_SECTIONS = [
   'build',
   'references',
@@ -26,4 +44,9 @@ export const OPTIONAL_SECTIONS = [
   'model'
 ];
 
+/**
+ * Recognized sections that identify the software domain.
+ *
+ * @type {string[]}
+ */
 export const DOMAIN_SECTIONS = ['web', 'cli', 'service', 'library', 'desktop', 'mobile'];

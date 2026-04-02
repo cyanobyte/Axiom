@@ -1,9 +1,23 @@
+/**
+ * Purpose: Build runtime adapters from validated runtime configuration.
+ * Responsibilities:
+ * - Create local workspace, artifact, worker, and checkpoint adapters.
+ * - Map named agent capabilities to provider-specific adapters.
+ * - Keep provider wiring out of authored intent files.
+ */
 import { createFakeAgentAdapter } from './providers/create-fake-agent-adapter.js';
 import { createOpenAIAgentAdapter } from './providers/create-openai-agent-adapter.js';
 import { createLocalWorkspaceAdapter } from './create-local-workspace-adapter.js';
 import { createLocalArtifactAdapter } from './create-local-artifact-adapter.js';
 import { createLocalShellAdapter } from './create-local-shell-adapter.js';
 
+/**
+ * Create a runtime adapter set from validated config.
+ *
+ * @param {object} options
+ * @param {object} options.runtimeConfig
+ * @returns {object}
+ */
 export function createConfiguredAdapters({ runtimeConfig }) {
   const workspace = createLocalWorkspaceAdapter(runtimeConfig.workspace.root);
   const artifacts = createLocalArtifactAdapter(runtimeConfig.workspace.root, runtimeConfig.artifacts.root);

@@ -1,3 +1,17 @@
+/**
+ * Purpose: Detect blocking readiness gaps before workflow execution starts.
+ * Responsibilities:
+ * - Catch underspecified intent definitions for supported runtime domains.
+ * - Convert missing operational detail into explicit diagnostics.
+ * - Prevent the runtime from inventing major architecture during execution.
+ */
+
+/**
+ * Check whether a definition is specific enough for runtime execution.
+ *
+ * @param {object} definition
+ * @returns {object[]}
+ */
 export function checkReadiness(definition) {
   const diagnostics = [];
 

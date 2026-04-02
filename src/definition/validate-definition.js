@@ -1,5 +1,18 @@
+/**
+ * Purpose: Validate authored intent definitions before runtime execution.
+ * Responsibilities:
+ * - Enforce required and recognized top-level sections.
+ * - Require at least one domain section.
+ * - Verify that declared verification coverage points at known clauses.
+ */
 import { DOMAIN_SECTIONS, OPTIONAL_SECTIONS, REQUIRED_SECTIONS } from './recognized-sections.js';
 
+/**
+ * Validate a cloned intent definition and return it on success.
+ *
+ * @param {object} definition
+ * @returns {object}
+ */
 export function validateDefinition(definition) {
   for (const key of REQUIRED_SECTIONS) {
     if (!(key in definition)) {

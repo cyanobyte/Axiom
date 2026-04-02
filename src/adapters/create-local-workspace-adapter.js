@@ -1,6 +1,19 @@
+/**
+ * Purpose: Expose controlled workspace file access for runtime execution.
+ * Responsibilities:
+ * - Resolve reads and writes under a configured workspace root.
+ * - Provide the root path for worker commands.
+ * - Keep file operations within an explicit adapter boundary.
+ */
 import path from 'node:path';
 import fs from 'node:fs/promises';
 
+/**
+ * Create a workspace adapter rooted at a local directory.
+ *
+ * @param {string} rootPath
+ * @returns {object}
+ */
 export function createLocalWorkspaceAdapter(rootPath) {
   return {
     root() {

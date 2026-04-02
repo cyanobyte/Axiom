@@ -1,8 +1,24 @@
+/**
+ * Purpose: Build the runtime `ctx` object used by authored workflow code.
+ * Responsibilities:
+ * - Expose steps, verification, checkpoints, workspace, and artifact access.
+ * - Bridge authored runtime code to configured adapters.
+ * - Provide small summary helpers over run state.
+ */
 import { requestApproval } from './checkpoints.js';
 import { applyIntentRevision } from './intent-revision.js';
 import { executeVerification } from '../verification/execute-verification.js';
 import { runStep } from './step-runner.js';
 
+/**
+ * Create the runtime context passed to an authored workflow callback.
+ *
+ * @param {object} file
+ * @param {object} adapters
+ * @param {object} state
+ * @param {object} result
+ * @returns {object}
+ */
 export function createRunContext(file, adapters, state, result) {
   return {
     meta: file.definition.meta,
