@@ -19,3 +19,12 @@ It shows the minimum useful flow:
 - outcome verification from a report artifact
 
 `counter-webapp.axiom.js` stays provider-agnostic. `axiom.config.js` is where runtime wiring lives, such as which provider/model handles `briefing`, `planner`, and `coder`.
+
+For a manual live-provider smoke run, start from `axiom.live.config.js`, adapt it into
+`axiom.config.js`, set `OPENAI_API_KEY`, and run:
+
+```bash
+node ../../bin/axiom.js run counter-webapp.axiom.js
+```
+
+Keep the default `axiom.config.js` deterministic for automated tests. The live path is manual-only.
