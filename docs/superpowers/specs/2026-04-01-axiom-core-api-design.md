@@ -52,9 +52,9 @@ For V1, the core API repo should primarily establish the authoring API, definiti
 
 ## Authoring Model
 
-V1 centers on JavaScript modules that read like executable specifications. Engineers write intent as normal code using an explicit builder object passed into `intent(name, defineFn)`. The module should be mostly declarations, with selective executable hooks where proof requires real logic. The shape is spec first: concise named declarations for what the system is, why it exists, its constraints, success criteria, stages, and verification rules.
+V1 centers on JavaScript modules that read like executable specifications. Engineers write intent as normal code using `intent(definition, runFn)`, where the definition object stays declarative and the runtime callback expresses workflow execution. The module should be mostly declarations, with selective executable hooks where proof requires real logic. The shape is spec first: concise named declarations for what the system is, why it exists, its constraints, success criteria, and verification rules.
 
-To avoid collapsing into a giant object, the API should prefer small composable builder calls over one monolithic literal. The authoring experience should encourage a sequence of intentional statements rather than a single deeply nested export. Internally Axiom can finalize this into an immutable definition model, but the surface API should feel like authored source code with readable boundaries and names.
+To avoid collapsing into a giant object, the API should prefer a small set of recognized top-level sections over arbitrary nested configuration sprawl. The authoring experience should encourage a readable definition object plus straightforward top-to-bottom runtime code. Internally Axiom can finalize this into an immutable definition model, but the surface API should feel like authored source code with readable boundaries and names.
 
 Authors declare truths, not lifecycle wiring. If a verification rule needs code, it should appear as a focused executable clause attached to a clear requirement, not as framework plumbing spread across files.
 
@@ -62,11 +62,11 @@ Authors declare truths, not lifecycle wiring. If a verification rule needs code,
 
 The V1 flow should be:
 
-1. Engineers author intent in JavaScript modules using `intent(name, defineFn)`.
+1. Engineers author intent in JavaScript modules using `intent(definition, runFn)`.
 2. Axiom builds and freezes an immutable `IntentDefinition`.
-3. Engineers call `run(definition, adapters, options?)` to start execution explicitly.
-4. The runtime executes stages in declared order, records stage outputs and mutations, and runs eligible verification checks incrementally.
-5. The final verification pass evaluates produced artifacts and outcomes against the declared clauses, stores concrete evidence, and produces structured diagnostics.
+3. The runtime loads the authored file, validates the definition, resolves adapters and workspace context, and invokes `runFn(ctx)`.
+4. The runtime executes steps in source order, records step outputs and mutations, and runs verification when requested.
+5. The run finalizes with structured diagnostics, verification results, and any pause or rerun state.
 
 Two design constraints matter here. First, traceability must be first-class, not reconstructed later from test names or logs. Second, execution and verification results must be structured data, not just console output, because LLM orchestration and tooling will need to consume them programmatically.
 
@@ -86,13 +86,13 @@ Verification results should carry structured status and severity, allowing error
 
 ## Testing
 
-V1 testing should focus on the correctness of the authoring surface and the integrity of normalization and traceability.
+V1 testing should focus on the correctness of the authoring surface and the integrity of validation, runtime execution order, and traceability.
 
 The authoring API should be tested for readability-preserving structure as well as behavior: declarations should normalize consistently, clause identities should remain stable across formatting and ordering changes, and small authored modules should produce predictable intent graphs. Since the API is supposed to feel like writing a spec, tests should favor realistic authored examples over low-level unit cases in isolation.
 
-Normalization tests should verify that equivalent authored intent produces the same internal model, malformed intent fails with precise diagnostics, and clause relationships and identities are preserved through loading. Authoring order should not affect the resulting model unless explicitly defined.
+Validation tests should verify that valid authored intent produces the expected internal model, malformed intent fails with precise diagnostics, and clause relationships and identities are preserved through loading.
 
-Verification-facing tests, at this stage, should focus on contracts rather than a full proof engine: the model must expose enough structure for checks, coverage mapping, evidence attachment, and diagnostics to operate deterministically.
+Verification-facing tests, at this stage, should focus on contracts rather than a full proof engine: the runtime and model must expose enough structure for checks, coverage mapping, evidence attachment, and diagnostics to operate deterministically.
 
 Traceability tests should ensure that every clause has a stable identity, every verification check maps to one or more clauses, and every clause can be resolved to its associated checks, evidence, and status.
 
@@ -138,18 +138,24 @@ type IntentDefinition = Readonly<{
   what: WhatDefinition;
   why: WhyDefinition;
   scope: ScopeDefinition;
-  stack?: StackDefinition;
+  runtime: RuntimeDefinition;
+  build?: BuildDefinition;
   assumptions?: string[];
+  architecture?: ArchitectureDefinition;
+  policies?: PolicyDefinition[];
+  quality_attributes?: QualityAttributeDefinition[];
   constraints: ConstraintDefinition[];
   outcomes: OutcomeDefinition[];
-  domain_model?: DomainModelDefinition;
-  api_contract?: ApiContractDefinition;
-  ui_contract?: UiContractDefinition;
   verification: {
     intent: VerificationDeclaration[];
     outcome: VerificationDeclaration[];
   };
-  docs?: DocsDefinition;
+  web?: WebDefinition;
+  cli?: CliDefinition;
+  service?: ServiceDefinition;
+  library?: LibraryDefinition;
+  desktop?: DesktopDefinition;
+  mobile?: MobileDefinition;
 }>;
 ```
 
@@ -163,16 +169,17 @@ It should include:
 - `what`
 - `why`
 - `scope`
-- `stack`
+- `runtime`
+- `build`
 - `assumptions`
+- `architecture`
+- `policies`
+- `quality_attributes`
 - `constraints`
 - `outcomes`
-- `domain_model`
-- `api_contract`
-- `ui_contract`
 - `verification.intent`
 - `verification.outcome`
-- `docs`
+- one or more recognized domain sections
 
 Constraints and outcomes remain separate first-class clause sets. Verification declarations stay split into `verification.intent` and `verification.outcome`, preserving the distinction between proving alignment with intent and proving the resulting system satisfies declared outcomes.
 
@@ -218,6 +225,27 @@ type WhyDefinition = {
 type ScopeDefinition = {
   includes: string[];
   excludes: string[];
+};
+
+type ArchitectureDefinition = {
+  components: Array<{
+    id: string;
+    responsibility: string;
+    depends_on?: string[];
+  }>;
+};
+
+type PolicyDefinition = {
+  id: string;
+  rule: string;
+  severity?: "error" | "warn" | "info";
+};
+
+type QualityAttributeDefinition = {
+  id: string;
+  attribute: string;
+  priority?: "high" | "medium" | "low";
+  description?: string;
 };
 
 type ConstraintDefinition = {
@@ -451,6 +479,79 @@ Validation rules for V1:
 - multiple domain sections are allowed when intentional
 - unknown top-level sections should fail validation in V1
 
+### Assumptions, Policies, and Quality Attributes
+
+V1 should support a small set of declarative sections that capture the operating ground rules around the project, not just its features.
+
+`assumptions`
+Statements about what the system expects to be true in its operating environment.
+
+Examples:
+
+- important checkpoints will be reviewed by a human
+- generated code lives in a writable workspace
+- rerunning from source after an intent edit is acceptable
+
+`policies`
+Hard behavioral rules for how the system itself must operate.
+
+Examples:
+
+- intent edits require human approval
+- revised intent only takes effect after rerun
+- verification must reference declared IDs
+- unmanaged file mutation is disallowed
+
+`quality_attributes`
+Non-functional qualities that should shape design decisions across the project.
+
+Examples:
+
+- traceability
+- predictability
+- auditability
+- explainability
+- simplicity
+
+These sections are especially important when Axiom is describing itself, because many of its central requirements are behavioral and qualitative rather than purely feature-oriented.
+
+### Architecture Section
+
+V1 should support a lightweight `architecture` section for declaring the major parts of a system and their boundaries.
+
+This is not intended to be a full UML replacement. It is a compact declaration of major components and responsibilities so larger projects do not collapse into one undifferentiated pile of constraints and outcomes.
+
+Conceptually:
+
+```ts
+type ArchitectureDefinition = {
+  components: Array<{
+    id: string;
+    responsibility: string;
+    depends_on?: string[];
+  }>;
+};
+```
+
+For Axiom itself, this is where major subsystems such as definition handling, runtime execution, verification, checkpoints, revision/rerun, and adapters belong.
+
+### Schema Validation Rules
+
+The schema must be strict enough to implement a validator cleanly.
+
+In addition to the top-level requirements above, V1 validation should enforce rules such as:
+
+- every top-level required section exists
+- every `id` is unique within its category
+- every verification `covers` reference points at an existing constraint or outcome
+- at least one verification declaration exists
+- at least one runtime language, target, and platform is declared
+- `build.system` must be one of the recognized values when `build` is present
+- unknown top-level sections fail validation
+- unknown recognized-section shapes fail validation
+
+Validation failures should be reported against the authored source with clear section and field context.
+
 ### Runtime Architecture
 
 Execution begins when the authored intent file is run and the runtime invokes the `runFn` with a live `ctx`.
@@ -467,7 +568,7 @@ Running a definition should:
 
 V1 should prefer readability and predictability over graph scheduling. Source order is the execution order unless the runtime later gains an explicit extension for alternate control flow.
 
-### Stage Results
+### Step Results
 
 Axiom should use a structured step result envelope with a flexible `output` field.
 
@@ -485,7 +586,7 @@ So a step may return an arbitrary JavaScript value, and Axiom will normalize it 
 Conceptually:
 
 ```ts
-type StageAuthorResult =
+type StepAuthorResult =
   | unknown
   | {
       output?: unknown;
@@ -514,7 +615,7 @@ The runtime must use explicit adapters. `@science451/intent-runtime` may ship si
 Conceptually:
 
 ```ts
-type StageContext = {
+type RunContext = {
   meta: Meta;
   intent: IntentDefinition;
   step<T = unknown>(stepId: StepId, run: () => Promise<T> | T): Promise<T>;
@@ -542,6 +643,32 @@ type StageContext = {
   checkpoint: CheckpointApi;
 };
 ```
+
+### Runtime API Surface
+
+The runtime API surface should be small and explicit. This is the actual programming model authors use inside the `.axiom.js` file, so it must be crisp enough to document and implement directly.
+
+The MVP runtime surface should include:
+
+- `ctx.step(id, fn)`
+- `ctx.stepResult(id)`
+- `ctx.intent`
+- `ctx.verify.intent(id, spec)`
+- `ctx.verify.outcome(id, spec)`
+- `ctx.checkpoint.approval(id, spec)`
+- `ctx.checkpoint.choice(id, spec)`
+- `ctx.checkpoint.input(id, spec)`
+- `ctx.agent(name).run(input)`
+- `ctx.worker(name).exec(spec)`
+- `ctx.artifact(path)`
+- `ctx.workspace.root()`
+- `ctx.workspace.read(path)`
+- `ctx.workspace.write(path, content)`
+- `ctx.workspace.patch(path, diff)`
+
+Planner, coder, verifier, and shell distinctions should be treated as runtime capabilities or tool modes, not as separate product-level actors.
+
+`ctx.intent` should expose the full validated intent definition as a high-level structured object. Steps should pass `intent: ctx.intent` directly by default rather than manually reconstructing partial payloads field by field. Authors should only handcraft step inputs when a step genuinely needs a derived or narrowed view of the intent.
 
 ### Workspace Control and Traceability
 
@@ -602,6 +729,23 @@ type RunResult = {
   artifacts: ArtifactRecord[];
 };
 ```
+
+### Result and Report Model
+
+The runtime needs a well-defined structured output for both humans and tools.
+
+The final run result should capture:
+
+- overall run status
+- normalized step results
+- verification records
+- diagnostics
+- artifacts
+- pending checkpoint data when the run pauses
+- proposed intent revision metadata when the run requires source changes
+- rerun-required termination status when revised intent has been applied
+
+This model is important because Axiom is not just about executing work. It must report what happened in a way that remains inspectable, auditable, and resumable.
 
 ### Human Checkpoints
 
@@ -665,6 +809,22 @@ Conceptually, the runtime should support statuses such as:
 - `terminated-requires-rerun`
 - `completed`
 - `failed`
+
+### Loading and Execution Model
+
+The runtime must define how an authored `.axiom.js` file is discovered, loaded, and executed.
+
+For V1, the simplest supported model is:
+
+1. the runtime loads a normal JavaScript module
+2. the module exports an `intent(...)` definition
+3. the runtime validates the definition
+4. the runtime resolves adapters and workspace context
+5. the runtime invokes the definition's execution callback with `ctx`
+
+This model should remain independent of the target software stack. The intent file is JavaScript orchestration; the generated project may target Go, C++, Rust, Kotlin, Swift, Node.js, or other supported languages.
+
+Whether the entry file is named `.axiom.js`, `.ax.js`, or another JavaScript-based convention is secondary to the execution model itself. The important point is that the runtime owns loading, validation, adapter setup, and run lifecycle management.
 
 ### Internal Module Layout
 

@@ -34,13 +34,17 @@ export default intent(
         "React + Bootstrap frontend",
         "CRUD API",
         "completion toggle",
-        "basic validation"
+        "basic validation",
+        "explicit human plan approval",
+        "artifact-backed verification reports"
       ],
       excludes: [
         "authentication",
         "multi-user support",
         "due dates",
-        "cloud deployment"
+        "cloud deployment",
+        "custom debugger support",
+        "hidden implicit adapters"
       ]
     },
 
@@ -54,6 +58,98 @@ export default intent(
       system: "make",
       test_runner: "make"
     },
+
+    assumptions: [
+      "The app is single-user and local-first for MVP purposes.",
+      "A writable project workspace is available during generation and testing.",
+      "The human user will review the implementation plan before code generation proceeds.",
+      "The runtime environment provides explicit AI, shell, workspace, and artifact capabilities.",
+      "The generated app can emit machine-readable test reports under a managed reports directory."
+    ],
+
+    architecture: {
+      components: [
+        {
+          id: "backend-api",
+          responsibility: "Serve REST endpoints for todo CRUD operations and persistence."
+        },
+        {
+          id: "sqlite-store",
+          responsibility: "Persist todo data across backend restarts.",
+          depends_on: ["backend-api"]
+        },
+        {
+          id: "frontend-ui",
+          responsibility: "Render the todo interface and drive user interactions against the API.",
+          depends_on: ["backend-api"]
+        },
+        {
+          id: "workspace-and-reports",
+          responsibility: "Manage generated files, test reports, and other verification artifacts."
+        }
+      ]
+    },
+
+    policies: [
+      {
+        id: "plan-must-be-approved",
+        rule: "Implementation must not begin until the human approves the generated plan.",
+        severity: "error"
+      },
+      {
+        id: "verification-must-be-declared",
+        rule: "Runtime verification must reference statically declared verification IDs.",
+        severity: "error"
+      },
+      {
+        id: "intent-should-flow-through-ctx-intent",
+        rule: "Steps should use ctx.intent as the validated high-level intent object by default.",
+        severity: "warn"
+      },
+      {
+        id: "workspace-mutation-must-be-managed",
+        rule: "Generated file changes must happen through runtime-managed tools and workspace APIs.",
+        severity: "error"
+      },
+      {
+        id: "runtime-capabilities-must-be-explicit",
+        rule: "AI, shell, workspace, and artifact capabilities must be provided explicitly by the runtime.",
+        severity: "error"
+      }
+    ],
+
+    quality_attributes: [
+      {
+        id: "traceable",
+        attribute: "traceability",
+        priority: "high",
+        description: "Generated artifacts and verification results should map clearly back to declared intent."
+      },
+      {
+        id: "simple",
+        attribute: "simplicity",
+        priority: "high",
+        description: "The app should remain small, understandable, and low-abstraction."
+      },
+      {
+        id: "predictable",
+        attribute: "predictability",
+        priority: "medium",
+        description: "The runtime flow and produced implementation should follow the approved plan clearly."
+      },
+      {
+        id: "auditable",
+        attribute: "auditability",
+        priority: "medium",
+        description: "The app generation flow should produce reports and outputs that are easy to review."
+      },
+      {
+        id: "explainable",
+        attribute: "explainability",
+        priority: "medium",
+        description: "Verification failures should be understandable from the produced reports."
+      }
+    ],
 
     web: {
       kind: "full-stack",
@@ -90,6 +186,7 @@ export default intent(
       must("must-support-completion-toggle", "App supports complete/incomplete toggle"),
       must("data-must-persist-across-restart", "Todos persist across backend restart"),
       must("must-have-basic-validation", "Empty todo titles are rejected"),
+      must("must-use-explicit-runtime-capabilities", "Runtime capabilities are supplied through explicit adapters"),
       should("must-remain-simple", "Keep the MVP straightforward and low-abstraction")
     ],
 
@@ -116,7 +213,8 @@ export default intent(
       outcome("todo-can-be-completed", "User can mark a todo complete/incomplete"),
       outcome("todo-can-be-deleted", "User can delete a todo"),
       outcome("todos-persist", "Todos remain after backend restart"),
-      outcome("empty-title-rejected", "Empty titles are rejected with a clear message")
+      outcome("empty-title-rejected", "Empty titles are rejected with a clear message"),
+      outcome("reports-are-produced", "Tests and verification steps produce machine-readable reports")
     ],
 
     verification: {
@@ -153,6 +251,9 @@ export default intent(
         verify("empty-title-validation-test", [
           "must-have-basic-validation",
           "empty-title-rejected"
+        ]),
+        verify("verification-reports-exist", [
+          "reports-are-produced"
         ])
       ]
     }
@@ -161,22 +262,14 @@ export default intent(
   async (ctx) => {
     const brief = await ctx.step("brief", () =>
       ctx.agent("briefing").run({
-        meta: ctx.intent.meta,
-        what: ctx.intent.what,
-        why: ctx.intent.why,
-        scope: ctx.intent.scope,
-        runtime: ctx.intent.runtime,
-        build: ctx.intent.build,
-        web: ctx.intent.web,
-        constraints: ctx.intent.constraints
+        intent: ctx.intent
       })
     );
 
     const plan = await ctx.step("plan", () =>
       ctx.agent("planner").run({
         brief,
-        model: ctx.intent.model,
-        web: ctx.intent.web
+        intent: ctx.intent
       })
     );
 
@@ -289,6 +382,18 @@ export default intent(
         return {
           passed: report?.emptyTitleRejected === true,
           evidence: report
+        };
+      }
+    });
+
+    await ctx.verify.outcome("verification-reports-exist", {
+      severity: "error",
+      run: async () => {
+        const unit = await ctx.artifact("reports/unit.json");
+        const ui = await ctx.artifact("reports/e2e.json");
+        return {
+          passed: Boolean(unit) && Boolean(ui),
+          evidence: { unit, ui }
         };
       }
     });
