@@ -15,6 +15,7 @@ export function createRunResult() {
   return {
     status: 'passed',
     stepResults: [],
+    events: [],
     verification: [],
     diagnostics: [],
     artifacts: [],

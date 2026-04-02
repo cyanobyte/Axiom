@@ -32,5 +32,10 @@ export async function executeVerification(definition, result, kind, verification
   };
 
   result.verification.push(record);
+
+  if (record.status === 'failed' && record.severity === 'error') {
+    result.status = 'failed';
+  }
+
   return record;
 }

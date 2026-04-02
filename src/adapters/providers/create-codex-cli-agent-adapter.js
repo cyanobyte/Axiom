@@ -7,6 +7,9 @@
  */
 import { runCliCommand } from './run-cli-command.js';
 import { parseJsonOutput } from './parse-json-output.js';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
 /**
  * Create a Codex CLI-backed adapter for a named capability.
@@ -17,20 +20,29 @@ import { parseJsonOutput } from './parse-json-output.js';
  */
 export function createCodexCliAgentAdapter(agentName, config = {}) {
   return {
-    async run(input) {
+    async run(input, options = {}) {
       const prompt = serializeInput(input);
+      const lastMessagePath = await createLastMessagePath();
+
       const result = await (config.runner ?? runCliCommand)({
         command: config.command ?? 'codex',
-        args: buildArgs(config),
+        args: buildArgs(config, lastMessagePath),
         cwd: config.cwd ?? process.cwd(),
-        input: prompt
+        input: prompt,
+        onStdout: options.onOutput,
+        onStderr: options.onOutput
       });
 
-      if (result.exitCode !== 0) {
-        throw new Error(`codex CLI request failed for ${agentName}: ${result.stderr || result.exitCode}`);
-      }
+      try {
+        if (result.exitCode !== 0) {
+          throw new Error(`codex CLI request failed for ${agentName}: ${result.stderr || result.exitCode}`);
+        }
 
-      return normalizeOutput(result.stdout, agentName, config);
+        const output = await readLastMessage(result, lastMessagePath);
+        return normalizeOutput(output, agentName, config);
+      } finally {
+        await fs.rm(lastMessagePath, { force: true });
+      }
     }
   };
 }
@@ -39,15 +51,17 @@ export function createCodexCliAgentAdapter(agentName, config = {}) {
  * Build the non-interactive Codex CLI argument list.
  *
  * @param {object} config
+ * @param {string} lastMessagePath
  * @returns {string[]}
  */
-function buildArgs(config) {
+function buildArgs(config, lastMessagePath) {
   const args = ['exec', '-', '--skip-git-repo-check'];
 
   if (config.model) {
     args.push('--model', config.model);
   }
 
+  args.push('--output-last-message', lastMessagePath);
   return args;
 }
 
@@ -83,4 +97,29 @@ function normalizeOutput(output, agentName, config) {
   }
 
   return output.trim();
+}
+
+/**
+ * Create a temporary path for Codex's final-message output file.
+ *
+ * @returns {Promise<string>}
+ */
+async function createLastMessagePath() {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'axiom-codex-'));
+  return path.join(directory, 'last-message.txt');
+}
+
+/**
+ * Read the final assistant message from the runner result or temp file.
+ *
+ * @param {object} result
+ * @param {string} lastMessagePath
+ * @returns {Promise<string>}
+ */
+async function readLastMessage(result, lastMessagePath) {
+  if (typeof result.lastMessage === 'string') {
+    return result.lastMessage;
+  }
+
+  return fs.readFile(lastMessagePath, 'utf8');
 }

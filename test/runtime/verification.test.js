@@ -43,4 +43,42 @@ describe('verification execution', () => {
       }
     ]);
   });
+
+  it('marks the run as failed when an error-severity verification fails', async () => {
+    const file = intent(
+      {
+        id: 'verify-failure',
+        meta: { title: 'Verify Failure' },
+        what: { capability: 'sample', description: 'Sample runtime' },
+        why: { problem: 'Need runtime', value: 'Failed verifications must fail the run' },
+        scope: { includes: [], excludes: [] },
+        runtime: { languages: ['javascript'], targets: ['node'], platforms: ['linux'] },
+        constraints: [must('must-exist', 'Constraint exists')],
+        outcomes: [outcome('works', 'It works')],
+        verification: {
+          intent: [],
+          outcome: [verify('works-check', ['works'])]
+        },
+        library: { kind: 'package' }
+      },
+      async (ctx) => {
+        await ctx.verify.outcome('works-check', {
+          severity: 'error',
+          run: async () => ({ passed: false, evidence: { ok: false } })
+        });
+
+        return { ok: true };
+      }
+    );
+
+    const result = await runIntent(file, createTestAdapters());
+
+    expect(result.status).toBe('failed');
+    expect(result.finalValue).toEqual({ ok: true });
+    expect(result.verification[0]).toMatchObject({
+      verificationId: 'works-check',
+      status: 'failed',
+      severity: 'error'
+    });
+  });
 });

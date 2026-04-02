@@ -16,9 +16,10 @@ import { runIntent } from '../runtime/run-intent.js';
  * Run an authored intent file by loading its sibling runtime config automatically.
  *
  * @param {string} intentFilePath
+ * @param {object} [options={}]
  * @returns {Promise<object>}
  */
-export async function runIntentFile(intentFilePath) {
+export async function runIntentFile(intentFilePath, options = {}) {
   const resolvedPath = path.resolve(intentFilePath);
   const file = await loadIntentFile(resolvedPath);
   const runtimeConfig = validateRuntimeConfig(await loadRuntimeConfig(resolvedPath));
@@ -27,5 +28,5 @@ export async function runIntentFile(intentFilePath) {
     runtimeConfig
   });
 
-  return runIntent(file, adapters);
+  return runIntent(file, adapters, options);
 }

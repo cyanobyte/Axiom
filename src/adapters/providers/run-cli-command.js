@@ -15,6 +15,8 @@ import { spawn } from 'node:child_process';
  * @param {string[]} [spec.args=[]]
  * @param {string} [spec.cwd=process.cwd()]
  * @param {string} [spec.input='']
+ * @param {Function} [spec.onStdout]
+ * @param {Function} [spec.onStderr]
  * @returns {Promise<object>}
  */
 export function runCliCommand(spec) {
@@ -29,10 +31,12 @@ export function runCliCommand(spec) {
 
     child.stdout.on('data', (chunk) => {
       stdout += String(chunk);
+      spec.onStdout?.(String(chunk).trimEnd());
     });
 
     child.stderr.on('data', (chunk) => {
       stderr += String(chunk);
+      spec.onStderr?.(String(chunk).trimEnd());
     });
 
     child.on('error', reject);

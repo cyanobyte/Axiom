@@ -17,12 +17,14 @@ import { parseJsonOutput } from './parse-json-output.js';
  */
 export function createClaudeCliAgentAdapter(agentName, config = {}) {
   return {
-    async run(input) {
+    async run(input, options = {}) {
       const result = await (config.runner ?? runCliCommand)({
         command: config.command ?? 'claude',
         args: buildArgs(serializeInput(input), config),
         cwd: config.cwd ?? process.cwd(),
-        input: ''
+        input: '',
+        onStdout: options.onOutput,
+        onStderr: options.onOutput
       });
 
       if (result.exitCode !== 0) {

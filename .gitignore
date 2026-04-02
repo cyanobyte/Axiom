@@ -145,3 +145,4 @@ vite.config.ts.timestamp-*
 .codex
 node_modules/
 coverage/
+examples/live-counter/generated/

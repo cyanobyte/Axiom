@@ -8,7 +8,12 @@ describe('createCodexCliAgentAdapter', () => {
       model: 'gpt-5.4-codex',
       runner: async (spec) => {
         calls.push(spec);
-        return { stdout: 'READY\n', stderr: '', exitCode: 0 };
+        return {
+          stdout: 'noisy transcript\n',
+          stderr: '',
+          exitCode: 0,
+          lastMessage: 'READY\n'
+        };
       }
     });
 
@@ -20,7 +25,15 @@ describe('createCodexCliAgentAdapter', () => {
     expect(calls).toEqual([
       {
         command: 'codex',
-        args: ['exec', '-', '--skip-git-repo-check', '--model', 'gpt-5.4-codex'],
+        args: [
+          'exec',
+          '-',
+          '--skip-git-repo-check',
+          '--model',
+          'gpt-5.4-codex',
+          '--output-last-message',
+          expect.any(String)
+        ],
         cwd: process.cwd(),
         input: 'Return READY.'
       }
@@ -40,7 +53,12 @@ describe('createCodexCliAgentAdapter', () => {
   it('parses JSON output when the provider is configured for structured responses', async () => {
     const adapter = createCodexCliAgentAdapter('planner', {
       output: 'json',
-      runner: async () => ({ stdout: '{"files":[]}\n', stderr: '', exitCode: 0 })
+      runner: async () => ({
+        stdout: 'noisy transcript\n',
+        stderr: '',
+        exitCode: 0,
+        lastMessage: '{"files":[]}\n'
+      })
     });
 
     await expect(adapter.run({ prompt: 'Return JSON.' })).resolves.toEqual({ files: [] });

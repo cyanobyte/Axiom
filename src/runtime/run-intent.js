@@ -8,6 +8,7 @@
 import { createRunResult } from './result-model.js';
 import { createRunContext } from './create-run-context.js';
 import { checkReadiness } from './check-readiness.js';
+import { createEventStream } from './create-event-stream.js';
 
 /**
  * Execute an authored intent file with an adapter set.
@@ -16,8 +17,9 @@ import { checkReadiness } from './check-readiness.js';
  * @param {object} adapters
  * @returns {Promise<object>}
  */
-export async function runIntent(file, adapters) {
+export async function runIntent(file, adapters, options = {}) {
   const result = createRunResult();
+  const events = createEventStream(result, options.onEvent);
   const diagnostics = checkReadiness(file.definition);
 
   if (diagnostics.length > 0) {
@@ -28,10 +30,21 @@ export async function runIntent(file, adapters) {
 
   const state = {
     stepResults: result.stepResults,
-    stepMap: new Map()
+    stepMap: new Map(),
+    currentStepId: undefined,
+    events
   };
 
   const ctx = createRunContext(file, adapters, state, result);
-  result.finalValue = await file.runFn(ctx);
+  try {
+    result.finalValue = await file.runFn(ctx);
+  } catch (error) {
+    result.status = 'failed';
+    result.diagnostics.push({
+      stepId: error.stepId,
+      message: error.message
+    });
+  }
+
   return result;
 }

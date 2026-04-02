@@ -45,7 +45,7 @@ describe('local adapters', () => {
             model: 'gpt-5.4-codex',
             runner: async (spec) => {
               calls.push(spec);
-              return { stdout: 'PLANNED', stderr: '', exitCode: 0 };
+              return { stdout: 'noisy', stderr: '', exitCode: 0, lastMessage: 'PLANNED' };
             }
           }
         },

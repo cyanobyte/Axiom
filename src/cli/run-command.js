@@ -23,7 +23,21 @@ export async function runCommand(args, { runIntentFile, logger }) {
   }
 
   try {
-    const result = await runIntentFile(filePath);
+    const result = await runIntentFile(filePath, {
+      onEvent(event) {
+        if (event.type === 'step.started') {
+          logger.log(`[step] ${event.stepId} started`);
+        }
+
+        if (event.type === 'step.output') {
+          logger.log(`[output:${event.stepId}] ${event.chunk}`);
+        }
+
+        if (event.type === 'step.finished') {
+          logger.log(`[step] ${event.stepId} ${event.status}`);
+        }
+      }
+    });
     logger.log(JSON.stringify(result, null, 2));
     return result.status === 'passed' ? 0 : 1;
   } catch (error) {

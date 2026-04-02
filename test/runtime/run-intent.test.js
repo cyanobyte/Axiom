@@ -81,4 +81,56 @@ describe('runIntent', () => {
       'Missing architecture.components for full-stack web app execution.'
     ]);
   });
+
+  it('marks the run as failed when a worker step returns a nonzero exit code', async () => {
+    const file = intent(
+      {
+        id: 'failing-shell-step',
+        meta: { title: 'Failing Shell Step' },
+        what: { capability: 'sample', description: 'A sample runtime with a failing shell step' },
+        why: { problem: 'Need shell failure handling', value: 'Nonzero exits must fail the run' },
+        scope: { includes: [], excludes: [] },
+        runtime: { languages: ['javascript'], targets: ['node'], platforms: ['linux'] },
+        constraints: [must('must-exist', 'Constraint exists')],
+        outcomes: [outcome('works', 'It works')],
+        verification: { intent: [], outcome: [] },
+        library: { kind: 'package' }
+      },
+      async (ctx) => {
+        await ctx.step('test', () =>
+          ctx.worker('shell').exec({
+            command: 'npm test',
+            cwd: '/tmp/axiom-test'
+          })
+        );
+
+        return { ok: true };
+      }
+    );
+
+    const adapters = createTestAdapters();
+    adapters.workers.worker = () => ({
+      async exec(spec) {
+        return {
+          ...spec,
+          stdout: '',
+          stderr: 'failure',
+          exitCode: 1
+        };
+      }
+    });
+
+    const result = await runIntent(file, adapters);
+
+    expect(result.status).toBe('failed');
+    expect(result.finalValue).toBeUndefined();
+    expect(result.stepResults).toHaveLength(1);
+    expect(result.stepResults[0]).toMatchObject({
+      stepId: 'test',
+      status: 'failed'
+    });
+    expect(result.stepResults[0].diagnostics[0]).toMatchObject({
+      message: 'Worker shell failed with exit code 1.'
+    });
+  });
 });

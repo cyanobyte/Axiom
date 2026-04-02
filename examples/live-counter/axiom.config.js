@@ -7,12 +7,11 @@
  */
 export default {
   agents: {
-    briefing: { provider: "codex-cli", model: "gpt-5.4" },
     planner: { provider: "codex-cli", model: "gpt-5.4", output: "json" },
-    coder: { provider: "codex-cli", model: "gpt-5.4-codex", output: "json" }
+    coder: { provider: "codex-cli", model: "gpt-5.4", output: "json" }
   },
   workspace: {
-    root: "./examples/live-counter"
+    root: "./examples/live-counter/generated"
   },
   workers: {
     shell: { type: "local-shell" }

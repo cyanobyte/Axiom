@@ -164,11 +164,13 @@ export default intent(
     }
   },
   async (ctx) => {
-    const brief = await ctx.step("brief", () =>
-      ctx.agent("briefing").run({
-        intent: ctx.intent
-      })
-    );
+    const brief = await ctx.step("brief", () => ({
+      title: ctx.intent.meta.title,
+      summary: ctx.intent.meta.summary,
+      capability: ctx.intent.what.capability,
+      constraints: ctx.intent.constraints.map((constraint) => constraint.id),
+      outcomes: ctx.intent.outcomes.map((outcomeItem) => outcomeItem.id)
+    }));
 
     const plan = await ctx.step("plan", () =>
       ctx.agent("planner").run({
@@ -206,7 +208,7 @@ export default intent(
     const implementation = await ctx.step("implement", () =>
       ctx.agent("coder").run({
         prompt: buildJsonContractPrompt(
-          `Generate the minimal files for this live counter web app.\n\nIntent:\n${JSON.stringify(ctx.intent, null, 2)}\n\nPlan:\n${JSON.stringify(plan, null, 2)}`,
+          `Generate the minimal files for this live counter web app.\n\nIntent:\n${JSON.stringify(ctx.intent, null, 2)}\n\nPlan:\n${JSON.stringify(plan, null, 2)}\n\nThe reports/counter-ui.json file must be valid JSON with this exact shape:\n{\n  "loads": true,\n  "increments": true,\n  "resets": true\n}`,
           {
             files: [
               {
@@ -232,6 +234,13 @@ export default intent(
     );
 
     await materializeFiles(ctx.workspace, implementation?.files ?? []);
+
+    await ctx.step("install", () =>
+      ctx.worker("shell").exec({
+        command: "npm install",
+        cwd: ctx.workspace.root()
+      })
+    );
 
     await ctx.step("test", () =>
       ctx.worker("shell").exec({

@@ -15,21 +15,55 @@
  */
 export async function runStep(state, stepId, run) {
   const startedAt = new Date().toISOString();
-  const output = await run();
-  const finishedAt = new Date().toISOString();
+  state.currentStepId = stepId;
+  state.events.emit({ type: 'step.started', stepId });
 
-  const record = {
-    stepId,
-    status: 'passed',
-    startedAt,
-    finishedAt,
-    output,
-    artifacts: [],
-    diagnostics: [],
-    mutations: []
-  };
+  try {
+    const output = await run();
+    const finishedAt = new Date().toISOString();
 
-  state.stepResults.push(record);
-  state.stepMap.set(stepId, output);
-  return output;
+    const record = {
+      stepId,
+      status: 'passed',
+      startedAt,
+      finishedAt,
+      output,
+      artifacts: [],
+      diagnostics: [],
+      mutations: []
+    };
+
+    state.stepResults.push(record);
+    state.stepMap.set(stepId, output);
+    state.events.emit({ type: 'step.finished', stepId, status: 'passed' });
+    return output;
+  } catch (error) {
+    const finishedAt = new Date().toISOString();
+    const record = {
+      stepId,
+      status: 'failed',
+      startedAt,
+      finishedAt,
+      output: error.stepOutput,
+      artifacts: [],
+      diagnostics: [
+        {
+          message: error.message
+        }
+      ],
+      mutations: []
+    };
+
+    state.stepResults.push(record);
+    error.stepId = stepId;
+    state.events.emit({
+      type: 'step.finished',
+      stepId,
+      status: 'failed',
+      error: error.message
+    });
+    throw error;
+  } finally {
+    state.currentStepId = undefined;
+  }
 }

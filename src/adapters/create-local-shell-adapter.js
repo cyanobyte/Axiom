@@ -14,7 +14,7 @@ import { spawn } from 'node:child_process';
  */
 export function createLocalShellAdapter() {
   return {
-    async exec(spec) {
+    async exec(spec, options = {}) {
       return new Promise((resolve, reject) => {
         const child = spawn(spec.command, {
           cwd: spec.cwd,
@@ -26,10 +26,12 @@ export function createLocalShellAdapter() {
 
         child.stdout.on('data', (chunk) => {
           stdout += String(chunk);
+          options.onOutput?.(String(chunk).trimEnd());
         });
 
         child.stderr.on('data', (chunk) => {
           stderr += String(chunk);
+          options.onOutput?.(String(chunk).trimEnd());
         });
 
         child.on('error', reject);

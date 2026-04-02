@@ -15,4 +15,12 @@ describe('loadRuntimeConfig', () => {
       loadRuntimeConfig(path.resolve('docs/superpowers/examples/todo-app.axiom.js'))
     ).rejects.toThrow('Missing runtime config: axiom.config.js');
   });
+
+  it('loads the live example config with an isolated generated workspace root', async () => {
+    const config = await loadRuntimeConfig(path.resolve('examples/live-counter/counter-webapp.axiom.js'));
+
+    expect(config.agents.planner.provider).toBe('codex-cli');
+    expect(config.workspace.root).toBe('./examples/live-counter/generated');
+    expect(config.artifacts.root).toBe('./reports');
+  });
 });

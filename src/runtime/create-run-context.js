@@ -34,10 +34,50 @@ export function createRunContext(file, adapters, state, result) {
       return adapters.artifacts.read(path);
     },
     agent(name) {
-      return adapters.ai.agent(name);
+      const agent = adapters.ai.agent(name);
+
+      return {
+        run(input) {
+          return agent.run(input, {
+            stepId: state.currentStepId,
+            onOutput(chunk) {
+              state.events.emit({
+                type: 'step.output',
+                stepId: state.currentStepId,
+                source: `agent:${name}`,
+                chunk
+              });
+            }
+          });
+        }
+      };
     },
     worker(name) {
-      return adapters.workers.worker(name);
+      const worker = adapters.workers.worker(name);
+
+      return {
+        async exec(spec) {
+          const result = await worker.exec(spec, {
+            stepId: state.currentStepId,
+            onOutput(chunk) {
+              state.events.emit({
+                type: 'step.output',
+                stepId: state.currentStepId,
+                source: `worker:${name}`,
+                chunk
+              });
+            }
+          });
+
+          if (typeof result?.exitCode === 'number' && result.exitCode !== 0) {
+            const error = new Error(`Worker ${name} failed with exit code ${result.exitCode}.`);
+            error.stepOutput = result;
+            throw error;
+          }
+
+          return result;
+        }
+      };
     },
     verify: {
       intent(verificationId, spec) {
