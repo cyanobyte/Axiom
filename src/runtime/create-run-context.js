@@ -40,12 +40,13 @@ export function createRunContext(file, adapters, state, result) {
         run(input) {
           return agent.run(input, {
             stepId: state.currentStepId,
-            onOutput(chunk) {
+            onOutput(output) {
+              const event = normalizeStepOutput(output);
               state.events.emit({
                 type: 'step.output',
                 stepId: state.currentStepId,
                 source: `agent:${name}`,
-                chunk
+                ...event
               });
             }
           });
@@ -59,12 +60,13 @@ export function createRunContext(file, adapters, state, result) {
         async exec(spec) {
           const result = await worker.exec(spec, {
             stepId: state.currentStepId,
-            onOutput(chunk) {
+            onOutput(output) {
+              const event = normalizeStepOutput(output);
               state.events.emit({
                 type: 'step.output',
                 stepId: state.currentStepId,
                 source: `worker:${name}`,
-                chunk
+                ...event
               });
             }
           });
@@ -114,5 +116,25 @@ export function createRunContext(file, adapters, state, result) {
     reviseIntent(revision) {
       return applyIntentRevision(result, revision);
     }
+  };
+}
+
+/**
+ * Normalize runtime output chunks into a structured event payload.
+ *
+ * @param {string|object} output
+ * @returns {{ chunk: string, visibility: string }}
+ */
+function normalizeStepOutput(output) {
+  if (typeof output === 'string') {
+    return {
+      chunk: output,
+      visibility: 'progress'
+    };
+  }
+
+  return {
+    chunk: output?.chunk ?? '',
+    visibility: output?.visibility ?? 'progress'
   };
 }

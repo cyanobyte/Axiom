@@ -29,8 +29,20 @@ export function createCodexCliAgentAdapter(agentName, config = {}) {
         args: buildArgs(config, lastMessagePath),
         cwd: config.cwd ?? process.cwd(),
         input: prompt,
-        onStdout: options.onOutput,
-        onStderr: options.onOutput
+        onStdout(chunk) {
+          const output = normalizeCodexChunk(chunk);
+          options.onOutput?.({
+            chunk: output.chunk,
+            visibility: output.visibility
+          });
+        },
+        onStderr(chunk) {
+          const output = normalizeCodexChunk(chunk);
+          options.onOutput?.({
+            chunk: output.chunk,
+            visibility: output.visibility
+          });
+        }
       });
 
       try {
@@ -44,6 +56,82 @@ export function createCodexCliAgentAdapter(agentName, config = {}) {
         await fs.rm(lastMessagePath, { force: true });
       }
     }
+  };
+}
+
+/**
+ * Classify live Codex CLI output for default vs verbose rendering.
+ *
+ * @param {string} chunk
+ * @returns {string}
+ */
+function classifyCodexChunk(chunk) {
+  if (!chunk || !chunk.trim()) {
+    return 'noise';
+  }
+
+  if (chunk.startsWith('warning:')) {
+    return 'warning';
+  }
+
+  if (chunk.includes('OpenAI Codex v') || chunk.includes('reasoning effort:') || chunk.includes('session id:')) {
+    return 'noise';
+  }
+
+  if (
+    chunk.includes('Using `using-superpowers`') ||
+    chunk.includes('using `using-superpowers`') ||
+    chunk.includes('name: using-superpowers') ||
+    chunk.includes('name: brainstorming') ||
+    chunk.includes('name: writing-plans')
+  ) {
+    return 'noise';
+  }
+
+  if (
+    chunk.includes('workdir: ') ||
+    chunk.includes('provider: openai') ||
+    chunk.includes('approval: never') ||
+    chunk.includes('sandbox: workspace-write') ||
+    chunk.includes('reasoning summaries: none') ||
+    chunk.includes('--------\nuser\n') ||
+    chunk.startsWith('exec\n/bin/bash -lc ') ||
+    chunk.startsWith('succeeded in ') ||
+    chunk.includes('\nexec\n/bin/bash -lc ') ||
+    chunk.includes('\nsucceeded in ') ||
+    chunk.startsWith('tokens used')
+  ) {
+    return 'noise';
+  }
+
+  if (chunk.trim().startsWith('{') || chunk.trim().startsWith('[')) {
+    return 'result';
+  }
+
+  return 'progress';
+}
+
+/**
+ * Normalize raw Codex chunks before the runtime emits them.
+ *
+ * @param {string} chunk
+ * @returns {{ chunk: string, visibility: string }}
+ */
+function normalizeCodexChunk(chunk) {
+  const normalizedChunk = chunk.startsWith('codex\n')
+    ? chunk.slice('codex\n'.length)
+    : chunk;
+
+  if (normalizedChunk.startsWith('{') || normalizedChunk.startsWith('[')) {
+    return {
+      chunk: normalizedChunk,
+      visibility: 'result'
+    };
+  }
+
+  return {
+    chunk: normalizedChunk,
+    visibility: classifyCodexChunk(normalizedChunk)
   };
 }
 

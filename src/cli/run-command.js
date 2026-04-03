@@ -16,9 +16,10 @@
  * @returns {Promise<number>}
  */
 export async function runCommand(args, { runIntentFile, logger }) {
-  const filePath = args[0];
+  const verbose = args.includes('--verbose');
+  const filePath = args.find((arg) => arg !== '--verbose');
   if (!filePath) {
-    logger.error('Usage: axiom run <file.axiom.js>');
+    logger.error('Usage: axiom run [--verbose] <file.axiom.js>');
     return 1;
   }
 
@@ -30,7 +31,9 @@ export async function runCommand(args, { runIntentFile, logger }) {
         }
 
         if (event.type === 'step.output') {
-          logger.log(`[output:${event.stepId}] ${event.chunk}`);
+          if (verbose || event.visibility !== 'noise') {
+            logger.log(`[output:${event.stepId}] ${event.chunk}`);
+          }
         }
 
         if (event.type === 'step.finished') {

@@ -18,12 +18,12 @@ describe('createClaudeCliAgentAdapter', () => {
 
     expect(result).toBe('BRIEF');
     expect(calls).toEqual([
-      {
+      expect.objectContaining({
         command: 'claude',
         args: ['--print', '--output-format', 'text', '--model', 'sonnet', 'Summarize the intent.'],
         cwd: process.cwd(),
         input: ''
-      }
+      })
     ]);
   });
 

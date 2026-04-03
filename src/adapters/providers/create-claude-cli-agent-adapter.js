@@ -23,8 +23,18 @@ export function createClaudeCliAgentAdapter(agentName, config = {}) {
         args: buildArgs(serializeInput(input), config),
         cwd: config.cwd ?? process.cwd(),
         input: '',
-        onStdout: options.onOutput,
-        onStderr: options.onOutput
+        onStdout(chunk) {
+          options.onOutput?.({
+            chunk,
+            visibility: classifyClaudeChunk(chunk)
+          });
+        },
+        onStderr(chunk) {
+          options.onOutput?.({
+            chunk,
+            visibility: chunk.startsWith('warning:') ? 'warning' : 'progress'
+          });
+        }
       });
 
       if (result.exitCode !== 0) {
@@ -34,6 +44,28 @@ export function createClaudeCliAgentAdapter(agentName, config = {}) {
       return normalizeOutput(result.stdout, agentName, config);
     }
   };
+}
+
+/**
+ * Classify live Claude CLI output for default vs verbose rendering.
+ *
+ * @param {string} chunk
+ * @returns {string}
+ */
+function classifyClaudeChunk(chunk) {
+  if (!chunk || !chunk.trim()) {
+    return 'noise';
+  }
+
+  if (chunk.startsWith('warning:')) {
+    return 'warning';
+  }
+
+  if (chunk.trim().startsWith('{') || chunk.trim().startsWith('[')) {
+    return 'result';
+  }
+
+  return 'progress';
 }
 
 /**

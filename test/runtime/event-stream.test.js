@@ -18,4 +18,23 @@ describe('createEventStream', () => {
     ]);
     expect(result.events).toHaveLength(3);
   });
+
+  it('preserves visibility metadata on emitted output events', () => {
+    const result = { events: [] };
+    const stream = createEventStream(result);
+
+    stream.emit({
+      type: 'step.output',
+      stepId: 'plan',
+      chunk: 'OpenAI Codex',
+      visibility: 'noise'
+    });
+
+    expect(result.events[0]).toMatchObject({
+      type: 'step.output',
+      stepId: 'plan',
+      chunk: 'OpenAI Codex',
+      visibility: 'noise'
+    });
+  });
 });
