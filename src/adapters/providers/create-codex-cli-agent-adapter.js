@@ -29,6 +29,7 @@ export function createCodexCliAgentAdapter(agentName, config = {}) {
         args: buildArgs(config, lastMessagePath),
         cwd: config.cwd ?? process.cwd(),
         input: prompt,
+        signal: options.signal,
         onStdout(chunk) {
           const output = normalizeCodexChunk(chunk);
           options.onOutput?.({

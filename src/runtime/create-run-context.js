@@ -48,7 +48,8 @@ export function createRunContext(file, adapters, state, result) {
                 source: `agent:${name}`,
                 ...event
               });
-            }
+            },
+            signal: state.signal
           });
         }
       };
@@ -68,7 +69,8 @@ export function createRunContext(file, adapters, state, result) {
                 source: `worker:${name}`,
                 ...event
               });
-            }
+            },
+            signal: state.signal
           });
 
           if (typeof result?.exitCode === 'number' && result.exitCode !== 0) {

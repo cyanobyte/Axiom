@@ -32,14 +32,15 @@ export async function runIntent(file, adapters, options = {}) {
     stepResults: result.stepResults,
     stepMap: new Map(),
     currentStepId: undefined,
-    events
+    events,
+    signal: options.signal
   };
 
   const ctx = createRunContext(file, adapters, state, result);
   try {
     result.finalValue = await file.runFn(ctx);
   } catch (error) {
-    result.status = 'failed';
+    result.status = error.code === 'INTERRUPTED' ? 'interrupted' : 'failed';
     result.diagnostics.push({
       stepId: error.stepId,
       message: error.message

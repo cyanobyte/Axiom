@@ -97,4 +97,30 @@ describe('runCommand', () => {
     expect(exitCode).toBe(0);
     expect(logger.log).toHaveBeenCalledWith('[output:implement] OpenAI Codex v0.118.0 (research preview)');
   });
+
+  it('returns 130 when the run is interrupted by SIGINT', async () => {
+    let interruptHandler;
+    const runIntentFile = vi.fn(async (_filePath, options) => {
+      interruptHandler();
+      expect(options.signal.aborted).toBe(true);
+      return { status: 'interrupted', events: [], diagnostics: [{ message: 'Run interrupted by user.' }] };
+    });
+    const logger = { log: vi.fn(), error: vi.fn() };
+
+    const exitCode = await runCommand(
+      ['examples/live-counter/counter-webapp.axiom.js'],
+      {
+        runIntentFile,
+        logger,
+        signalHandlers: {
+          register(handler) {
+            interruptHandler = handler;
+          },
+          unregister() {}
+        }
+      }
+    );
+
+    expect(exitCode).toBe(130);
+  });
 });

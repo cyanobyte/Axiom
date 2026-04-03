@@ -13,9 +13,17 @@
  * @param {object} dependencies
  * @param {Function} dependencies.runIntentFile
  * @param {object} dependencies.logger
+ * @param {object} [dependencies.signalHandlers]
  * @returns {Promise<number>}
  */
-export async function runCommand(args, { runIntentFile, logger }) {
+export async function runCommand(args, { runIntentFile, logger, signalHandlers = {
+    register(handler) {
+      process.once('SIGINT', handler);
+    },
+    unregister(handler) {
+      process.off('SIGINT', handler);
+    }
+  } }) {
   const verbose = args.includes('--verbose');
   const filePath = args.find((arg) => arg !== '--verbose');
   if (!filePath) {
@@ -23,8 +31,15 @@ export async function runCommand(args, { runIntentFile, logger }) {
     return 1;
   }
 
+  const controller = new AbortController();
+  const handleInterrupt = () => {
+    controller.abort();
+  };
+  signalHandlers.register(handleInterrupt);
+
   try {
     const result = await runIntentFile(filePath, {
+      signal: controller.signal,
       onEvent(event) {
         if (event.type === 'step.started') {
           logger.log(`[step] ${event.stepId} started`);
@@ -42,9 +57,19 @@ export async function runCommand(args, { runIntentFile, logger }) {
       }
     });
     logger.log(JSON.stringify(result, null, 2));
+    if (result.status === 'interrupted') {
+      return 130;
+    }
+
     return result.status === 'passed' ? 0 : 1;
   } catch (error) {
+    if (error.code === 'INTERRUPTED') {
+      return 130;
+    }
+
     logger.error(error.message);
     return 1;
+  } finally {
+    signalHandlers.unregister(handleInterrupt);
   }
 }

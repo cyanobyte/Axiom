@@ -133,4 +133,49 @@ describe('runIntent', () => {
       message: 'Worker shell failed with exit code 1.'
     });
   });
+
+  it('marks the run as interrupted when a worker step is aborted', async () => {
+    const file = intent(
+      {
+        id: 'interrupted-shell-step',
+        meta: { title: 'Interrupted Shell Step' },
+        what: { capability: 'sample', description: 'A sample runtime with an interrupted shell step' },
+        why: { problem: 'Need interrupt handling', value: 'Interrupted runs must be reported clearly' },
+        scope: { includes: [], excludes: [] },
+        runtime: { languages: ['javascript'], targets: ['node'], platforms: ['linux'] },
+        constraints: [must('must-exist', 'Constraint exists')],
+        outcomes: [outcome('works', 'It works')],
+        verification: { intent: [], outcome: [] },
+        library: { kind: 'package' }
+      },
+      async (ctx) => {
+        await ctx.step('test', () =>
+          ctx.worker('shell').exec({
+            command: 'npm test',
+            cwd: '/tmp/axiom-test'
+          })
+        );
+
+        return { ok: true };
+      }
+    );
+
+    const adapters = createTestAdapters();
+    adapters.workers.worker = () => ({
+      async exec() {
+        const error = new Error('Command interrupted by user.');
+        error.code = 'INTERRUPTED';
+        throw error;
+      }
+    });
+
+    const result = await runIntent(file, adapters);
+
+    expect(result.status).toBe('interrupted');
+    expect(result.finalValue).toBeUndefined();
+    expect(result.diagnostics[0]).toMatchObject({
+      stepId: 'test',
+      message: 'Command interrupted by user.'
+    });
+  });
 });

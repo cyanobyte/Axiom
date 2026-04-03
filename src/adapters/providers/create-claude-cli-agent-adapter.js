@@ -23,6 +23,7 @@ export function createClaudeCliAgentAdapter(agentName, config = {}) {
         args: buildArgs(serializeInput(input), config),
         cwd: config.cwd ?? process.cwd(),
         input: '',
+        signal: options.signal,
         onStdout(chunk) {
           options.onOutput?.({
             chunk,

@@ -28,5 +28,8 @@ export async function runIntentFile(intentFilePath, options = {}) {
     runtimeConfig
   });
 
-  return runIntent(file, adapters, options);
+  return runIntent(file, adapters, {
+    onEvent: options.onEvent,
+    signal: options.signal
+  });
 }

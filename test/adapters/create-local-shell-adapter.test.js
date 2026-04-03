@@ -13,4 +13,23 @@ describe('createLocalShellAdapter', () => {
     expect(result.stdout.trim()).toBe('123');
     expect(result.stderr).toBe('');
   });
+
+  it('interrupts a running command when the abort signal is triggered', async () => {
+    const shell = createLocalShellAdapter();
+    const controller = new AbortController();
+
+    const pending = shell.exec({
+      command: 'node -e "setTimeout(() => {}, 5000)"',
+      cwd: process.cwd()
+    }, {
+      signal: controller.signal
+    });
+
+    controller.abort();
+
+    await expect(pending).rejects.toMatchObject({
+      code: 'INTERRUPTED',
+      message: 'Command interrupted by user.'
+    });
+  });
 });
