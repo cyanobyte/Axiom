@@ -15,6 +15,8 @@ import fs from 'node:fs/promises';
  * @returns {object}
  */
 export function createLocalWorkspaceAdapter(rootPath) {
+  const writtenFiles = new Set();
+
   return {
     root() {
       return rootPath;
@@ -26,9 +28,22 @@ export function createLocalWorkspaceAdapter(rootPath) {
       const resolvedPath = path.join(rootPath, filePath);
       await fs.mkdir(path.dirname(resolvedPath), { recursive: true });
       await fs.writeFile(resolvedPath, content, 'utf8');
+      writtenFiles.add(filePath);
+    },
+    async remove(filePath) {
+      await fs.rm(path.join(rootPath, filePath), {
+        recursive: true,
+        force: true
+      });
     },
     async patch() {
       throw new Error('Workspace patching not implemented yet');
+    },
+    getWrittenFiles() {
+      return Array.from(writtenFiles);
+    },
+    clearWrittenFiles() {
+      writtenFiles.clear();
     }
   };
 }

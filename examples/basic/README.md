@@ -20,6 +20,13 @@ It shows the minimum useful flow:
 
 `counter-webapp.axiom.js` stays provider-agnostic. `axiom.config.js` is where runtime wiring lives, such as which provider/model handles `briefing`, `planner`, and `coder`.
 
+Generated files and build metadata are written under `generated/`. That keeps this example
+directory clean and matches the compiler model: edit the `.axiom.js` source, rerun Axiom, and
+treat generated output as disposable build artifacts.
+
+The deterministic verification fixture stays in `reports/` next to the example so automated tests
+can read a stable tracked artifact while the generated workspace remains disposable.
+
 For a manual live-provider smoke run, use the dedicated live workspace instead:
 
 ```bash

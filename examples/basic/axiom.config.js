@@ -40,12 +40,12 @@ export default {
     }
   },
   workspace: {
-    root: "./examples/basic"
+    root: "./examples/basic/generated"
   },
   workers: {
     shell: { type: "fake-shell" }
   },
   artifacts: {
-    root: "./reports"
+    root: "../reports"
   }
 };

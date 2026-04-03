@@ -11,7 +11,11 @@ describe('materializeFiles', () => {
     await materializeFiles(
       {
         root: () => root,
-        write: (filePath, content) => fs.writeFile(path.join(root, filePath), content, 'utf8')
+        write: async (filePath, content) => {
+          const resolvedPath = path.join(root, filePath);
+          await fs.mkdir(path.dirname(resolvedPath), { recursive: true });
+          await fs.writeFile(resolvedPath, content, 'utf8');
+        }
       },
       [
         { path: 'app/index.html', content: '<h1>Hello</h1>' }

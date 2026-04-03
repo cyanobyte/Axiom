@@ -11,12 +11,15 @@ describe('local adapters', () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'axiom-local-'));
     await fs.mkdir(path.join(root, 'reports'));
     await fs.writeFile(path.join(root, 'reports', 'sample.json'), JSON.stringify({ ok: true }));
+    await fs.mkdir(path.join(root, 'generated'));
 
     const workspace = createLocalWorkspaceAdapter(root);
     const artifacts = createLocalArtifactAdapter(root, './reports');
+    const siblingArtifacts = createLocalArtifactAdapter(path.join(root, 'generated'), '../reports');
 
     expect(workspace.root()).toBe(root);
     expect(await artifacts.read('sample.json')).toEqual({ ok: true });
+    expect(await siblingArtifacts.read('reports/sample.json')).toEqual({ ok: true });
   });
 
   it('maps capability names to configured agent providers', async () => {

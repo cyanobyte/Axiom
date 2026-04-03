@@ -5,7 +5,8 @@ This is the manual live-smoke workspace for full MVP acceptance.
 It exists separately from `examples/basic/` so a real generated run can write files into this
 directory without mutating the deterministic beginner example used by the automated suite.
 Generated app files are written under `generated/` so reruns do not turn this example directory
-into a nested Node package.
+into a nested Node package. Successful runs also record `.axiom-build.json` inside `generated/`
+so Axiom can detect stale output when `meta.version` changes and cleanly rebuild.
 
 Run it with:
 

@@ -6,8 +6,8 @@ describe('loadRuntimeConfig', () => {
   it('loads axiom.config.js from the same directory as the intent file', async () => {
     const config = await loadRuntimeConfig(path.resolve('examples/basic/counter-webapp.axiom.js'));
     expect(config.agents.planner.provider).toBe('fake');
-    expect(config.workspace.root).toBe('./examples/basic');
-    expect(config.artifacts.root).toBe('./reports');
+    expect(config.workspace.root).toBe('./examples/basic/generated');
+    expect(config.artifacts.root).toBe('../reports');
   });
 
   it('throws a clear error when the sibling config file is missing', async () => {

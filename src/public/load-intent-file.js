@@ -6,6 +6,7 @@
  * - Return the loaded authored runtime object unchanged.
  */
 import path from 'node:path';
+import fs from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 /**
@@ -16,7 +17,11 @@ import { pathToFileURL } from 'node:url';
  */
 export async function loadIntentFile(filePath) {
   const absolutePath = path.resolve(filePath);
-  const module = await import(pathToFileURL(absolutePath).href);
+  const stat = await fs.stat(absolutePath);
+  const moduleUrl = new URL(pathToFileURL(absolutePath).href);
+  moduleUrl.searchParams.set('mtime', String(stat.mtimeMs));
+
+  const module = await import(moduleUrl.href);
 
   if (!module.default || module.default.kind !== 'intent-file') {
     throw new Error(`Intent module did not export a valid intent file: ${filePath}`);
