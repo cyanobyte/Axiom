@@ -2,6 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { loadIntentFile } from '../../src/index.js';
 
 describe('canonical examples', () => {
+  it('loads the echo tool CLI example', async () => {
+    const file = await loadIntentFile('examples/cli/echo-tool.axiom.js');
+    expect(file.definition.id).toBe('echo-tool-cli');
+    expect(file.definition.cli.command).toBe('echo-tool');
+    expect(file.definition.build.commands.test).toBe('npm test');
+    expect(file.runFn).toBeTypeOf('function');
+  });
+
   it('loads the basic counter web app example', async () => {
     const file = await loadIntentFile('examples/basic/counter-webapp.axiom.js');
     expect(file.definition.id).toBe('counter-webapp-basic');

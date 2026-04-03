@@ -4,6 +4,7 @@ Intent based programming
 ## Examples
 
 - Beginner example: `examples/basic/counter-webapp.axiom.js`
+- CLI example: `examples/cli/echo-tool.axiom.js`
 - Example runtime config: `examples/basic/axiom.config.js`
 - Live smoke example: `examples/live-counter/counter-webapp.axiom.js`
 - Richer examples: `docs/superpowers/examples/`
