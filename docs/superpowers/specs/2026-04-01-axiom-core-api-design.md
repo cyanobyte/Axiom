@@ -162,6 +162,54 @@ export default {
 
 If `axiom.config.js` is missing, the runtime should fail clearly unless adapters were supplied explicitly by another entrypoint.
 
+### Compiler CLI Surface
+
+The primary operational interface should be the `ax` command-line tool. The JavaScript runtime remains the implementation, but everyday use should feel like a compiler/build tool rather than a raw Node script.
+
+The command model should evolve toward:
+
+- `ax init`
+  Bootstrap a new Axiom project.
+- `ax init --existing <path>`
+  Inspect an existing codebase and generate the first `.axiom.js`.
+- `ax validate`
+  Analyze the current Axiom source for schema issues, ambiguities, readiness gaps, and weak verification.
+- `ax build`
+  Build the local canonical Axiom file in the current directory.
+- `ax build <file>`
+  Build a specific Axiom file explicitly.
+- `ax update`
+  Apply selected improvements proposed by `ax validate`.
+- `ax debug`
+  Later, launch the current project through a debugger-oriented flow.
+
+The CLI should be the source of truth for behavior. Node entrypoints and editor integrations should wrap this command surface rather than inventing parallel semantics.
+
+### Skill Wrappers
+
+Conversational integrations for Codex, Claude, Gemini, or similar systems should be thin wrappers over the `ax` commands rather than independent implementations.
+
+That means:
+
+- `/ax init` wraps `ax init`
+- `/ax validate` wraps `ax validate`
+- `/ax build` wraps `ax build`
+- `/ax update` wraps `ax update`
+- later `/ax debug` wraps `ax debug`
+
+The wrapper may improve usability by:
+
+- helping users choose arguments
+- narrating progress
+- explaining validation results
+- presenting update proposals more clearly
+
+But it should not replace the underlying command behavior. The CLI remains the canonical product surface so:
+
+- terminal usage and AI-assisted usage stay consistent
+- documentation matches actual behavior
+- editor and chat integrations do not drift into separate workflows
+
 Conceptually, the public API is:
 
 ```ts
