@@ -9,6 +9,10 @@ Intent based programming
 - Live smoke example: `examples/live-counter/counter-webapp.axiom.js`
 - Richer examples: `docs/superpowers/examples/`
 
+The beginner and CLI examples stay deterministic for automated tests. Their generated output is
+isolated under `generated/`, and successful runs record `.axiom-build.json` there so Axiom can
+detect stale output and rebuild cleanly when `meta.version` changes.
+
 ## Running Axiom
 
 Install dependencies:
@@ -43,3 +47,10 @@ The live config under `examples/live-counter/` uses the local `codex` CLI, so it
 existing CLI login instead of requiring a separate API key. This path is manual-only and should
 not be part of the default automated suite. Generated app files are isolated under
 `examples/live-counter/generated/` so repeated runs do not break package self-resolution.
+
+Normal CLI runs now aim to feel like a readable AI compiler:
+
+- default output keeps live AI activity visible while filtering provider transcript noise
+- `--verbose` shows the raw provider transcript
+- `Ctrl-C` interrupts the active run cleanly
+- failures print compiler-style actionable diagnostics before the full structured result

@@ -9,8 +9,14 @@ The MVP is fully functional only when all of the following are true:
 5. The runtime can execute a real local shell command.
 6. The runtime can read artifact files from disk.
 7. The runtime can execute verification and return structured results.
-8. The live counter example can be run through the CLI with local CLI-backed providers.
-9. The default automated suite still passes without calling live AI.
+8. Default CLI output shows readable AI/compiler progress without drowning in provider transcript noise.
+9. `--verbose` still exposes the raw provider transcript when needed.
+10. `Ctrl-C` interrupts a live run cleanly and returns `status: "interrupted"` with exit code `130`.
+11. Generated output is treated as disposable build artifacts, with `.axiom-build.json` used only for staleness detection and clean rebuilds.
+12. Runtime failures emit actionable diagnostics with `kind`, `stepId`, `message`, and `nextAction`.
+13. At least two runnable examples exist: one small web app and one small CLI tool.
+14. The live counter example can be run through the CLI with local CLI-backed providers.
+15. The default automated suite still passes without calling live AI.
 
 The current remaining acceptance step is the manual live smoke run:
 
@@ -21,7 +27,8 @@ node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js
 That run is accepted when:
 
 - the local AI CLI adapter is invoked successfully
-- the generated project files are written into `examples/live-counter/`
+- readable live compiler output is shown during the run
+- the generated project files are written into `examples/live-counter/generated/`
 - the generated project test command succeeds
-- `reports/counter-ui.json` is produced
+- `generated/reports/counter-ui.json` is produced
 - Axiom returns a structured passing result
