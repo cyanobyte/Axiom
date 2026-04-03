@@ -129,8 +129,17 @@ describe('runIntent', () => {
       stepId: 'test',
       status: 'failed'
     });
-    expect(result.stepResults[0].diagnostics[0]).toMatchObject({
-      message: 'Worker shell failed with exit code 1.'
+    expect(result.stepResults[0].diagnostics[0]).toEqual({
+      kind: 'worker',
+      stepId: 'test',
+      message: 'Worker shell failed with exit code 1.',
+      nextAction: 'Inspect the failing command output and update the .axiom.js source or generated files before rerunning.'
+    });
+    expect(result.diagnostics[0]).toEqual({
+      kind: 'worker',
+      stepId: 'test',
+      message: 'Worker shell failed with exit code 1.',
+      nextAction: 'Inspect the failing command output and update the .axiom.js source or generated files before rerunning.'
     });
   });
 
@@ -173,9 +182,11 @@ describe('runIntent', () => {
 
     expect(result.status).toBe('interrupted');
     expect(result.finalValue).toBeUndefined();
-    expect(result.diagnostics[0]).toMatchObject({
+    expect(result.diagnostics[0]).toEqual({
+      kind: 'runtime',
       stepId: 'test',
-      message: 'Command interrupted by user.'
+      message: 'Command interrupted by user.',
+      nextAction: 'Rerun the intent file when you are ready to continue.'
     });
   });
 });

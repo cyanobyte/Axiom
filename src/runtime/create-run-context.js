@@ -85,10 +85,14 @@ export function createRunContext(file, adapters, state, result) {
     },
     verify: {
       intent(verificationId, spec) {
-        return executeVerification(file.definition, result, 'intent', verificationId, spec);
+        return executeVerification(file.definition, result, 'intent', verificationId, spec, {
+          stepId: state.currentStepId
+        });
       },
       outcome(verificationId, spec) {
-        return executeVerification(file.definition, result, 'outcome', verificationId, spec);
+        return executeVerification(file.definition, result, 'outcome', verificationId, spec, {
+          stepId: state.currentStepId
+        });
       }
     },
     verification: {

@@ -5,6 +5,7 @@
  * - Convert missing operational detail into explicit diagnostics.
  * - Prevent the runtime from inventing major architecture during execution.
  */
+import { formatRuntimeError } from './format-runtime-error.js';
 
 /**
  * Check whether a definition is specific enough for runtime execution.
@@ -37,8 +38,9 @@ export function checkReadiness(definition) {
 }
 
 function createBlockingDiagnostic(message) {
-  return {
+  return formatRuntimeError({
+    kind: 'readiness',
     severity: 'error',
     message
-  };
+  });
 }

@@ -9,6 +9,7 @@ import { createRunResult } from './result-model.js';
 import { createRunContext } from './create-run-context.js';
 import { checkReadiness } from './check-readiness.js';
 import { createEventStream } from './create-event-stream.js';
+import { formatRuntimeError } from './format-runtime-error.js';
 
 /**
  * Execute an authored intent file with an adapter set.
@@ -41,10 +42,7 @@ export async function runIntent(file, adapters, options = {}) {
     result.finalValue = await file.runFn(ctx);
   } catch (error) {
     result.status = error.code === 'INTERRUPTED' ? 'interrupted' : 'failed';
-    result.diagnostics.push({
-      stepId: error.stepId,
-      message: error.message
-    });
+    result.diagnostics.push(formatRuntimeError(error));
   }
 
   return result;

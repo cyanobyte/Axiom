@@ -62,9 +62,11 @@ describe('verification execution', () => {
         library: { kind: 'package' }
       },
       async (ctx) => {
-        await ctx.verify.outcome('works-check', {
-          severity: 'error',
-          run: async () => ({ passed: false, evidence: { ok: false } })
+        await ctx.step('verify', async () => {
+          await ctx.verify.outcome('works-check', {
+            severity: 'error',
+            run: async () => ({ passed: false, evidence: { ok: false } })
+          });
         });
 
         return { ok: true };
@@ -79,6 +81,12 @@ describe('verification execution', () => {
       verificationId: 'works-check',
       status: 'failed',
       severity: 'error'
+    });
+    expect(result.diagnostics[0]).toEqual({
+      kind: 'verification',
+      stepId: 'verify',
+      message: 'Outcome verification failed: works-check.',
+      nextAction: 'Update the intent, generated files, or verification evidence so the declared outcome passes.'
     });
   });
 });

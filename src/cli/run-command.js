@@ -56,6 +56,11 @@ export async function runCommand(args, { runIntentFile, logger, signalHandlers =
         }
       }
     });
+    for (const diagnostic of result.diagnostics ?? []) {
+      logger.error(
+        `[error:${diagnostic.kind ?? 'runtime'}] ${diagnostic.message} Next: ${diagnostic.nextAction}`
+      );
+    }
     logger.log(JSON.stringify(result, null, 2));
     if (result.status === 'interrupted') {
       return 130;

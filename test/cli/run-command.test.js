@@ -123,4 +123,30 @@ describe('runCommand', () => {
 
     expect(exitCode).toBe(130);
   });
+
+  it('prints concise compiler-style diagnostics for failed runs', async () => {
+    const runIntentFile = vi.fn(async () => ({
+      status: 'failed',
+      diagnostics: [
+        {
+          kind: 'verification',
+          stepId: 'verify',
+          message: 'Outcome verification failed: counter-ui-flow.',
+          nextAction: 'Update the intent, generated files, or verification evidence so the declared outcome passes.'
+        }
+      ],
+      events: []
+    }));
+    const logger = { log: vi.fn(), error: vi.fn() };
+
+    const exitCode = await runCommand(
+      ['examples/live-counter/counter-webapp.axiom.js'],
+      { runIntentFile, logger }
+    );
+
+    expect(exitCode).toBe(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      '[error:verification] Outcome verification failed: counter-ui-flow. Next: Update the intent, generated files, or verification evidence so the declared outcome passes.'
+    );
+  });
 });

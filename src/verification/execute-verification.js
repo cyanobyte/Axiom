@@ -6,6 +6,7 @@
  * - Store a normalized verification record on the run result.
  */
 import { findVerification } from './find-verification.js';
+import { formatRuntimeError } from '../runtime/format-runtime-error.js';
 
 /**
  * Execute a declared verification check and record its result.
@@ -15,9 +16,10 @@ import { findVerification } from './find-verification.js';
  * @param {string} kind
  * @param {string} verificationId
  * @param {object} spec
+ * @param {object} [options={}]
  * @returns {Promise<object>}
  */
-export async function executeVerification(definition, result, kind, verificationId, spec) {
+export async function executeVerification(definition, result, kind, verificationId, spec, options = {}) {
   const declaration = findVerification(definition, kind, verificationId);
   const check = await spec.run();
 
@@ -35,7 +37,18 @@ export async function executeVerification(definition, result, kind, verification
 
   if (record.status === 'failed' && record.severity === 'error') {
     result.status = 'failed';
+    result.diagnostics.push(
+      formatRuntimeError({
+        kind: 'verification',
+        stepId: options.stepId,
+        message: `${capitalize(kind)} verification failed: ${verificationId}.`
+      })
+    );
   }
 
   return record;
+}
+
+function capitalize(value) {
+  return value.slice(0, 1).toUpperCase() + value.slice(1);
 }

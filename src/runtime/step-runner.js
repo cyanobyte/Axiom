@@ -5,6 +5,8 @@
  * - Normalize step outputs into the run result.
  * - Keep a step map for later step-result lookups.
  */
+import { formatRuntimeError } from './format-runtime-error.js';
+
 /**
  * Run a named workflow step and store its structured result.
  *
@@ -39,6 +41,8 @@ export async function runStep(state, stepId, run) {
     return output;
   } catch (error) {
     const finishedAt = new Date().toISOString();
+    error.stepId = stepId;
+    const diagnostic = formatRuntimeError(error);
     const record = {
       stepId,
       status: 'failed',
@@ -46,16 +50,11 @@ export async function runStep(state, stepId, run) {
       finishedAt,
       output: error.stepOutput,
       artifacts: [],
-      diagnostics: [
-        {
-          message: error.message
-        }
-      ],
+      diagnostics: [diagnostic],
       mutations: []
     };
 
     state.stepResults.push(record);
-    error.stepId = stepId;
     state.events.emit({
       type: 'step.finished',
       stepId,
