@@ -7,7 +7,18 @@ describe('runCommand', () => {
       options.onEvent({ type: 'step.started', stepId: 'plan' });
       options.onEvent({ type: 'step.output', stepId: 'plan', chunk: 'working' });
       options.onEvent({ type: 'step.finished', stepId: 'plan', status: 'passed' });
-      return { status: 'passed', events: [] };
+      return {
+        status: 'passed',
+        events: [],
+        healthReport: {
+          sourceVersion: '1.0.0',
+          builtVersion: '1.0.0',
+          status: 'passed',
+          steps: { passed: 1, total: 1 },
+          verification: { passed: 0, total: 0 },
+          generatedFiles: 0
+        }
+      };
     });
     const logger = { log: vi.fn(), error: vi.fn() };
 
@@ -26,6 +37,9 @@ describe('runCommand', () => {
     expect(logger.log).toHaveBeenCalledWith('[step] plan started');
     expect(logger.log).toHaveBeenCalledWith('[output:plan] working');
     expect(logger.log).toHaveBeenCalledWith('[step] plan passed');
+    expect(logger.log).toHaveBeenCalledWith(
+      '[summary] passed source=1.0.0 built=1.0.0 steps=1/1 verification=0/0 files=0'
+    );
   });
 
   it('filters provider transcript noise in default mode', async () => {

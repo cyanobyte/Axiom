@@ -11,6 +11,7 @@ import { loadRuntimeConfig } from './load-runtime-config.js';
 import { validateRuntimeConfig } from '../config/validate-runtime-config.js';
 import { createConfiguredAdapters } from '../adapters/create-configured-adapters.js';
 import { runIntent } from '../runtime/run-intent.js';
+import { createHealthReport } from '../runtime/create-health-report.js';
 import {
   clearGeneratedFiles,
   readBuildState,
@@ -53,6 +54,17 @@ export async function runIntentFile(intentFilePath, options = {}) {
       generatedFiles: adapters.workspace.getWrittenFiles?.() ?? []
     });
   }
+
+  result.healthReport = createHealthReport({
+    intentFile: resolvedPath,
+    sourceVersion: file.definition.meta.version,
+    builtVersion:
+      result.status === 'passed'
+        ? file.definition.meta.version
+        : buildState.previousVersion,
+    result,
+    generatedFiles: adapters.workspace.getWrittenFiles?.() ?? buildState.generatedFiles
+  });
 
   return result;
 }

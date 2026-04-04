@@ -61,6 +61,11 @@ export async function runCommand(args, { runIntentFile, logger, signalHandlers =
         `[error:${diagnostic.kind ?? 'runtime'}] ${diagnostic.message} Next: ${diagnostic.nextAction}`
       );
     }
+    if (result.healthReport) {
+      logger.log(
+        `[summary] ${result.healthReport.status} source=${result.healthReport.sourceVersion ?? 'unknown'} built=${result.healthReport.builtVersion ?? 'unknown'} steps=${result.healthReport.steps.passed}/${result.healthReport.steps.total} verification=${result.healthReport.verification.passed}/${result.healthReport.verification.total} files=${result.healthReport.generatedFiles}`
+      );
+    }
     logger.log(JSON.stringify(result, null, 2));
     if (result.status === 'interrupted') {
       return 130;

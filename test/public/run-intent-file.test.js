@@ -10,6 +10,22 @@ describe('runIntentFile', () => {
     const result = await runIntentFile('examples/basic/counter-webapp.axiom.js');
 
     expect(result.status).toBe('passed');
+    expect(result.healthReport).toMatchObject({
+      intentFile: path.resolve('examples/basic/counter-webapp.axiom.js'),
+      sourceVersion: '1.0.0',
+      builtVersion: '1.0.0',
+      status: 'passed',
+      steps: {
+        total: 4,
+        passed: 4,
+        failed: 0
+      },
+      verification: {
+        total: 4,
+        passed: 4,
+        failed: 0
+      }
+    });
     expect(result.stepResults.map((step) => step.stepId)).toEqual([
       'brief',
       'plan',
@@ -70,6 +86,14 @@ describe('runIntentFile', () => {
     await expect(fs.readFile(path.join(workspaceRoot, 'dist/old.txt'), 'utf8')).rejects.toThrow();
     await expect(fs.readFile(path.join(workspaceRoot, 'dist/new.txt'), 'utf8')).resolves.toBe('new build');
     await expect(fs.readFile(path.join(workspaceRoot, '.axiom-build.json'), 'utf8')).resolves.toContain('"intentVersion": "1.1.0"');
+
+    const rerun = await runIntentFile(intentPath);
+    expect(rerun.healthReport).toMatchObject({
+      intentFile: intentPath,
+      sourceVersion: '1.1.0',
+      builtVersion: '1.1.0',
+      generatedFiles: 2
+    });
   });
 });
 

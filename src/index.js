@@ -10,6 +10,7 @@ export { analyzeCommand } from './cli/analyze-command.js';
 export { loadIntentFile } from './public/load-intent-file.js';
 export { loadRuntimeConfig } from './public/load-runtime-config.js';
 export { runIntentFile } from './public/run-intent-file.js';
+export { createHealthReport } from './runtime/create-health-report.js';
 export { runIntent } from './runtime/run-intent.js';
 export { createConfiguredAdapters } from './adapters/create-configured-adapters.js';
 export { must, should, outcome, verify } from './definition/helpers.js';
