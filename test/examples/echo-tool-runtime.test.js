@@ -16,8 +16,8 @@ describe('echo tool example via file runtime', () => {
       ok: true,
       app: 'echo-tool',
       verifiedOutcomes: {
-        total: 3,
-        passed: 3,
+        total: 2,
+        passed: 2,
         failed: 0
       }
     });

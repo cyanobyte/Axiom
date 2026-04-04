@@ -2,6 +2,142 @@ import { describe, expect, it } from 'vitest';
 import { intent, must, should, outcome, verify } from '../../src/index.js';
 
 describe('intent helpers', () => {
+  it('expands compact definitions into the full runtime shape', () => {
+    const file = intent(
+      {
+        meta: {
+          title: 'Echo Tool'
+        },
+        what: {
+          capability: 'echo_cli_tool',
+          description: 'Users can run a command that prints the provided message.'
+        },
+        runtime: {
+          languages: ['javascript'],
+          targets: ['node'],
+          platforms: ['linux', 'macos', 'windows']
+        },
+        cli: {
+          command: 'echo-tool',
+          arguments: ['<message>']
+        }
+      },
+      async () => ({ ok: true })
+    );
+
+    expect(file.definition).toMatchObject({
+      id: 'echo-tool',
+      meta: {
+        title: 'Echo Tool'
+      },
+      why: {
+        problem: 'Users can run a command that prints the provided message.',
+        value: 'Deliver Echo Tool.'
+      },
+      scope: {
+        includes: [],
+        excludes: []
+      },
+      constraints: [
+        {
+          id: 'must-run-cli-command',
+          text: 'The tool runs as a CLI command.',
+          severity: 'error'
+        },
+        {
+          id: 'must-accept-required-arguments',
+          text: 'The tool accepts the declared required CLI arguments.',
+          severity: 'error'
+        }
+      ],
+      outcomes: [
+        {
+          id: 'cli-command-runs',
+          text: 'Running the command with the declared arguments succeeds.'
+        },
+        {
+          id: 'cli-usage-is-clear',
+          text: 'Running the command without required arguments shows a clear usage error.'
+        }
+      ],
+      verification: {
+        intent: [
+          {
+            id: 'plan-covers-cli-flow',
+            covers: ['must-run-cli-command', 'must-accept-required-arguments']
+          }
+        ],
+        outcome: [
+          {
+            id: 'cli-flow',
+            covers: ['cli-command-runs', 'cli-usage-is-clear']
+          }
+        ]
+      }
+    });
+  });
+
+  it('derives the standard CLI contract for compact CLI intents', () => {
+    const file = intent(
+      {
+        meta: {
+          title: 'Echo Tool'
+        },
+        what: {
+          capability: 'echo_cli_tool',
+          description: 'Users can run a command that prints the provided message.'
+        },
+        runtime: {
+          languages: ['javascript'],
+          targets: ['node'],
+          platforms: ['linux', 'macos', 'windows']
+        },
+        cli: {
+          command: 'echo-tool',
+          arguments: ['<message>']
+        }
+      },
+      async () => ({ ok: true })
+    );
+
+    expect(file.definition.constraints).toEqual([
+      {
+        id: 'must-run-cli-command',
+        text: 'The tool runs as a CLI command.',
+        severity: 'error'
+      },
+      {
+        id: 'must-accept-required-arguments',
+        text: 'The tool accepts the declared required CLI arguments.',
+        severity: 'error'
+      }
+    ]);
+    expect(file.definition.outcomes).toEqual([
+      {
+        id: 'cli-command-runs',
+        text: 'Running the command with the declared arguments succeeds.'
+      },
+      {
+        id: 'cli-usage-is-clear',
+        text: 'Running the command without required arguments shows a clear usage error.'
+      }
+    ]);
+    expect(file.definition.verification).toEqual({
+      intent: [
+        {
+          id: 'plan-covers-cli-flow',
+          covers: ['must-run-cli-command', 'must-accept-required-arguments']
+        }
+      ],
+      outcome: [
+        {
+          id: 'cli-flow',
+          covers: ['cli-command-runs', 'cli-usage-is-clear']
+        }
+      ]
+    });
+  });
+
   it('builds an immutable intent definition with helper records', () => {
     const file = intent(
       {

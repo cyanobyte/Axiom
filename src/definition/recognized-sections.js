@@ -24,6 +24,13 @@ export const REQUIRED_SECTIONS = [
 ];
 
 /**
+ * Compact-mode sections that must still be authored explicitly.
+ *
+ * @type {string[]}
+ */
+export const COMPACT_CORE_SECTIONS = ['meta', 'what', 'runtime'];
+
+/**
  * Optional top-level definition sections.
  *
  * @type {string[]}

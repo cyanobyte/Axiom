@@ -7,6 +7,8 @@
  */
 import { requestApproval } from './checkpoints.js';
 import { applyIntentRevision } from './intent-revision.js';
+import { materializeFiles } from './materialize-files.js';
+import { buildFileGenerationPrompt, buildStructuredJsonPrompt } from './output-contracts.js';
 import { executeVerification } from '../verification/execute-verification.js';
 import { runStep } from './step-runner.js';
 
@@ -30,6 +32,11 @@ export function createRunContext(file, adapters, state, result) {
       return state.stepMap.get(stepId);
     },
     workspace: adapters.workspace,
+    materialize: {
+      files(files) {
+        return materializeFiles(adapters.workspace, files);
+      }
+    },
     artifact(path) {
       return adapters.artifacts.read(path);
     },
@@ -83,16 +90,135 @@ export function createRunContext(file, adapters, state, result) {
         }
       };
     },
+    generate: {
+      brief(spec = {}) {
+        return adapters.ai.agent(spec.agent ?? 'briefing').run(
+          {
+            intent: spec.intent ?? file.definition
+          },
+          {
+            stepId: state.currentStepId,
+            onOutput(output) {
+              const event = normalizeStepOutput(output);
+              state.events.emit({
+                type: 'step.output',
+                stepId: state.currentStepId,
+                source: `agent:${spec.agent ?? 'briefing'}`,
+                ...event
+              });
+            },
+            signal: state.signal
+          }
+        );
+      },
+      plan(spec) {
+        return adapters.ai.agent(spec.agent ?? 'planner').run(
+          {
+            prompt: buildStructuredJsonPrompt({
+              instructions: spec.instructions,
+              context: spec.context,
+              shape: spec.shape
+            })
+          },
+          {
+            stepId: state.currentStepId,
+            onOutput(output) {
+              const event = normalizeStepOutput(output);
+              state.events.emit({
+                type: 'step.output',
+                stepId: state.currentStepId,
+                source: `agent:${spec.agent ?? 'planner'}`,
+                ...event
+              });
+            },
+            signal: state.signal
+          }
+        );
+      },
+      files(spec) {
+        return adapters.ai.agent(spec.agent ?? 'coder').run(
+          {
+            prompt: buildFileGenerationPrompt(spec)
+          },
+          {
+            stepId: state.currentStepId,
+            onOutput(output) {
+              const event = normalizeStepOutput(output);
+              state.events.emit({
+                type: 'step.output',
+                stepId: state.currentStepId,
+                source: `agent:${spec.agent ?? 'coder'}`,
+                ...event
+              });
+            },
+            signal: state.signal
+          }
+        );
+      }
+    },
     verify: {
       intent(verificationId, spec) {
         return executeVerification(file.definition, result, 'intent', verificationId, spec, {
           stepId: state.currentStepId
         });
       },
+      intentShape(verificationId, spec) {
+        return executeVerification(
+          file.definition,
+          result,
+          'intent',
+          verificationId,
+          {
+            severity: spec.severity,
+            run: async () => {
+              const diagnostics = [];
+
+              for (const [key, expected] of Object.entries(spec.expected)) {
+                if (spec.value?.[key] !== expected) {
+                  diagnostics.push({
+                    message: `Expected ${key} to be ${JSON.stringify(expected)}.`
+                  });
+                }
+              }
+
+              return {
+                passed: diagnostics.length === 0,
+                evidence: spec.value,
+                diagnostics
+              };
+            }
+          },
+          {
+            stepId: state.currentStepId
+          }
+        );
+      },
       outcome(verificationId, spec) {
         return executeVerification(file.definition, result, 'outcome', verificationId, spec, {
           stepId: state.currentStepId
         });
+      },
+      outcomeReport(verificationId, spec) {
+        return executeVerification(
+          file.definition,
+          result,
+          'outcome',
+          verificationId,
+          {
+            severity: spec.severity,
+            run: async () => {
+              const report = await adapters.artifacts.read(spec.path);
+              return {
+                passed: spec.passes(report),
+                evidence: report,
+                diagnostics: spec.diagnostics?.(report) ?? []
+              };
+            }
+          },
+          {
+            stepId: state.currentStepId
+          }
+        );
       }
     },
     verification: {
@@ -111,6 +237,12 @@ export function createRunContext(file, adapters, state, result) {
     checkpoint: {
       approval(checkpointId, spec) {
         return requestApproval(result, adapters, checkpointId, spec);
+      },
+      approvePlan(plan, message = 'Approve this plan?') {
+        return requestApproval(result, adapters, 'approve-plan', {
+          message,
+          data: plan
+        });
       },
       choice(checkpointId, spec) {
         return adapters.checkpoint.choice(checkpointId, spec);

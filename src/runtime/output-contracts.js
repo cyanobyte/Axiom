@@ -22,3 +22,40 @@ export function buildJsonContractPrompt(instructions, shape) {
     JSON.stringify(shape, null, 2)
   ].join('\n');
 }
+
+/**
+ * Build a structured JSON prompt with optional structured context.
+ *
+ * @param {object} spec
+ * @param {string} spec.instructions
+ * @param {object} [spec.context]
+ * @param {object} spec.shape
+ * @returns {string}
+ */
+export function buildStructuredJsonPrompt({ instructions, context = {}, shape }) {
+  const sections = [instructions];
+
+  for (const [label, value] of Object.entries(context)) {
+    sections.push(`${label[0].toUpperCase()}${label.slice(1)}:`);
+    sections.push(JSON.stringify(value, null, 2));
+  }
+
+  return buildJsonContractPrompt(sections.join('\n\n'), shape);
+}
+
+/**
+ * Build a file-generation prompt with optional structured context.
+ *
+ * @param {object} spec
+ * @param {string} spec.instructions
+ * @param {object} [spec.context]
+ * @param {object[]} spec.files
+ * @returns {string}
+ */
+export function buildFileGenerationPrompt({ instructions, context = {}, files }) {
+  return buildStructuredJsonPrompt({
+    instructions,
+    context,
+    shape: { files }
+  });
+}

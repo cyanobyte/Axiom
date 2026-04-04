@@ -4,7 +4,7 @@ import { loadIntentFile } from '../../src/index.js';
 describe('canonical examples', () => {
   it('loads the echo tool CLI example', async () => {
     const file = await loadIntentFile('examples/cli/echo-tool.axiom.js');
-    expect(file.definition.id).toBe('echo-tool-cli');
+    expect(file.definition.id).toBe('echo-tool');
     expect(file.definition.cli.command).toBe('echo-tool');
     expect(file.definition.build.commands.test).toBe('npm test');
     expect(file.runFn).toBeTypeOf('function');
