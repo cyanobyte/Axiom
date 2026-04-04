@@ -7,6 +7,7 @@ describe('analyzeCommand', () => {
 
     const exitCode = await analyzeCommand([], {
       loadIntentFile: vi.fn(),
+      readSourceFile: vi.fn(),
       loadRuntimeConfig: vi.fn(),
       validateRuntimeConfig: vi.fn(),
       checkReadiness: vi.fn(),
@@ -21,7 +22,7 @@ describe('analyzeCommand', () => {
     const logger = { log: vi.fn(), error: vi.fn() };
     const loadIntentFile = vi.fn(async () => ({
       definition: {
-        meta: { title: 'Echo Tool' },
+        meta: { title: 'Echo Tool', summary: 'Prints the provided message.' },
         runtime: { targets: ['node'] },
         cli: { command: 'echo-tool' },
         build: {
@@ -43,6 +44,25 @@ describe('analyzeCommand', () => {
 
     const exitCode = await analyzeCommand(['examples/cli/echo-tool.axiom.js'], {
       loadIntentFile,
+      readSourceFile: vi.fn(async () => `
+        export default {
+          meta: {
+            title: "Echo Tool",
+            summary: "Prints the provided message."
+          },
+          build: {
+            system: "npm",
+            test_runner: "npm",
+            commands: {
+              install: "npm install",
+              test: "npm test"
+            }
+          },
+          cli: {
+            command: "echo-tool"
+          }
+        };
+      `),
       loadRuntimeConfig,
       validateRuntimeConfig: vi.fn((config) => config),
       checkReadiness: vi.fn(() => []),
@@ -83,6 +103,7 @@ describe('analyzeCommand', () => {
           runtime: { targets: ['node'] }
         }
       })),
+      readSourceFile: vi.fn(async () => `export default {};`),
       loadRuntimeConfig: vi.fn(async () => {
         throw new Error('Missing runtime config: axiom.config.js');
       }),
@@ -119,6 +140,7 @@ describe('analyzeCommand', () => {
           web: { kind: 'full-stack' }
         }
       })),
+      readSourceFile: vi.fn(async () => `export default {};`),
       loadRuntimeConfig: vi.fn(async () => ({
         workers: { shell: { type: 'fake-shell' } },
         workspace: { root: './generated' },

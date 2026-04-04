@@ -34,13 +34,13 @@ export async function fixCommand(args, { loadIntentFile, logger }) {
   }
 
   const intentFile = await loadIntentFile(filePath);
-  if (!appliesFix(fixId, intentFile.definition)) {
+  const source = await fs.readFile(filePath, 'utf8');
+  if (!appliesFix(fixId, { definition: intentFile.definition, source })) {
     logger.error(`Fix \`${fixId}\` does not apply to this intent file.`);
     return 1;
   }
 
-  const source = await fs.readFile(filePath, 'utf8');
-  const updatedSource = applyFixToSource(fixId, source);
+  const updatedSource = applyFixToSource(fixId, { source, definition: intentFile.definition });
   await fs.writeFile(filePath, updatedSource, 'utf8');
 
   logger.log(JSON.stringify({
@@ -49,7 +49,7 @@ export async function fixCommand(args, { loadIntentFile, logger }) {
     applied: [
       {
         id: fixId,
-        message: 'Removed the redundant default npm build block.'
+        message: fix.appliedMessage
       }
     ]
   }, null, 2));

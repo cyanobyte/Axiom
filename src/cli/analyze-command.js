@@ -5,6 +5,7 @@
  * - Analyze authored source, readiness, and sibling runtime config.
  * - Print a structured analysis result without mutating project files.
  */
+import fs from 'node:fs/promises';
 
 import { findApplicableFixes } from './fix-rules.js';
 
@@ -14,26 +15,6 @@ function createFinding({ kind, section, message, nextAction }) {
     section,
     message,
     nextAction
-  };
-}
-
-function createCompactBuildSuggestion(definition) {
-  const fix = findApplicableFixes(definition).find((candidate) => candidate.id === 'compact-build-defaults');
-  if (!fix) {
-    return null;
-  }
-  return {
-    id: fix.id,
-    ...createFinding({
-      kind: 'authoring',
-      section: 'build',
-      message: 'Compact CLI intents can omit the default npm build configuration.',
-      nextAction: 'Remove build and rely on compact defaults unless this project needs custom commands.'
-    }),
-    fix: {
-      type: fix.type,
-      label: fix.label
-    }
   };
 }
 
@@ -80,6 +61,7 @@ export async function analyzeCommand(
   args,
   {
     loadIntentFile,
+    readSourceFile = (filePath) => fs.readFile(filePath, 'utf8'),
     loadRuntimeConfig,
     validateRuntimeConfig,
     checkReadiness,
@@ -101,9 +83,11 @@ export async function analyzeCommand(
   };
 
   let definition;
+  let source;
   try {
     const file = await loadIntentFile(filePath);
     definition = file.definition;
+    source = await readSourceFile(filePath);
   } catch (error) {
     result.status = 'invalid';
     result.errors.push(
@@ -125,13 +109,42 @@ export async function analyzeCommand(
     result.errors.push(createConfigError(error));
   }
 
+  const applicableFixes = findApplicableFixes({ definition, source });
+
   for (const diagnostic of checkReadiness(definition)) {
+    if (
+      diagnostic.message === 'Missing build.commands.test for full-stack web app execution.' &&
+      applicableFixes.some((fix) => fix.id === 'web-build-test-command')
+    ) {
+      continue;
+    }
     result.errors.push(normalizeReadinessFinding(diagnostic));
   }
 
-  const compactBuildSuggestion = createCompactBuildSuggestion(definition);
-  if (compactBuildSuggestion) {
-    result.suggestions.push(compactBuildSuggestion);
+  for (const fix of applicableFixes) {
+    const finding = {
+      id: fix.id,
+      kind: fix.severity === 'error' ? 'readiness' : 'authoring',
+      section: fix.section,
+      message: fix.message,
+      nextAction: fix.nextAction,
+      fix: {
+        type: fix.type,
+        label: fix.label
+      }
+    };
+
+    if (fix.severity === 'error') {
+      result.errors.push(finding);
+      continue;
+    }
+
+    if (fix.severity === 'warning') {
+      result.warnings.push(finding);
+      continue;
+    }
+
+    result.suggestions.push(finding);
   }
 
   if (result.errors.length > 0) {
