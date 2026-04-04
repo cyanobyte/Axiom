@@ -21,8 +21,76 @@ export function createEventStream(result, listener = () => {}) {
         ...event
       };
 
-      result.events.push(emitted);
       listener(emitted);
+
+      const stored = compactStoredEvent(emitted);
+      if (stored) {
+        result.events.push(stored);
+      }
     }
   };
+}
+
+function compactStoredEvent(event) {
+  if (event.type !== 'step.output') {
+    return event;
+  }
+
+  if (event.visibility === 'noise') {
+    return null;
+  }
+
+  if (event.visibility === 'result') {
+    return compactResultOutputEvent(event);
+  }
+
+  return {
+    timestamp: event.timestamp,
+    type: event.type,
+    stepId: event.stepId,
+    source: event.source,
+    visibility: event.visibility,
+    summary: summarizeChunk(event.chunk)
+  };
+}
+
+function compactResultOutputEvent(event) {
+  const parsed = parseChunkJson(event.chunk);
+  if (parsed !== undefined) {
+    return {
+      timestamp: event.timestamp,
+      type: event.type,
+      stepId: event.stepId,
+      source: event.source,
+      visibility: event.visibility,
+      summary: 'structured result',
+      data: parsed
+    };
+  }
+
+  return {
+    timestamp: event.timestamp,
+    type: event.type,
+    stepId: event.stepId,
+    source: event.source,
+    visibility: event.visibility,
+    summary: summarizeChunk(event.chunk)
+  };
+}
+
+function summarizeChunk(chunk = '') {
+  const trimmed = String(chunk).trim();
+  if (trimmed.length <= 120) {
+    return trimmed;
+  }
+
+  return `${trimmed.slice(0, 117)}...`;
+}
+
+function parseChunkJson(chunk) {
+  try {
+    return JSON.parse(String(chunk));
+  } catch {
+    return undefined;
+  }
 }
