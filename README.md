@@ -7,6 +7,7 @@ Intent based programming
 - CLI example: `examples/cli/echo-tool.axiom.js`
 - Example runtime config: `examples/basic/axiom.config.js`
 - Live smoke example: `examples/live-counter/counter-webapp.axiom.js`
+- Dogfood slice example: `examples/dogfood/axiom-runtime-slice.axiom.js`
 - Richer examples: `docs/superpowers/examples/`
 
 The beginner and CLI examples stay deterministic for automated tests. Their generated output is

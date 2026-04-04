@@ -40,4 +40,12 @@ describe('canonical examples', () => {
     expect(file.definition.library.kind).toBe('package');
     expect(file.runFn).toBeTypeOf('function');
   });
+
+  it('loads the dogfood runtime slice example', async () => {
+    const file = await loadIntentFile('examples/dogfood/axiom-runtime-slice.axiom.js');
+    expect(file.definition.id).toBe('axiom-runtime-slice');
+    expect(file.definition.library.kind).toBe('package');
+    expect(file.definition.build.commands.test).toBe('npm test');
+    expect(file.runFn).toBeTypeOf('function');
+  });
 });
