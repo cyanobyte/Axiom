@@ -1,90 +1,66 @@
 # Axiom
 Intent based programming
 
-## Examples
+Axiom treats authored `.axiom.js` files as the primary source and generated project output as disposable build output.
 
-- Beginner example: `examples/basic/counter-webapp.axiom.js`
-- CLI example: `examples/cli/echo-tool.axiom.js`
-- Example runtime config: `examples/basic/axiom.config.js`
-- Live smoke example: `examples/live-counter/counter-webapp.axiom.js`
-- Dogfood slice example: `examples/dogfood/axiom-runtime-slice.axiom.js`
-- Richer examples: `docs/superpowers/examples/`
+## Quickstart
 
-The beginner and CLI examples stay deterministic for automated tests. Their generated output is
-isolated under `generated/`, and successful runs record `.axiom-build.json` there so Axiom can
-detect stale output and rebuild cleanly when `meta.version` changes.
-
-## Running Axiom
-
-Install dependencies:
+Install the CLI from the repo root:
 
 ```bash
 npm install
+npm link
 ```
 
-Build the beginner example:
+Build the deterministic beginner example:
 
 ```bash
-node bin/ax.js build examples/basic/counter-webapp.axiom.js
+ax build examples/basic/counter-webapp.axiom.js
 ```
 
-Analyze an intent file without running it:
+Analyze an authored intent without mutating it:
 
 ```bash
-node bin/ax.js analyze examples/cli/echo-tool.axiom.js
+ax analyze examples/cli/echo-tool.axiom.js
+```
+
+Apply one explicit supported fix:
+
+```bash
+ax fix examples/cli/echo-tool.axiom.js --apply compact-build-defaults
 ```
 
 Bootstrap a starter intent file for an existing project:
 
 ```bash
-node bin/ax.js init --existing .
+ax init --existing .
 ```
 
-Apply a supported source fix explicitly:
+## Docs
+
+- [Getting Started](/mnt/d/Science451/Axiom/docs/getting-started.md)
+- [CLI Reference](/mnt/d/Science451/Axiom/docs/cli.md)
+- [Authoring Intents](/mnt/d/Science451/Axiom/docs/authoring-intents.md)
+- [Runtime Config](/mnt/d/Science451/Axiom/docs/runtime-config.md)
+- [Examples](/mnt/d/Science451/Axiom/docs/examples.md)
+- [Troubleshooting](/mnt/d/Science451/Axiom/docs/troubleshooting.md)
+
+## Examples
+
+- Beginner example: `examples/basic/counter-webapp.axiom.js`
+- CLI example: `examples/cli/echo-tool.axiom.js`
+- Live smoke example: `examples/live-counter/counter-webapp.axiom.js`
+- Dogfood slice example: `examples/dogfood/axiom-runtime-slice.axiom.js`
+
+## Notes
+
+- beginner and CLI examples stay deterministic for automated tests
+- generated output is isolated under example `generated/` directories
+- `.axiom-build.json` is used for staleness detection and clean rebuild tracking
+- the live smoke path is manual and exercises the local CLI-backed provider flow
+
+Manual live smoke:
 
 ```bash
-node bin/ax.js fix examples/cli/echo-tool.axiom.js --apply compact-build-defaults
+ax build examples/live-counter/counter-webapp.axiom.js
 ```
-
-This loads:
-
-- `examples/basic/counter-webapp.axiom.js`
-- `examples/basic/axiom.config.js`
-
-The default beginner example uses fake agent adapters so the runtime can be exercised without spending model tokens.
-When a live provider adapter is implemented, replace the fake agent entries in `examples/basic/axiom.config.js` with provider-backed entries and rerun the same command.
-
-## Live Smoke Path
-
-For a manual live-provider smoke run, use the dedicated live workspace and run:
-
-```bash
-node bin/ax.js build examples/live-counter/counter-webapp.axiom.js
-```
-
-The live config under `examples/live-counter/` uses the local `codex` CLI, so it reuses your
-existing CLI login instead of requiring a separate API key. This path is manual-only and should
-not be part of the default automated suite. Generated app files are isolated under
-`examples/live-counter/generated/` so repeated runs do not break package self-resolution.
-The current post-MVP verification pass completed successfully with this exact live smoke command.
-
-Normal CLI runs now aim to feel like a readable AI compiler:
-
-- default output keeps live AI activity visible while filtering provider transcript noise
-- `--verbose` shows the raw provider transcript
-- `Ctrl-C` interrupts the active run cleanly
-- failures print compiler-style actionable diagnostics before the full structured result
-- `analyze` reports structured `errors`, `warnings`, and `suggestions` without mutating source files
-- `fix` applies an explicitly requested supported source rewrite and reports what changed
-- `init --existing` emits a starter `.axiom.js` for an existing project and leaves runtime config choices explicit
-
-## Source Compression
-
-The first recorded baseline is in `docs/superpowers/specs/axiom-source-compression.md`.
-
-Current result:
-
-- on the small `echo-tool` and `counter-webapp` examples, `.axiom.js` is longer than both a natural
-  reconstructed Markdown baseline and the generated source bundle
-- current Axiom examples are therefore stronger as structured, verifiable compiler workflows than as
-  shorter authoring formats for very small projects
