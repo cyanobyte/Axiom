@@ -27,6 +27,12 @@ Run the beginner example:
 node bin/axiom.js run examples/basic/counter-webapp.axiom.js
 ```
 
+Analyze an intent file without running it:
+
+```bash
+node bin/axiom.js analyze examples/cli/echo-tool.axiom.js
+```
+
 This loads:
 
 - `examples/basic/counter-webapp.axiom.js`
@@ -54,3 +60,4 @@ Normal CLI runs now aim to feel like a readable AI compiler:
 - `--verbose` shows the raw provider transcript
 - `Ctrl-C` interrupts the active run cleanly
 - failures print compiler-style actionable diagnostics before the full structured result
+- `analyze` reports structured `errors`, `warnings`, and `suggestions` without mutating source files

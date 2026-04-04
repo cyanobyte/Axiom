@@ -70,11 +70,11 @@ The first post-MVP wave should prioritize adoption and authoring leverage before
 Ordered priorities:
 
 1. compact mode / compression for tiny projects
-2. `ax validate` so authors can tighten intent before running
+2. `ax analyze` so authors can tighten intent before running
 3. stronger live verification
 4. cleaner stored events and summaries
 5. existing-project onboarding with `ax init --existing`
-6. `ax update` for intentional source mutation
+6. `ax fix` for intentional source mutation
 
 ### Second-Wave Priorities
 
@@ -84,7 +84,7 @@ Likely second-wave items:
 
 1. `ax init --query` for interactive new-project bootstrapping
 2. `ax debug` editor/debugger integration
-3. richer generated-output validation in `ax validate`
+3. richer generated-output analysis in `ax analyze`
 4. stronger dogfooding on larger Axiom-targeted slices
 
 ### Compiler Tool Track
@@ -97,14 +97,14 @@ The CLI should evolve into the main compiler/build-tool interface:
   - ask guided questions to build a better starter Axiom file for a new project
 - `ax init --existing <path>`
   - inspect an existing codebase and generate the first `.axiom.js`
-- `ax validate`
+- `ax analyze`
   - analyze the current Axiom source for schema issues, ambiguities, readiness gaps, and weak verification
 - `ax build`
   - build the local canonical Axiom file in the current directory
 - `ax build <file>`
   - build a specific Axiom file explicitly
-- `ax update`
-  - apply selected improvements or fixes proposed by `ax validate`
+- `ax fix`
+  - apply selected improvements or fixes proposed by `ax analyze`
 - `ax debug`
   - later: launch the current project through a debugger-oriented flow
 
@@ -155,24 +155,24 @@ git add src/definition/recognized-sections.js src/definition/validate-definition
 git commit -m "feat: add compact intent mode for tiny projects"
 ```
 
-### Task 2: `ax validate` Source Analysis
+### Task 2: `ax analyze` Source Analysis
 
 **Goal:** Add a compiler-style validation command that finds schema errors, ambiguities, readiness gaps, and weak verification before execution.
 
-**Why this matters:** `ax validate` should be the natural preflight/lint command for Axiom source. It needs to analyze, not mutate.
+**Why this matters:** `ax analyze` should be the natural preflight/lint command for Axiom source. It needs to analyze, not mutate.
 
-**MVP scope rule:** The first implementation of `ax validate` should validate source and config only. It should not become a full generated-output or build-state inspector yet, beyond possibly noting obvious staleness metadata later.
+**MVP scope rule:** The first implementation of `ax analyze` should inspect source and config only. It should not become a full generated-output or build-state inspector yet, beyond possibly noting obvious staleness metadata later.
 
 **Files:**
-- Create: `src/cli/validate-command.js`
+- Create: `src/cli/analyze-command.js`
 - Modify: `src/index.js`
 - Modify: `bin/axiom.js`
 - Modify: `src/public/load-intent-file.js`
 - Modify: `src/public/load-runtime-config.js`
-- Create: `test/cli/validate-command.test.js`
+- Create: `test/cli/analyze-command.test.js`
 - Modify: `README.md`
 
-- [ ] **Step 1: Add failing tests for `ax validate`**
+- [ ] **Step 1: Add failing tests for `ax analyze`**
 
 Require:
 - schema validation
@@ -198,14 +198,14 @@ Do not modify the `.axiom.js` file in this command.
 
 Run:
 ```bash
-npm test -- test/cli/validate-command.test.js
+npm test -- test/cli/analyze-command.test.js
 ```
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/cli/validate-command.js src/index.js bin/axiom.js src/public/load-intent-file.js src/public/load-runtime-config.js test/cli/validate-command.test.js README.md
-git commit -m "feat: add ax validate command"
+git add src/cli/analyze-command.js src/index.js bin/axiom.js src/public/load-intent-file.js src/public/load-runtime-config.js test/cli/analyze-command.test.js README.md
+git commit -m "feat: add ax analyze command"
 ```
 
 ### Task 3: Strengthen Live Example Verification
@@ -492,9 +492,9 @@ Prefer the local project file in the current working directory so the common wor
 Update docs to reflect:
 - `ax init`
 - `ax init --existing`
-- `ax validate`
+- `ax analyze`
 - `ax build`
-- `ax update`
+- `ax fix`
 - later `ax debug`
 
 - [ ] **Step 4: Run focused tests**
@@ -511,24 +511,24 @@ git add package.json bin/axiom.js src/cli/run-command.js README.md test/cli/run-
 git commit -m "feat: add compiler-style ax build workflow"
 ```
 
-### Task 10: `ax update` Suggested Source Changes
+### Task 10: `ax fix` Suggested Source Changes
 
-**Goal:** Add an explicit mutation command that can apply selected fixes or improvements proposed by `ax validate`.
+**Goal:** Add an explicit mutation command that can apply selected fixes or improvements proposed by `ax analyze`.
 
 **Why this matters:** Validation should propose. Mutation should be intentional and separate. This keeps Axiom aligned with a compiler/build-tool mental model instead of becoming a hidden agent.
 
 **Files:**
-- Create: `src/cli/update-command.js`
+- Create: `src/cli/fix-command.js`
 - Modify: `src/index.js`
 - Modify: `bin/axiom.js`
 - Modify: `README.md`
-- Create: `test/cli/update-command.test.js`
+- Create: `test/cli/fix-command.test.js`
 
-- [ ] **Step 1: Add failing tests for `ax update`**
+- [ ] **Step 1: Add failing tests for `ax fix`**
 
 Require:
 - explicit application of proposed changes
-- no source mutation during `ax validate`
+- no source mutation during `ax analyze`
 - clear reporting of what changed
 
 - [ ] **Step 2: Implement the first update flow**
@@ -542,14 +542,14 @@ Start simple:
 
 Run:
 ```bash
-npm test -- test/cli/update-command.test.js
+npm test -- test/cli/fix-command.test.js
 ```
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/cli/update-command.js src/index.js bin/axiom.js README.md test/cli/update-command.test.js
-git commit -m "feat: add ax update command"
+git add src/cli/fix-command.js src/index.js bin/axiom.js README.md test/cli/fix-command.test.js
+git commit -m "feat: add ax fix command"
 ```
 
 ### Task 11: Final Post-MVP Verification

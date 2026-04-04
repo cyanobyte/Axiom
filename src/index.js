@@ -6,6 +6,7 @@
  * - Re-export adapter construction utilities for runtime wiring.
  */
 export { intent } from './public/intent.js';
+export { analyzeCommand } from './cli/analyze-command.js';
 export { loadIntentFile } from './public/load-intent-file.js';
 export { loadRuntimeConfig } from './public/load-runtime-config.js';
 export { runIntentFile } from './public/run-intent-file.js';

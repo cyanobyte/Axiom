@@ -172,14 +172,14 @@ The command model should evolve toward:
   Bootstrap a new Axiom project.
 - `ax init --existing <path>`
   Inspect an existing codebase and generate the first `.axiom.js`.
-- `ax validate`
+- `ax analyze`
   Analyze the current Axiom source for schema issues, ambiguities, readiness gaps, and weak verification.
 - `ax build`
   Build the local canonical Axiom file in the current directory.
 - `ax build <file>`
   Build a specific Axiom file explicitly.
-- `ax update`
-  Apply selected improvements proposed by `ax validate`.
+- `ax fix`
+  Apply selected improvements proposed by `ax analyze`.
 - `ax debug`
   Later, launch the current project through a debugger-oriented flow.
 
@@ -192,9 +192,9 @@ Conversational integrations for Codex, Claude, Gemini, or similar systems should
 That means:
 
 - `/ax init` wraps `ax init`
-- `/ax validate` wraps `ax validate`
+- `/ax analyze` wraps `ax analyze`
 - `/ax build` wraps `ax build`
-- `/ax update` wraps `ax update`
+- `/ax fix` wraps `ax fix`
 - later `/ax debug` wraps `ax debug`
 
 The wrapper may improve usability by:
