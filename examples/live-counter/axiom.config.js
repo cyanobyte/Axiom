@@ -3,7 +3,7 @@
  * Responsibilities:
  * - Route agent capabilities to CLI-backed providers with structured JSON output.
  * - Keep generated files isolated under the live-smoke example workspace.
- * - Preserve local shell execution for the generated project's test command.
+ * - Preserve local shell execution for the generated project's self-verifying test command.
  */
 export default {
   agents: {

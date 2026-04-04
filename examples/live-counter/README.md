@@ -20,5 +20,6 @@ Expected live behavior:
 - `planner` and `coder` return structured JSON
 - generated files are written into `generated/`
 - `npm test` runs in `generated/`
-- the generated project writes `generated/reports/counter-ui.json`
+- the generated project test command starts the generated server and exercises the real HTTP counter flow
+- the generated verification script writes `generated/reports/counter-ui.json`
 - Axiom verifies the report and returns a structured result

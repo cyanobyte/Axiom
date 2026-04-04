@@ -49,13 +49,14 @@ function createLiveExampleAdapters() {
             if (name === 'coder') {
               expect(typeof input.prompt).toBe('string');
               expect(input.prompt).toContain('Return only valid JSON');
-              expect(input.prompt).toContain('"loads": true');
-              expect(input.prompt).toContain('"increments": true');
-              expect(input.prompt).toContain('"resets": true');
+              expect(input.prompt).toContain('verify-counter.js');
+              expect(input.prompt).toContain('start the generated server');
+              expect(input.prompt).toContain('exercise the real HTTP counter flow');
               return {
                 files: [
                   { path: 'package.json', content: '{"name":"counter-live"}' },
-                  { path: 'reports/counter-ui.json', content: '{"loads":true,"increments":true,"resets":true}' }
+                  { path: 'server.js', content: 'console.log("server")' },
+                  { path: 'scripts/verify-counter.js', content: 'console.log("verify")' }
                 ]
               };
             }

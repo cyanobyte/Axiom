@@ -29,6 +29,7 @@ That run is accepted when:
 - the local AI CLI adapter is invoked successfully
 - readable live compiler output is shown during the run
 - the generated project files are written into `examples/live-counter/generated/`
-- the generated project test command succeeds
+- the generated project test command succeeds after exercising the generated app's real HTTP flow
 - `generated/reports/counter-ui.json` is produced
+- `generated/reports/counter-ui.json` reflects the generated app's actual load, increment, and reset behavior
 - Axiom returns a structured passing result

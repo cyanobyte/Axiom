@@ -11,7 +11,6 @@ import {
   outcome,
   verify
 } from "@science451/intent-runtime";
-import { materializeFiles } from "../../src/runtime/materialize-files.js";
 import { buildJsonContractPrompt } from "../../src/runtime/output-contracts.js";
 
 export default intent(
@@ -63,7 +62,7 @@ export default intent(
     assumptions: [
       "A writable workspace is available for generated files and reports.",
       "The local Codex CLI session is already authenticated for manual live runs.",
-      "The generated app will produce reports/counter-ui.json during its test command."
+      "The generated app test command will start the generated server and produce reports/counter-ui.json after exercising the real HTTP flow."
     ],
     architecture: {
       components: [
@@ -208,7 +207,7 @@ export default intent(
     const implementation = await ctx.step("implement", () =>
       ctx.agent("coder").run({
         prompt: buildJsonContractPrompt(
-          `Generate the minimal files for this live counter web app.\n\nIntent:\n${JSON.stringify(ctx.intent, null, 2)}\n\nPlan:\n${JSON.stringify(plan, null, 2)}\n\nThe reports/counter-ui.json file must be valid JSON with this exact shape:\n{\n  "loads": true,\n  "increments": true,\n  "resets": true\n}`,
+          `Generate the minimal files for this live counter web app.\n\nIntent:\n${JSON.stringify(ctx.intent, null, 2)}\n\nPlan:\n${JSON.stringify(plan, null, 2)}\n\nThe generated project test command must start the generated server, exercise the real HTTP counter flow, and only then write reports/counter-ui.json. Include a verification script at scripts/verify-counter.js that starts the generated server, waits for it to be ready, exercises the real HTTP counter flow, and writes reports/counter-ui.json with this exact JSON shape:\n{\n  "loads": true,\n  "increments": true,\n  "resets": true\n}`,
           {
             files: [
               {
@@ -224,7 +223,7 @@ export default intent(
                 content: "string"
               },
               {
-                path: "reports/counter-ui.json",
+                path: "scripts/verify-counter.js",
                 content: "string"
               }
             ]
@@ -233,7 +232,7 @@ export default intent(
       })
     );
 
-    await materializeFiles(ctx.workspace, implementation?.files ?? []);
+    await ctx.materialize.files(implementation?.files ?? []);
 
     await ctx.step("install", () =>
       ctx.worker("shell").exec({
@@ -249,28 +248,21 @@ export default intent(
       })
     );
 
-    await ctx.verify.outcome("counter-ui-flow", {
-      severity: "error",
-      run: async () => {
-        const report = await ctx.artifact("reports/counter-ui.json");
-        return {
-          passed:
-            report?.loads === true &&
-            report?.increments === true &&
-            report?.resets === true,
-          evidence: report
-        };
+    await ctx.verify.outcomeReport("counter-ui-flow", {
+      path: "reports/counter-ui.json",
+      passes(report) {
+        return (
+          report?.loads === true &&
+          report?.increments === true &&
+          report?.resets === true
+        );
       }
     });
 
-    await ctx.verify.outcome("counter-report-exists", {
-      severity: "error",
-      run: async () => {
-        const report = await ctx.artifact("reports/counter-ui.json");
-        return {
-          passed: report != null,
-          evidence: report
-        };
+    await ctx.verify.outcomeReport("counter-report-exists", {
+      path: "reports/counter-ui.json",
+      passes(report) {
+        return report != null;
       }
     });
 
