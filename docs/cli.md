@@ -13,6 +13,11 @@ npm install
 npm link
 ```
 
+Current install model:
+
+- `ax` is currently expected to be installed from this repository with `npm link`
+- publishing to a package registry is not set up yet
+
 Available commands:
 
 - `build`

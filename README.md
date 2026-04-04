@@ -12,6 +12,12 @@ npm install
 npm link
 ```
 
+Current install model:
+
+- Axiom is currently a repo-local CLI tool
+- the supported install path is `npm link` from this repository
+- registry publishing is not set up yet
+
 Build the deterministic beginner example:
 
 ```bash

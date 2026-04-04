@@ -22,6 +22,11 @@ npm link
 
 After that, use `ax` as a normal CLI command.
 
+Current install model:
+
+- Axiom is currently installed from this repository with `npm link`
+- a published registry install is not set up yet
+
 ## 1. Build An Example
 
 Start with the deterministic beginner example:
