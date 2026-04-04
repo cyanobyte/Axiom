@@ -34,6 +34,12 @@ Analyze an intent file without running it:
 node bin/axiom.js analyze examples/cli/echo-tool.axiom.js
 ```
 
+Bootstrap a starter intent file for an existing project:
+
+```bash
+node bin/axiom.js init --existing .
+```
+
 This loads:
 
 - `examples/basic/counter-webapp.axiom.js`
@@ -62,3 +68,15 @@ Normal CLI runs now aim to feel like a readable AI compiler:
 - `Ctrl-C` interrupts the active run cleanly
 - failures print compiler-style actionable diagnostics before the full structured result
 - `analyze` reports structured `errors`, `warnings`, and `suggestions` without mutating source files
+- `init --existing` emits a starter `.axiom.js` for an existing project and leaves runtime config choices explicit
+
+## Source Compression
+
+The first recorded baseline is in `docs/superpowers/specs/axiom-source-compression.md`.
+
+Current result:
+
+- on the small `echo-tool` and `counter-webapp` examples, `.axiom.js` is longer than both a natural
+  reconstructed Markdown baseline and the generated source bundle
+- current Axiom examples are therefore stronger as structured, verifiable compiler workflows than as
+  shorter authoring formats for very small projects
