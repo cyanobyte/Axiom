@@ -18,13 +18,13 @@ The MVP is fully functional only when all of the following are true:
 14. The live counter example can be run through the CLI with local CLI-backed providers.
 15. The default automated suite still passes without calling live AI.
 
-The current remaining acceptance step is the manual live smoke run:
+The final manual live smoke run has now passed:
 
 ```bash
 node bin/ax.js build examples/live-counter/counter-webapp.axiom.js
 ```
 
-That run is accepted when:
+Observed acceptance result:
 
 - the local AI CLI adapter is invoked successfully
 - readable live compiler output is shown during the run
@@ -33,3 +33,5 @@ That run is accepted when:
 - `generated/reports/counter-ui.json` is produced
 - `generated/reports/counter-ui.json` reflects the generated app's actual load, increment, and reset behavior
 - Axiom returns a structured passing result
+
+Status: MVP acceptance complete.

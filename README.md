@@ -66,6 +66,7 @@ The live config under `examples/live-counter/` uses the local `codex` CLI, so it
 existing CLI login instead of requiring a separate API key. This path is manual-only and should
 not be part of the default automated suite. Generated app files are isolated under
 `examples/live-counter/generated/` so repeated runs do not break package self-resolution.
+The current post-MVP verification pass completed successfully with this exact live smoke command.
 
 Normal CLI runs now aim to feel like a readable AI compiler:
 
