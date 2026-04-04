@@ -22,22 +22,22 @@ Install dependencies:
 npm install
 ```
 
-Run the beginner example:
+Build the beginner example:
 
 ```bash
-node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+node bin/ax.js build examples/basic/counter-webapp.axiom.js
 ```
 
 Analyze an intent file without running it:
 
 ```bash
-node bin/axiom.js analyze examples/cli/echo-tool.axiom.js
+node bin/ax.js analyze examples/cli/echo-tool.axiom.js
 ```
 
 Bootstrap a starter intent file for an existing project:
 
 ```bash
-node bin/axiom.js init --existing .
+node bin/ax.js init --existing .
 ```
 
 This loads:
@@ -53,7 +53,7 @@ When a live provider adapter is implemented, replace the fake agent entries in `
 For a manual live-provider smoke run, use the dedicated live workspace and run:
 
 ```bash
-node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js
+node bin/ax.js build examples/live-counter/counter-webapp.axiom.js
 ```
 
 The live config under `examples/live-counter/` uses the local `codex` CLI, so it reuses your

@@ -166,7 +166,7 @@ git commit -m "feat: add compact intent mode for tiny projects"
 **Files:**
 - Create: `src/cli/analyze-command.js`
 - Modify: `src/index.js`
-- Modify: `bin/axiom.js`
+- Modify: `bin/ax.js`
 - Modify: `src/public/load-intent-file.js`
 - Modify: `src/public/load-runtime-config.js`
 - Create: `test/cli/analyze-command.test.js`
@@ -204,7 +204,7 @@ npm test -- test/cli/analyze-command.test.js
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/cli/analyze-command.js src/index.js bin/axiom.js src/public/load-intent-file.js src/public/load-runtime-config.js test/cli/analyze-command.test.js README.md
+git add src/cli/analyze-command.js src/index.js bin/ax.js src/public/load-intent-file.js src/public/load-runtime-config.js test/cli/analyze-command.test.js README.md
 git commit -m "feat: add ax analyze command"
 ```
 
@@ -263,9 +263,9 @@ git commit -m "test: strengthen live smoke verification"
 - Modify: `src/runtime/create-run-context.js`
 - Modify: `src/adapters/providers/create-codex-cli-agent-adapter.js`
 - Modify: `src/adapters/providers/create-claude-cli-agent-adapter.js`
-- Modify: `src/cli/run-command.js`
+- Modify: `src/cli/build-command.js`
 - Test: `test/runtime/event-stream.test.js`
-- Test: `test/cli/run-command.test.js`
+- Test: `test/cli/build-command.test.js`
 
 - [ ] **Step 1: Add failing tests for event/result compaction**
 
@@ -288,13 +288,13 @@ Ensure the CLI still receives live progress/result output even if the stored eve
 
 Run:
 ```bash
-npm test -- test/runtime/event-stream.test.js test/cli/run-command.test.js
+npm test -- test/runtime/event-stream.test.js test/cli/build-command.test.js
 ```
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/runtime/create-event-stream.js src/runtime/create-run-context.js src/adapters/providers/create-codex-cli-agent-adapter.js src/adapters/providers/create-claude-cli-agent-adapter.js src/cli/run-command.js test/runtime/event-stream.test.js test/cli/run-command.test.js
+git add src/runtime/create-event-stream.js src/runtime/create-run-context.js src/adapters/providers/create-codex-cli-agent-adapter.js src/adapters/providers/create-claude-cli-agent-adapter.js src/cli/build-command.js test/runtime/event-stream.test.js test/cli/build-command.test.js
 git commit -m "feat: compact stored compiler events"
 ```
 
@@ -307,9 +307,9 @@ git commit -m "feat: compact stored compiler events"
 **Files:**
 - Create: `src/runtime/create-health-report.js`
 - Modify: `src/public/run-intent-file.js`
-- Modify: `src/cli/run-command.js`
+- Modify: `src/cli/build-command.js`
 - Test: `test/public/run-intent-file.test.js`
-- Test: `test/cli/run-command.test.js`
+- Test: `test/cli/build-command.test.js`
 
 - [ ] **Step 1: Add failing tests for a compact health summary**
 
@@ -334,13 +334,13 @@ Print a concise final summary before the raw JSON result.
 
 Run:
 ```bash
-npm test -- test/public/run-intent-file.test.js test/cli/run-command.test.js
+npm test -- test/public/run-intent-file.test.js test/cli/build-command.test.js
 ```
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/runtime/create-health-report.js src/public/run-intent-file.js src/cli/run-command.js test/public/run-intent-file.test.js test/cli/run-command.test.js
+git add src/runtime/create-health-report.js src/public/run-intent-file.js src/cli/build-command.js test/public/run-intent-file.test.js test/cli/build-command.test.js
 git commit -m "feat: add compiler health summary"
 ```
 
@@ -431,7 +431,7 @@ git commit -m "docs: record axiom source compression baselines"
 **Files:**
 - Create: `src/cli/init-command.js`
 - Modify: `src/index.js`
-- Modify: `bin/axiom.js`
+- Modify: `bin/ax.js`
 - Create: `test/cli/init-command.test.js`
 - Modify: `README.md`
 
@@ -457,7 +457,7 @@ npm test -- test/cli/init-command.test.js
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/cli/init-command.js src/index.js bin/axiom.js test/cli/init-command.test.js README.md
+git add src/cli/init-command.js src/index.js bin/ax.js test/cli/init-command.test.js README.md
 git commit -m "feat: add existing-project ax init bootstrap"
 ```
 
@@ -465,14 +465,14 @@ git commit -m "feat: add existing-project ax init bootstrap"
 
 **Goal:** Make Axiom behave more like a compiler/build tool than a raw Node entrypoint.
 
-**Why this matters:** The daily-use model should be `ax build`, not `node bin/axiom.js run ...`.
+**Why this matters:** The daily-use model should be `ax build`, not `node bin/ax.js build <file.axiom.js>` with extra ceremony or a raw Node entrypoint.
 
 **Files:**
 - Modify: `package.json`
-- Modify: `bin/axiom.js`
-- Modify: `src/cli/run-command.js`
+- Modify: `bin/ax.js`
+- Modify: `src/cli/build-command.js`
 - Modify: `README.md`
-- Test: `test/cli/run-command.test.js`
+- Test: `test/cli/build-command.test.js`
 
 - [ ] **Step 1: Add failing tests for `ax build` local-file discovery**
 
@@ -501,13 +501,13 @@ Update docs to reflect:
 
 Run:
 ```bash
-npm test -- test/cli/run-command.test.js
+npm test -- test/cli/build-command.test.js
 ```
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add package.json bin/axiom.js src/cli/run-command.js README.md test/cli/run-command.test.js
+git add package.json bin/ax.js src/cli/build-command.js README.md test/cli/build-command.test.js
 git commit -m "feat: add compiler-style ax build workflow"
 ```
 
@@ -520,7 +520,7 @@ git commit -m "feat: add compiler-style ax build workflow"
 **Files:**
 - Create: `src/cli/fix-command.js`
 - Modify: `src/index.js`
-- Modify: `bin/axiom.js`
+- Modify: `bin/ax.js`
 - Modify: `README.md`
 - Create: `test/cli/fix-command.test.js`
 
@@ -548,7 +548,7 @@ npm test -- test/cli/fix-command.test.js
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/cli/fix-command.js src/index.js bin/axiom.js README.md test/cli/fix-command.test.js
+git add src/cli/fix-command.js src/index.js bin/ax.js README.md test/cli/fix-command.test.js
 git commit -m "feat: add ax fix command"
 ```
 
@@ -571,7 +571,7 @@ npm test
 
 Run:
 ```bash
-node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js
+node bin/ax.js build examples/live-counter/counter-webapp.axiom.js
 ```
 
 - [ ] **Step 3: Commit**

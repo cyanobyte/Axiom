@@ -1,36 +1,49 @@
 /**
- * Purpose: Provide the user-facing CLI command handler for running intent files.
+ * Purpose: Provide the user-facing CLI command handler for building intent files.
  * Responsibilities:
- * - Parse the target file path from command arguments.
+ * - Resolve the local canonical target when no file path is provided.
  * - Execute the file runtime entrypoint.
  * - Print structured results or usage errors to the console.
  */
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 /**
- * Run the `axiom run` command with injected runtime and logger dependencies.
+ * Run the `ax build` command with local-file discovery when no explicit target is provided.
  *
  * @param {string[]} args
  * @param {object} dependencies
  * @param {Function} dependencies.runIntentFile
  * @param {object} dependencies.logger
+ * @param {Function} [dependencies.resolveBuildTarget]
  * @param {object} [dependencies.signalHandlers]
  * @returns {Promise<number>}
  */
-export async function runCommand(args, { runIntentFile, logger, signalHandlers = {
-    register(handler) {
-      process.once('SIGINT', handler);
-    },
-    unregister(handler) {
-      process.off('SIGINT', handler);
-    }
-  } }) {
+export async function buildCommand(
+  args,
+  {
+    runIntentFile,
+    logger,
+    resolveBuildTarget = resolveBuildTargetDefault,
+    signalHandlers = defaultSignalHandlers
+  }
+) {
   const verbose = args.includes('--verbose');
-  const filePath = args.find((arg) => arg !== '--verbose');
+  let filePath = args.find((arg) => arg !== '--verbose');
+
   if (!filePath) {
-    logger.error('Usage: axiom run [--verbose] <file.axiom.js>');
-    return 1;
+    try {
+      filePath = await resolveBuildTarget(process.cwd());
+    } catch (error) {
+      logger.error(error.message);
+      return 1;
+    }
   }
 
+  return executeBuild(filePath, { verbose, runIntentFile, logger, signalHandlers });
+}
+
+async function executeBuild(filePath, { verbose, runIntentFile, logger, signalHandlers }) {
   const controller = new AbortController();
   const handleInterrupt = () => {
     controller.abort();
@@ -82,4 +95,35 @@ export async function runCommand(args, { runIntentFile, logger, signalHandlers =
   } finally {
     signalHandlers.unregister(handleInterrupt);
   }
+}
+
+const defaultSignalHandlers = {
+  register(handler) {
+    process.once('SIGINT', handler);
+  },
+  unregister(handler) {
+    process.off('SIGINT', handler);
+  }
+};
+
+async function resolveBuildTargetDefault(cwd) {
+  const entries = await fs.readdir(cwd, { withFileTypes: true });
+  const candidates = entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.axiom.js'))
+    .map((entry) => entry.name)
+    .sort();
+
+  if (candidates.length === 0) {
+    throw new Error(
+      `No .axiom.js file found in ${cwd}. Run \`ax build <file.axiom.js>\` or add a local intent file.`
+    );
+  }
+
+  if (candidates.length > 1) {
+    throw new Error(
+      `Multiple .axiom.js files found in ${cwd}: ${candidates.join(', ')}. Run \`ax build <file.axiom.js>\`.`
+    );
+  }
+
+  return path.join(cwd, candidates[0]);
 }

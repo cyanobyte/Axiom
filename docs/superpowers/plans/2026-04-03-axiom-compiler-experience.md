@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make `axiom run` feel like an AI compiler and development tool by improving live output, interruption, rebuild behavior, error quality, and example strength.
+**Goal:** Make `ax build` feel like an AI compiler and development tool by improving live output, interruption, rebuild behavior, error quality, and example strength.
 
 **Architecture:** Keep the current runtime and CLI structure, but tighten the user-facing execution loop around it. The runtime should emit normalized events, the CLI should render those events in readable modes, rebuild behavior should be explicit and metadata-driven, and failures should point users back to the `.axiom.js` source and the active step.
 
@@ -19,9 +19,9 @@
 - Modify: `src/adapters/providers/run-cli-command.js`
 - Modify: `src/adapters/providers/create-codex-cli-agent-adapter.js`
 - Modify: `src/adapters/providers/create-claude-cli-agent-adapter.js`
-- Modify: `src/cli/run-command.js`
+- Modify: `src/cli/build-command.js`
 - Test: `test/runtime/event-stream.test.js`
-- Test: `test/cli/run-command.test.js`
+- Test: `test/cli/build-command.test.js`
 - Test: `test/adapters/create-codex-cli-agent-adapter.test.js`
 
 - [ ] **Step 1: Write failing tests for filtered default output and verbose passthrough**
@@ -31,7 +31,7 @@ Add assertions that default CLI output does not print provider session banners o
 ```js
 it('prints concise provider progress in default mode', async () => {
   const logger = createLogger();
-  const exitCode = await runCommand(['file.axiom.js'], {
+  const exitCode = await buildCommand(['file.axiom.js'], {
     runIntentFile: async (_path, options) => {
       options.onEvent({ type: 'step.started', stepId: 'plan' });
       options.onEvent({
@@ -67,7 +67,7 @@ it('prints concise provider progress in default mode', async () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npm test -- test/cli/run-command.test.js test/adapters/create-codex-cli-agent-adapter.test.js test/runtime/event-stream.test.js`
+Run: `npm test -- test/cli/build-command.test.js test/adapters/create-codex-cli-agent-adapter.test.js test/runtime/event-stream.test.js`
 Expected: FAIL because the CLI currently prints raw provider transcript noise.
 
 - [ ] **Step 3: Implement normalized output classification**
@@ -98,7 +98,7 @@ function classifyProviderChunk(chunk) {
 
 - [ ] **Step 4: Implement CLI output modes**
 
-Add default concise mode and `--verbose` passthrough in `runCommand`.
+Add default concise mode and `--verbose` passthrough in `buildCommand`.
 
 ```js
 const verbose = args.includes('--verbose');
@@ -112,13 +112,13 @@ if (event.type === 'step.output') {
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `npm test -- test/cli/run-command.test.js test/adapters/create-codex-cli-agent-adapter.test.js test/runtime/event-stream.test.js`
+Run: `npm test -- test/cli/build-command.test.js test/adapters/create-codex-cli-agent-adapter.test.js test/runtime/event-stream.test.js`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/runtime/create-event-stream.js src/runtime/result-model.js src/runtime/create-run-context.js src/adapters/providers/run-cli-command.js src/adapters/providers/create-codex-cli-agent-adapter.js src/adapters/providers/create-claude-cli-agent-adapter.js src/cli/run-command.js test/runtime/event-stream.test.js test/cli/run-command.test.js test/adapters/create-codex-cli-agent-adapter.test.js
+git add src/runtime/create-event-stream.js src/runtime/result-model.js src/runtime/create-run-context.js src/adapters/providers/run-cli-command.js src/adapters/providers/create-codex-cli-agent-adapter.js src/adapters/providers/create-claude-cli-agent-adapter.js src/cli/build-command.js test/runtime/event-stream.test.js test/cli/build-command.test.js test/adapters/create-codex-cli-agent-adapter.test.js
 git commit -m "feat: normalize live compiler output"
 ```
 
@@ -130,10 +130,10 @@ git commit -m "feat: normalize live compiler output"
 - Modify: `src/runtime/result-model.js`
 - Modify: `src/runtime/run-intent.js`
 - Modify: `src/public/run-intent-file.js`
-- Modify: `src/cli/run-command.js`
+- Modify: `src/cli/build-command.js`
 - Test: `test/adapters/create-local-shell-adapter.test.js`
 - Test: `test/runtime/run-intent.test.js`
-- Test: `test/cli/run-command.test.js`
+- Test: `test/cli/build-command.test.js`
 
 - [ ] **Step 1: Write failing tests for interrupted runs**
 
@@ -157,7 +157,7 @@ it('marks the run as interrupted when the active process is cancelled', async ()
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npm test -- test/runtime/run-intent.test.js test/cli/run-command.test.js test/adapters/create-local-shell-adapter.test.js`
+Run: `npm test -- test/runtime/run-intent.test.js test/cli/build-command.test.js test/adapters/create-local-shell-adapter.test.js`
 Expected: FAIL because interruption state is not tracked yet.
 
 - [ ] **Step 3: Implement interruptable child-process tracking**
@@ -186,13 +186,13 @@ if (error.code === 'INTERRUPTED') {
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `npm test -- test/runtime/run-intent.test.js test/cli/run-command.test.js test/adapters/create-local-shell-adapter.test.js`
+Run: `npm test -- test/runtime/run-intent.test.js test/cli/build-command.test.js test/adapters/create-local-shell-adapter.test.js`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/adapters/providers/run-cli-command.js src/adapters/create-local-shell-adapter.js src/runtime/result-model.js src/runtime/run-intent.js src/public/run-intent-file.js src/cli/run-command.js test/adapters/create-local-shell-adapter.test.js test/runtime/run-intent.test.js test/cli/run-command.test.js
+git add src/adapters/providers/run-cli-command.js src/adapters/create-local-shell-adapter.js src/runtime/result-model.js src/runtime/run-intent.js src/public/run-intent-file.js src/cli/build-command.js test/adapters/create-local-shell-adapter.test.js test/runtime/run-intent.test.js test/cli/build-command.test.js
 git commit -m "feat: support interruptible live runs"
 ```
 
@@ -268,10 +268,10 @@ git commit -m "feat: add clean rebuild metadata flow"
 - Create: `src/runtime/format-runtime-error.js`
 - Modify: `src/runtime/run-intent.js`
 - Modify: `src/verification/execute-verification.js`
-- Modify: `src/cli/run-command.js`
+- Modify: `src/cli/build-command.js`
 - Test: `test/runtime/run-intent.test.js`
 - Test: `test/runtime/verification.test.js`
-- Test: `test/cli/run-command.test.js`
+- Test: `test/cli/build-command.test.js`
 
 - [ ] **Step 1: Write failing tests for normalized actionable errors**
 
@@ -292,7 +292,7 @@ it('returns actionable diagnostics for failed verification', async () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npm test -- test/runtime/run-intent.test.js test/runtime/verification.test.js test/cli/run-command.test.js`
+Run: `npm test -- test/runtime/run-intent.test.js test/runtime/verification.test.js test/cli/build-command.test.js`
 Expected: FAIL because diagnostics are not normalized enough yet.
 
 - [ ] **Step 3: Implement normalized runtime-error formatting**
@@ -322,13 +322,13 @@ for (const diagnostic of result.diagnostics) {
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `npm test -- test/runtime/run-intent.test.js test/runtime/verification.test.js test/cli/run-command.test.js`
+Run: `npm test -- test/runtime/run-intent.test.js test/runtime/verification.test.js test/cli/build-command.test.js`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/runtime/format-runtime-error.js src/runtime/run-intent.js src/verification/execute-verification.js src/cli/run-command.js test/runtime/run-intent.test.js test/runtime/verification.test.js test/cli/run-command.test.js
+git add src/runtime/format-runtime-error.js src/runtime/run-intent.js src/verification/execute-verification.js src/cli/build-command.js test/runtime/run-intent.test.js test/runtime/verification.test.js test/cli/build-command.test.js
 git commit -m "feat: normalize compiler-style runtime errors"
 ```
 
@@ -412,7 +412,7 @@ Expected: PASS with all default tests green and the guarded OpenAI integration t
 
 - [ ] **Step 3: Run the manual live smoke again**
 
-Run: `node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js`
+Run: `node bin/ax.js build examples/live-counter/counter-webapp.axiom.js`
 Expected: PASS with readable live output, successful install/test/verify, and final `status: "passed"`.
 
 - [ ] **Step 4: Commit**

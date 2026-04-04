@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { runCommand } from '../../src/cli/run-command.js';
+import { buildCommand } from '../../src/cli/build-command.js';
 
-describe('runCommand', () => {
-  it('runs an intent file path provided on the command line', async () => {
+describe('buildCommand', () => {
+  it('runs an explicit intent file path provided on the command line', async () => {
     const runIntentFile = vi.fn(async (_filePath, options) => {
       options.onEvent({ type: 'step.started', stepId: 'plan' });
       options.onEvent({ type: 'step.output', stepId: 'plan', chunk: 'working' });
@@ -22,7 +22,7 @@ describe('runCommand', () => {
     });
     const logger = { log: vi.fn(), error: vi.fn() };
 
-    const exitCode = await runCommand(
+    const exitCode = await buildCommand(
       ['examples/basic/counter-webapp.axiom.js'],
       { runIntentFile, logger }
     );
@@ -40,6 +40,42 @@ describe('runCommand', () => {
     expect(logger.log).toHaveBeenCalledWith(
       '[summary] passed source=1.0.0 built=1.0.0 steps=1/1 verification=0/0 files=0'
     );
+  });
+
+  it('resolves the local canonical axiom file when no file is provided', async () => {
+    const runIntentFile = vi.fn(async () => ({ status: 'passed', events: [] }));
+    const logger = { log: vi.fn(), error: vi.fn() };
+    const resolveBuildTarget = vi.fn(async () => 'counter-webapp.axiom.js');
+
+    const exitCode = await buildCommand([], {
+      runIntentFile,
+      resolveBuildTarget,
+      logger
+    });
+
+    expect(exitCode).toBe(0);
+    expect(resolveBuildTarget).toHaveBeenCalled();
+    expect(runIntentFile).toHaveBeenCalledWith(
+      'counter-webapp.axiom.js',
+      expect.objectContaining({
+        onEvent: expect.any(Function)
+      })
+    );
+  });
+
+  it('prints ax-prefixed usage when no file path is available', async () => {
+    const logger = { log: vi.fn(), error: vi.fn() };
+
+    const exitCode = await buildCommand([], {
+      runIntentFile: vi.fn(),
+      resolveBuildTarget: vi.fn(async () => {
+        throw new Error('No .axiom.js file found in /repo');
+      }),
+      logger
+    });
+
+    expect(exitCode).toBe(1);
+    expect(logger.error).toHaveBeenCalledWith('No .axiom.js file found in /repo');
   });
 
   it('filters provider transcript noise in default mode', async () => {
@@ -78,7 +114,7 @@ describe('runCommand', () => {
     });
     const logger = { log: vi.fn(), error: vi.fn() };
 
-    const exitCode = await runCommand(
+    const exitCode = await buildCommand(
       ['examples/basic/counter-webapp.axiom.js'],
       { runIntentFile, logger }
     );
@@ -103,7 +139,7 @@ describe('runCommand', () => {
     });
     const logger = { log: vi.fn(), error: vi.fn() };
 
-    const exitCode = await runCommand(
+    const exitCode = await buildCommand(
       ['--verbose', 'examples/live-counter/counter-webapp.axiom.js'],
       { runIntentFile, logger }
     );
@@ -112,16 +148,16 @@ describe('runCommand', () => {
     expect(logger.log).toHaveBeenCalledWith('[output:implement] OpenAI Codex v0.118.0 (research preview)');
   });
 
-  it('returns 130 when the run is interrupted by SIGINT', async () => {
+  it('returns 130 when the build is interrupted by SIGINT', async () => {
     let interruptHandler;
     const runIntentFile = vi.fn(async (_filePath, options) => {
       interruptHandler();
       expect(options.signal.aborted).toBe(true);
-      return { status: 'interrupted', events: [], diagnostics: [{ message: 'Run interrupted by user.' }] };
+      return { status: 'interrupted', events: [], diagnostics: [{ message: 'Build interrupted by user.' }] };
     });
     const logger = { log: vi.fn(), error: vi.fn() };
 
-    const exitCode = await runCommand(
+    const exitCode = await buildCommand(
       ['examples/live-counter/counter-webapp.axiom.js'],
       {
         runIntentFile,
@@ -138,7 +174,7 @@ describe('runCommand', () => {
     expect(exitCode).toBe(130);
   });
 
-  it('prints concise compiler-style diagnostics for failed runs', async () => {
+  it('prints concise compiler-style diagnostics for failed builds', async () => {
     const runIntentFile = vi.fn(async () => ({
       status: 'failed',
       diagnostics: [
@@ -153,7 +189,7 @@ describe('runCommand', () => {
     }));
     const logger = { log: vi.fn(), error: vi.fn() };
 
-    const exitCode = await runCommand(
+    const exitCode = await buildCommand(
       ['examples/live-counter/counter-webapp.axiom.js'],
       { runIntentFile, logger }
     );
@@ -161,6 +197,25 @@ describe('runCommand', () => {
     expect(exitCode).toBe(1);
     expect(logger.error).toHaveBeenCalledWith(
       '[error:verification] Outcome verification failed: counter-ui-flow. Next: Update the intent, generated files, or verification evidence so the declared outcome passes.'
+    );
+  });
+
+  it('prints a clear error when multiple local axiom files exist', async () => {
+    const logger = { log: vi.fn(), error: vi.fn() };
+
+    const exitCode = await buildCommand([], {
+      runIntentFile: vi.fn(),
+      resolveBuildTarget: vi.fn(async () => {
+        throw new Error(
+          'Multiple .axiom.js files found in /repo: app.axiom.js, api.axiom.js. Run `ax build <file.axiom.js>`.'
+        );
+      }),
+      logger
+    });
+
+    expect(exitCode).toBe(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Multiple .axiom.js files found in /repo: app.axiom.js, api.axiom.js. Run `ax build <file.axiom.js>`.'
     );
   });
 });

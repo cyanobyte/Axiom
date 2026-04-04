@@ -1,7 +1,7 @@
 /**
  * Purpose: Provide the user-facing CLI command handler for existing-project bootstrap.
  * Responsibilities:
- * - Parse `axiom init --existing <path>` arguments.
+ * - Parse `ax init --existing <path>` arguments.
  * - Inspect a target project directory for a minimal starter shape.
  * - Emit a starter `.axiom.js` file and next-step guidance.
  */
@@ -9,7 +9,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 
 /**
- * Run the `axiom init --existing` command with injected inspection and file-writing dependencies.
+ * Run the `ax init --existing` command with injected inspection and file-writing dependencies.
  *
  * @param {string[]} args
  * @param {object} dependencies
@@ -27,7 +27,7 @@ export async function initCommand(
   }
 ) {
   if (args[0] !== '--existing' || !args[1]) {
-    logger.error('Usage: axiom init --existing <path>');
+    logger.error('Usage: ax init --existing <path>');
     return 1;
   }
 
@@ -39,7 +39,7 @@ export async function initCommand(
   await writeStarterIntentFile(targetPath, filename, content);
 
   logger.log(`Wrote starter intent file: ${path.join(targetPath, filename)}`);
-  logger.log('Next: add axiom.config.js, refine the generated intent, then run `axiom analyze <file.axiom.js>`.');
+  logger.log('Next: add axiom.config.js, refine the generated intent, then run `ax analyze <file.axiom.js>`.');
   return 0;
 }
 

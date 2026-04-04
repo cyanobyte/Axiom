@@ -7,6 +7,7 @@
  */
 export { intent } from './public/intent.js';
 export { analyzeCommand } from './cli/analyze-command.js';
+export { buildCommand } from './cli/build-command.js';
 export { initCommand } from './cli/init-command.js';
 export { loadIntentFile } from './public/load-intent-file.js';
 export { loadRuntimeConfig } from './public/load-runtime-config.js';

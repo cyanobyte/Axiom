@@ -66,7 +66,7 @@ function normalizeReadinessFinding(diagnostic) {
 }
 
 /**
- * Run the `axiom analyze` command with injected loader and logger dependencies.
+ * Run the `ax analyze` command with injected loader and logger dependencies.
  *
  * @param {string[]} args
  * @param {object} dependencies
@@ -89,7 +89,7 @@ export async function analyzeCommand(
 ) {
   const filePath = args[0];
   if (!filePath) {
-    logger.error('Usage: axiom analyze <file.axiom.js>');
+    logger.error('Usage: ax analyze <file.axiom.js>');
     return 1;
   }
 

@@ -15,7 +15,7 @@ describe('initCommand', () => {
     });
 
     expect(exitCode).toBe(1);
-    expect(logger.error).toHaveBeenCalledWith('Usage: axiom init --existing <path>');
+    expect(logger.error).toHaveBeenCalledWith('Usage: ax init --existing <path>');
   });
 
   it('writes a starter intent file for a library-style Node project', async () => {
@@ -54,7 +54,7 @@ describe('initCommand', () => {
       `Wrote starter intent file: ${starterPath}`
     );
     expect(logger.log).toHaveBeenCalledWith(
-      'Next: add axiom.config.js, refine the generated intent, then run `axiom analyze <file.axiom.js>`.'
+      'Next: add axiom.config.js, refine the generated intent, then run `ax analyze <file.axiom.js>`.'
     );
   });
 

@@ -4,7 +4,7 @@
 
 **Goal:** Turn the current tested runtime skeleton into a usable MVP by loading sibling `axiom.config.js` files, constructing real adapters from config, exposing a runnable CLI, and supporting one live model provider path through local AI CLIs plus local shell/workspace/artifact execution.
 
-**Architecture:** `axiom run <file.axiom.js>` should load the intent file, load `axiom.config.js` from the same directory by default, validate both, build adapters from that config, run preflight readiness checks, execute the workflow, and return structured results. The intent file remains provider-agnostic; all provider, shell, workspace, and artifact wiring lives in config and adapter factories.
+**Architecture:** `ax build <file.axiom.js>` should load the intent file, load `axiom.config.js` from the same directory by default, validate both, build adapters from that config, run preflight readiness checks, execute the workflow, and return structured results. The intent file remains provider-agnostic; all provider, shell, workspace, and artifact wiring lives in config and adapter factories.
 
 **Tech Stack:** Node.js, JavaScript (ES modules), Vitest
 
@@ -35,8 +35,8 @@ The default `npm test` path must not call live AI services.
 - Create: `src/public/load-runtime-config.js`
 - Create: `src/public/build-adapters.js`
 - Create: `src/public/run-intent-file.js`
-- Create: `src/cli/run-command.js`
-- Create: `bin/axiom.js`
+- Create: `src/cli/build-command.js`
+- Create: `bin/ax.js`
 - Modify: `package.json`
 
 ### Config Validation
@@ -59,7 +59,7 @@ The default `npm test` path must not call live AI services.
 - Create: `test/config/validate-runtime-config.test.js`
 - Create: `test/public/run-intent-file.test.js`
 - Create: `test/adapters/create-configured-adapters.test.js`
-- Create: `test/cli/run-command.test.js`
+- Create: `test/cli/build-command.test.js`
 - Create: `test/examples/counter-webapp-file-runtime.test.js`
 
 ---
@@ -500,24 +500,24 @@ git commit -m "feat: run intent files with sibling config"
 ## Task 6: Add a minimal CLI
 
 **Files:**
-- Create: `src/cli/run-command.js`
-- Create: `bin/axiom.js`
+- Create: `src/cli/build-command.js`
+- Create: `bin/ax.js`
 - Modify: `package.json`
-- Create: `test/cli/run-command.test.js`
-- Test: `test/cli/run-command.test.js`
+- Create: `test/cli/build-command.test.js`
+- Test: `test/cli/build-command.test.js`
 
 - [ ] **Step 1: Write the failing CLI test**
 
 ```js
 import { describe, expect, it, vi } from 'vitest';
-import { runCommand } from '../../src/cli/run-command.js';
+import { buildCommand } from '../../src/cli/build-command.js';
 
-describe('runCommand', () => {
+describe('buildCommand', () => {
   it('runs an intent file path provided on the command line', async () => {
     const runIntentFile = vi.fn(async () => ({ status: 'passed' }));
     const logger = { log: vi.fn(), error: vi.fn() };
 
-    const exitCode = await runCommand(
+    const exitCode = await buildCommand(
       ['examples/basic/counter-webapp.axiom.js'],
       { runIntentFile, logger }
     );
@@ -530,17 +530,17 @@ describe('runCommand', () => {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test -- test/cli/run-command.test.js`
-Expected: FAIL with missing module `src/cli/run-command.js`
+Run: `npm test -- test/cli/build-command.test.js`
+Expected: FAIL with missing module `src/cli/build-command.js`
 
 - [ ] **Step 3: Implement the minimal CLI**
 
 ```js
-// src/cli/run-command.js
-export async function runCommand(args, { runIntentFile, logger }) {
+// src/cli/build-command.js
+export async function buildCommand(args, { runIntentFile, logger }) {
   const filePath = args[0];
   if (!filePath) {
-    logger.error('Usage: axiom run <file.axiom.js>');
+    logger.error('Usage: ax build <file.axiom.js>');
     return 1;
   }
 
@@ -556,31 +556,31 @@ export async function runCommand(args, { runIntentFile, logger }) {
 ```
 
 ```js
-// bin/axiom.js
+// bin/ax.js
 #!/usr/bin/env node
-import { runCommand } from '../src/cli/run-command.js';
+import { buildCommand } from '../src/cli/build-command.js';
 import { runIntentFile } from '../src/public/run-intent-file.js';
 
 const args = process.argv.slice(2);
-if (args[0] === 'run') {
-  const exitCode = await runCommand(args.slice(1), { runIntentFile, logger: console });
+if (args[0] === 'build') {
+  const exitCode = await buildCommand(args.slice(1), { runIntentFile, logger: console });
   process.exit(exitCode);
 }
 
-console.error('Usage: axiom run <file.axiom.js>');
+console.error('Usage: ax build <file.axiom.js>');
 process.exit(1);
 ```
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run: `npm test -- test/cli/run-command.test.js`
+Run: `npm test -- test/cli/build-command.test.js`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/cli/run-command.js bin/axiom.js package.json test/cli/run-command.test.js
-git commit -m "feat: add axiom run cli"
+git add src/cli/build-command.js bin/ax.js package.json test/cli/build-command.test.js
+git commit -m "feat: add ax build cli"
 ```
 
 ## Task 7: Make the beginner example runnable through `runIntentFile(...)`
@@ -691,7 +691,7 @@ npm install
 Run the beginner example:
 
 ```bash
-node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+node bin/ax.js build examples/basic/counter-webapp.axiom.js
 ```
 
 This loads:
@@ -903,7 +903,7 @@ When a real provider adapter is wired, copy or adapt `examples/basic/axiom.live.
 to `examples/basic/axiom.config.js` and run:
 
 ```bash
-node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+node bin/ax.js build examples/basic/counter-webapp.axiom.js
 ```
 
 This path is manual-only and should not be part of the default automated suite. The live config
@@ -1000,7 +1000,7 @@ Manual smoke:
 
 ```bash
 cp examples/basic/axiom.live.config.js examples/basic/axiom.config.js
-node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+node bin/ax.js build examples/basic/counter-webapp.axiom.js
 ```
 
 Expected:
@@ -1032,7 +1032,7 @@ Create `docs/superpowers/specs/axiom-mvp-acceptance.md`:
 
 The MVP is considered fully functional only when all of the following are true:
 
-1. `node bin/axiom.js run <file.axiom.js>` works.
+1. `node bin/ax.js build <file.axiom.js>` works.
 2. The runtime loads sibling `axiom.config.js` automatically.
 3. The runtime builds adapters from config successfully.
 4. The runtime can call a real local AI CLI provider for at least one configured agent capability.
@@ -1054,7 +1054,7 @@ Manual smoke command:
 
 ```bash
 cp examples/basic/axiom.live.config.js examples/basic/axiom.config.js
-node bin/axiom.js run examples/basic/counter-webapp.axiom.js
+node bin/ax.js build examples/basic/counter-webapp.axiom.js
 ```
 
 Expected:
@@ -1263,7 +1263,7 @@ Expected: PASS with no live-provider calls in the default suite
 Manual smoke command:
 
 ```bash
-node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js
+node bin/ax.js build examples/live-counter/counter-webapp.axiom.js
 ```
 
 Expected:
@@ -1344,7 +1344,7 @@ Expected: PASS
 Run:
 
 ```bash
-node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js
+node bin/ax.js build examples/live-counter/counter-webapp.axiom.js
 ```
 
 Expected:
@@ -1365,12 +1365,12 @@ git commit -m "feat: add explicit json output contracts for live smoke"
 - Modify: `src/runtime/run-intent.js`
 - Modify: `src/runtime/step-runner.js`
 - Modify: `src/runtime/create-run-context.js`
-- Modify: `src/cli/run-command.js`
+- Modify: `src/cli/build-command.js`
 - Modify: `src/adapters/create-local-shell-adapter.js`
 - Modify: `src/adapters/providers/run-cli-command.js`
 - Create: `src/runtime/create-event-stream.js`
 - Create: `test/runtime/event-stream.test.js`
-- Modify: `test/cli/run-command.test.js`
+- Modify: `test/cli/build-command.test.js`
 - Test: `test/runtime/event-stream.test.js`
 
 - [ ] **Step 1: Write the failing event-stream tests**
@@ -1422,17 +1422,17 @@ Update the runtime so:
 - `runIntent(...)` creates an event stream
 - `runStep(...)` emits `step.started` and `step.finished`
 - shell/provider adapters can emit `step.output` chunks
-- `runCommand(...)` prints those events in a readable live form
+- `buildCommand(...)` prints those events in a readable live form
 
 - [ ] **Step 4: Run the targeted tests**
 
-Run: `npm test -- test/runtime/event-stream.test.js test/cli/run-command.test.js`
+Run: `npm test -- test/runtime/event-stream.test.js test/cli/build-command.test.js`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/runtime/create-event-stream.js src/runtime/run-intent.js src/runtime/step-runner.js src/runtime/create-run-context.js src/cli/run-command.js src/adapters/create-local-shell-adapter.js src/adapters/providers/run-cli-command.js test/runtime/event-stream.test.js test/cli/run-command.test.js
+git add src/runtime/create-event-stream.js src/runtime/run-intent.js src/runtime/step-runner.js src/runtime/create-run-context.js src/cli/build-command.js src/adapters/create-local-shell-adapter.js src/adapters/providers/run-cli-command.js test/runtime/event-stream.test.js test/cli/build-command.test.js
 git commit -m "feat: stream live step output through runtime"
 ```
 
@@ -1442,10 +1442,10 @@ git commit -m "feat: stream live step output through runtime"
 - Modify: `src/adapters/create-local-shell-adapter.js`
 - Modify: `src/adapters/providers/run-cli-command.js`
 - Modify: `src/runtime/run-intent.js`
-- Modify: `src/cli/run-command.js`
+- Modify: `src/cli/build-command.js`
 - Modify: `src/runtime/result-model.js`
 - Create: `test/runtime/interrupts.test.js`
-- Modify: `test/cli/run-command.test.js`
+- Modify: `test/cli/build-command.test.js`
 - Test: `test/runtime/interrupts.test.js`
 
 - [ ] **Step 1: Write the failing interrupt tests**
@@ -1479,13 +1479,13 @@ Update the runtime so:
 
 - [ ] **Step 4: Run the targeted tests**
 
-Run: `npm test -- test/runtime/interrupts.test.js test/cli/run-command.test.js`
+Run: `npm test -- test/runtime/interrupts.test.js test/cli/build-command.test.js`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/adapters/create-local-shell-adapter.js src/adapters/providers/run-cli-command.js src/runtime/run-intent.js src/runtime/result-model.js src/cli/run-command.js test/runtime/interrupts.test.js test/cli/run-command.test.js
+git add src/adapters/create-local-shell-adapter.js src/adapters/providers/run-cli-command.js src/runtime/run-intent.js src/runtime/result-model.js src/cli/build-command.js test/runtime/interrupts.test.js test/cli/build-command.test.js
 git commit -m "feat: interrupt live runs from the cli"
 ```
 
@@ -1514,5 +1514,5 @@ git commit -m "feat: interrupt live runs from the cli"
 ## Self-Review Notes
 
 - Placeholder scan: complete; every task includes exact files, tests, commands, and commit points.
-- Type consistency: this plan consistently uses `loadRuntimeConfig`, `validateRuntimeConfig`, `createConfiguredAdapters`, `runIntentFile`, and `runCommand`.
+- Type consistency: this plan consistently uses `loadRuntimeConfig`, `validateRuntimeConfig`, `createConfiguredAdapters`, `runIntentFile`, and `buildCommand`.
 - Scope check: this plan now carries the runtime from deterministic local execution through actual local AI CLI provider execution, structured provider outputs, explicit JSON prompting, workspace materialization, live event streaming, interrupt handling, and an explicit end-to-end acceptance proof. It still does not attempt pause/resume persistence, real patch-based intent revision, or multi-provider production parity.

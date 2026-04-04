@@ -14,7 +14,7 @@ describe('analyzeCommand', () => {
     });
 
     expect(exitCode).toBe(1);
-    expect(logger.error).toHaveBeenCalledWith('Usage: axiom analyze <file.axiom.js>');
+    expect(logger.error).toHaveBeenCalledWith('Usage: ax analyze <file.axiom.js>');
   });
 
   it('prints a passing structured analysis result for a valid file', async () => {

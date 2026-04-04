@@ -2,7 +2,7 @@
 
 The MVP is fully functional only when all of the following are true:
 
-1. `node bin/axiom.js run <file.axiom.js>` works.
+1. `node bin/ax.js build <file.axiom.js>` works.
 2. The runtime loads sibling `axiom.config.js` automatically.
 3. The runtime builds adapters from config successfully.
 4. The runtime can call a real local AI CLI provider for at least one configured agent capability.
@@ -21,7 +21,7 @@ The MVP is fully functional only when all of the following are true:
 The current remaining acceptance step is the manual live smoke run:
 
 ```bash
-node bin/axiom.js run examples/live-counter/counter-webapp.axiom.js
+node bin/ax.js build examples/live-counter/counter-webapp.axiom.js
 ```
 
 That run is accepted when:
