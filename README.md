@@ -40,6 +40,12 @@ Bootstrap a starter intent file for an existing project:
 node bin/ax.js init --existing .
 ```
 
+Apply a supported source fix explicitly:
+
+```bash
+node bin/ax.js fix examples/cli/echo-tool.axiom.js --apply compact-build-defaults
+```
+
 This loads:
 
 - `examples/basic/counter-webapp.axiom.js`
@@ -68,6 +74,7 @@ Normal CLI runs now aim to feel like a readable AI compiler:
 - `Ctrl-C` interrupts the active run cleanly
 - failures print compiler-style actionable diagnostics before the full structured result
 - `analyze` reports structured `errors`, `warnings`, and `suggestions` without mutating source files
+- `fix` applies an explicitly requested supported source rewrite and reports what changed
 - `init --existing` emits a starter `.axiom.js` for an existing project and leaves runtime config choices explicit
 
 ## Source Compression

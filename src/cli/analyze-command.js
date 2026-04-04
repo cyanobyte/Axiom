@@ -6,6 +6,8 @@
  * - Print a structured analysis result without mutating project files.
  */
 
+import { findApplicableFixes } from './fix-rules.js';
+
 function createFinding({ kind, section, message, nextAction }) {
   return {
     kind,
@@ -16,26 +18,23 @@ function createFinding({ kind, section, message, nextAction }) {
 }
 
 function createCompactBuildSuggestion(definition) {
-  if (!definition?.cli || !definition?.build) {
+  const fix = findApplicableFixes(definition).find((candidate) => candidate.id === 'compact-build-defaults');
+  if (!fix) {
     return null;
   }
-
-  const commands = definition.build.commands ?? {};
-  if (
-    definition.build.system === 'npm' &&
-    definition.build.test_runner === 'npm' &&
-    commands.install === 'npm install' &&
-    commands.test === 'npm test'
-  ) {
-    return createFinding({
+  return {
+    id: fix.id,
+    ...createFinding({
       kind: 'authoring',
       section: 'build',
       message: 'Compact CLI intents can omit the default npm build configuration.',
       nextAction: 'Remove build and rely on compact defaults unless this project needs custom commands.'
-    });
-  }
-
-  return null;
+    }),
+    fix: {
+      type: fix.type,
+      label: fix.label
+    }
+  };
 }
 
 function createConfigError(error) {

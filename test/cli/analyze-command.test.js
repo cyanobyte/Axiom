@@ -59,10 +59,15 @@ describe('analyzeCommand', () => {
       warnings: [],
       suggestions: [
         {
+          id: 'compact-build-defaults',
           kind: 'authoring',
           section: 'build',
           message: 'Compact CLI intents can omit the default npm build configuration.',
-          nextAction: 'Remove build and rely on compact defaults unless this project needs custom commands.'
+          nextAction: 'Remove build and rely on compact defaults unless this project needs custom commands.',
+          fix: {
+            type: 'remove-default-build',
+            label: 'Remove redundant default npm build block from a compact CLI intent.'
+          }
         }
       ]
     }, null, 2));

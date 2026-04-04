@@ -2,6 +2,7 @@
 
 import { analyzeCommand } from '../src/cli/analyze-command.js';
 import { buildCommand } from '../src/cli/build-command.js';
+import { fixCommand } from '../src/cli/fix-command.js';
 import { initCommand } from '../src/cli/init-command.js';
 import { validateRuntimeConfig } from '../src/config/validate-runtime-config.js';
 import { checkReadiness } from '../src/runtime/check-readiness.js';
@@ -34,5 +35,10 @@ if (args[0] === 'build') {
   process.exit(exitCode);
 }
 
-console.error('Usage: ax <init|analyze|build> ...');
+if (args[0] === 'fix') {
+  const exitCode = await fixCommand(args.slice(1), { loadIntentFile, logger: console });
+  process.exit(exitCode);
+}
+
+console.error('Usage: ax <init|analyze|build|fix> ...');
 process.exit(1);
