@@ -19,7 +19,7 @@ import { formatRuntimeError } from './format-runtime-error.js';
  * @returns {Promise<object>}
  */
 export async function runIntent(file, adapters, options = {}) {
-  const result = createRunResult();
+  const result = createRunResult(file.definition);
   const events = createEventStream(result, options.onEvent);
   const diagnostics = checkReadiness(file.definition);
 

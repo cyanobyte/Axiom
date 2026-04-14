@@ -18,3 +18,4 @@ export { runIntent } from './runtime/run-intent.js';
 export { createConfiguredAdapters } from './adapters/create-configured-adapters.js';
 export { must, should, outcome, verify } from './definition/helpers.js';
 export { normalizeSecurityPolicy } from './security/normalize-security-policy.js';
+export { createSecurityReport } from './security/create-security-report.js';

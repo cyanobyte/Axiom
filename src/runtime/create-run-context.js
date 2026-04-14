@@ -25,6 +25,7 @@ export function createRunContext(file, adapters, state, result) {
   return {
     meta: file.definition.meta,
     intent: file.definition,
+    security: file.definition.security,
     step(stepId, run) {
       return runStep(state, stepId, run);
     },
