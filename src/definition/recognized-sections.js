@@ -48,7 +48,8 @@ export const OPTIONAL_SECTIONS = [
   'library',
   'desktop',
   'mobile',
-  'model'
+  'model',
+  'security'
 ];
 
 /**

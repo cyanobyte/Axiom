@@ -222,4 +222,55 @@ describe('intent helpers', () => {
       )
     ).toThrow(/Unknown verification coverage id: missing-clause/);
   });
+
+  it('accepts a top-level security section', () => {
+    const file = intent(
+      {
+        id: 'secure-web-app',
+        meta: { title: 'Secure Web App' },
+        what: { capability: 'webapp', description: 'Secure browser app' },
+        why: { problem: 'Need secure app', value: 'Audit generated output' },
+        scope: { includes: [], excludes: [] },
+        runtime: { languages: ['javascript'], targets: ['browser'], platforms: ['web'] },
+        constraints: [must('must-exist', 'Constraint exists')],
+        outcomes: [outcome('works', 'It works')],
+        verification: { intent: [], outcome: [] },
+        web: { kind: 'static' },
+        security: {
+          build: { mode: 'local' },
+          app: {
+            target: 'web-app',
+            profile: 'browser-app-basic'
+          }
+        }
+      },
+      async () => ({ ok: true })
+    );
+
+    expect(file.definition.security.app.violationAction).toBe('break');
+    expect(file.definition.security.build.mode).toBe('local');
+  });
+
+  it('rejects invalid security declarations during intent validation', () => {
+    expect(() =>
+      intent(
+        {
+          id: 'bad-security',
+          meta: { title: 'Bad Security' },
+          what: { capability: 'webapp', description: 'Bad security app' },
+          why: { problem: 'Need secure app', value: 'Audit generated output' },
+          scope: { includes: [], excludes: [] },
+          runtime: { languages: ['javascript'], targets: ['browser'], platforms: ['web'] },
+          constraints: [must('must-exist', 'Constraint exists')],
+          outcomes: [outcome('works', 'It works')],
+          verification: { intent: [], outcome: [] },
+          web: { kind: 'static' },
+          security: {
+            build: { mode: 'vm', provider: 'aws', profile: 'node-webapp' }
+          }
+        },
+        async () => ({ ok: true })
+      )
+    ).toThrow(/Unsupported New MVP vm provider: aws/);
+  });
 });

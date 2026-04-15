@@ -11,6 +11,7 @@ import {
   OPTIONAL_SECTIONS,
   REQUIRED_SECTIONS
 } from './recognized-sections.js';
+import { normalizeSecurityPolicy } from '../security/normalize-security-policy.js';
 
 function slugify(value) {
   return String(value ?? '')
@@ -156,6 +157,10 @@ export function validateDefinition(definition) {
     if (!allowed.has(key)) {
       throw new Error(`Unknown top-level section: ${key}`);
     }
+  }
+
+  if (normalized.security) {
+    normalized.security = normalizeSecurityPolicy(normalized.security);
   }
 
   if (!DOMAIN_SECTIONS.some((key) => key in normalized)) {
