@@ -42,6 +42,28 @@ Bootstrap a starter intent file for an existing project:
 ax init --existing .
 ```
 
+## Security Policy
+
+Axiom intent files can declare source-controlled security policy:
+
+```js
+security: {
+  build: {
+    mode: "docker",
+    profile: "node-webapp"
+  },
+  app: {
+    target: "web-app",
+    profile: "browser-app-basic",
+    violationAction: "break"
+  }
+}
+```
+
+`security.build` controls where AI/build work runs. New MVP supports `local`, `docker`, and `vm`; VM execution supports `provider: "virtualbox"` first.
+
+`security.app` controls what the generated application is allowed to do. Axiom runs static checks and an AI security review, then writes findings into the build security report.
+
 ## Docs
 
 - [Getting Started](/mnt/d/Science451/Axiom/docs/getting-started.md)

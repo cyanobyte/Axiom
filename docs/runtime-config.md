@@ -13,6 +13,8 @@ Runtime config currently wires:
 - `workspace`
 - `artifacts`
 
+Security policy is declared in `.axiom.js`, not runtime config. Runtime config still provides concrete adapters and credentials. New MVP Docker and VM security modes validate official profiles in source; full Docker/VM execution adapter wiring is a follow-up implementation layer.
+
 ## Minimal Shape
 
 At minimum, the runtime expects:

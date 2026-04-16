@@ -77,6 +77,17 @@ export default intent(
       }
     },
 
+    security: {
+      build: {
+        mode: "local"
+      },
+      app: {
+        target: "web-app",
+        profile: "browser-app-basic",
+        violationAction: "warn"
+      }
+    },
+
     // Minimal operating assumptions
     assumptions: [
       "A writable workspace is available for generated files and test reports.",

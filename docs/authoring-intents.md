@@ -76,6 +76,48 @@ Stay explicit when the project needs:
 
 The compact path is convenience, not the only authoring model.
 
+## Security
+
+Declare security policy in `.axiom.js` when the build process or generated application needs an auditable security posture.
+
+Local build mode runs in the assigned workspace and reports that host process isolation is limited:
+
+```js
+security: {
+  build: { mode: "local" }
+}
+```
+
+Docker mode uses an official Axiom build profile:
+
+```js
+security: {
+  build: { mode: "docker", profile: "node-webapp" }
+}
+```
+
+VM mode supports VirtualBox first:
+
+```js
+security: {
+  build: { mode: "vm", provider: "virtualbox", profile: "node-webapp" }
+}
+```
+
+Generated app policy can use an official profile:
+
+```js
+security: {
+  app: {
+    target: "web-app",
+    profile: "browser-app-basic",
+    violationAction: "break"
+  }
+}
+```
+
+`security.app` accepts one policy source at a time: `profile`, `profileFile`, or inline `policy`. Official profiles can also use `overrides`. Combining `profileFile` with inline `policy` is invalid because the runtime must resolve one clear app security policy.
+
 ## Authoring Philosophy
 
 `.axiom.js` is the source of truth.
