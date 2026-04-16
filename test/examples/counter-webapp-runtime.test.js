@@ -72,6 +72,12 @@ function createExampleAdapters() {
               };
             }
 
+            if (name === 'security-reviewer') {
+              return {
+                findings: []
+              };
+            }
+
             throw new Error(`Unexpected agent: ${name}`);
           }
         };
