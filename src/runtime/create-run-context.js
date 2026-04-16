@@ -34,8 +34,10 @@ export function createRunContext(file, adapters, state, result) {
     },
     workspace: adapters.workspace,
     materialize: {
-      files(files) {
-        return materializeFiles(adapters.workspace, files);
+      async files(files) {
+        const materialized = await materializeFiles(adapters.workspace, files);
+        state.materializedFiles.push(...files);
+        return materialized;
       }
     },
     artifact(path) {

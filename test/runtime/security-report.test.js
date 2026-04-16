@@ -67,4 +67,76 @@ describe('runtime security report', () => {
     expect(capturedSecurity.build.mode).toBe('docker');
     expect(capturedSecurity.app.policy.secrets).toBe('none');
   });
+
+  it('breaks the build when app security violations are found and violationAction is break', async () => {
+    const file = secureWebIntent(
+      {
+        app: {
+          target: 'web-app',
+          profile: 'browser-app-basic',
+          violationAction: 'break'
+        }
+      },
+      async (ctx) => {
+        await ctx.materialize.files([
+          {
+            path: 'src/app.js',
+            content: 'document.cookie = "token=abc";'
+          }
+        ]);
+        return { ok: true };
+      }
+    );
+
+    const adapters = createTestAdapters({
+      writtenFiles: []
+    });
+    adapters.workspace.write = async (path, content) => {
+      adapters.writtenFiles.push({ path, content });
+    };
+    adapters.writtenFiles = [];
+
+    const result = await runIntent(file, adapters);
+
+    expect(result.status).toBe('failed');
+    expect(result.securityReport.app.finalStatus).toBe('failed');
+    expect(result.diagnostics[0].message).toBe('Application security policy failed.');
+  });
+
+  it('warns without failing when app security violations are found and violationAction is warn', async () => {
+    const file = secureWebIntent(
+      {
+        app: {
+          target: 'web-app',
+          policy: {
+            network: { allowed: ['https'], denied: [] },
+            storage: { allowed: [], denied: ['cookies'] },
+            secrets: 'none',
+            filesystem: 'none'
+          },
+          violationAction: 'warn'
+        }
+      },
+      async (ctx) => {
+        await ctx.materialize.files([
+          {
+            path: 'src/app.js',
+            content: 'document.cookie = "token=abc";'
+          }
+        ]);
+        return { ok: true };
+      }
+    );
+
+    const adapters = createTestAdapters();
+    adapters.writtenFiles = [];
+    adapters.workspace.write = async (path, content) => {
+      adapters.writtenFiles.push({ path, content });
+    };
+
+    const result = await runIntent(file, adapters);
+
+    expect(result.status).toBe('passed');
+    expect(result.securityReport.app.finalStatus).toBe('warning');
+  });
 });

@@ -10,6 +10,7 @@ import { createRunContext } from './create-run-context.js';
 import { checkReadiness } from './check-readiness.js';
 import { createEventStream } from './create-event-stream.js';
 import { formatRuntimeError } from './format-runtime-error.js';
+import { auditAppSecurity } from '../security/audit-app-security.js';
 
 /**
  * Execute an authored intent file with an adapter set.
@@ -34,16 +35,52 @@ export async function runIntent(file, adapters, options = {}) {
     stepMap: new Map(),
     currentStepId: undefined,
     events,
-    signal: options.signal
+    signal: options.signal,
+    materializedFiles: []
   };
 
   const ctx = createRunContext(file, adapters, state, result);
   try {
     result.finalValue = await file.runFn(ctx);
+    applyAppSecurityAudit(file.definition.security?.app, result, state.materializedFiles);
   } catch (error) {
     result.status = error.code === 'INTERRUPTED' ? 'interrupted' : 'failed';
     result.diagnostics.push(formatRuntimeError(error));
   }
 
   return result;
+}
+
+function applyAppSecurityAudit(appSecurity, result, files) {
+  if (!appSecurity || !result.securityReport?.app) {
+    return;
+  }
+
+  const audit = auditAppSecurity(appSecurity, files);
+  result.securityReport.app.staticChecks = audit.staticChecks;
+  result.securityReport.app.aiReview = {
+    status: 'not-run',
+    findings: []
+  };
+
+  if (audit.finalStatus === 'failed' && appSecurity.violationAction === 'warn') {
+    result.securityReport.app.finalStatus = 'warning';
+    result.diagnostics.push({
+      kind: 'security',
+      message: 'Application security policy produced warnings.',
+      nextAction: 'Review securityReport.app.staticChecks.findings before release.'
+    });
+    return;
+  }
+
+  result.securityReport.app.finalStatus = audit.finalStatus;
+
+  if (audit.finalStatus === 'failed') {
+    result.status = 'failed';
+    result.diagnostics.push({
+      kind: 'security',
+      message: 'Application security policy failed.',
+      nextAction: 'Fix generated code or adjust the declared security.app policy.'
+    });
+  }
 }

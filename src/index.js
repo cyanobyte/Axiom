@@ -19,3 +19,4 @@ export { createConfiguredAdapters } from './adapters/create-configured-adapters.
 export { must, should, outcome, verify } from './definition/helpers.js';
 export { normalizeSecurityPolicy } from './security/normalize-security-policy.js';
 export { createSecurityReport } from './security/create-security-report.js';
+export { auditAppSecurity } from './security/audit-app-security.js';
