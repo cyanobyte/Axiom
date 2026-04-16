@@ -139,4 +139,52 @@ describe('runtime security report', () => {
     expect(result.status).toBe('passed');
     expect(result.securityReport.app.finalStatus).toBe('warning');
   });
+
+  it('includes AI security review warnings in the final app security status', async () => {
+    const file = secureWebIntent(
+      {
+        app: {
+          target: 'web-app',
+          profile: 'browser-app-basic'
+        }
+      },
+      async (ctx) => {
+        await ctx.materialize.files([
+          {
+            path: 'src/app.js',
+            content: 'window.localStorage.setItem("token", token);'
+          }
+        ]);
+        return { ok: true };
+      }
+    );
+
+    const result = await runIntent(
+      file,
+      createTestAdapters({
+        securityReviewResult: {
+          findings: [
+            {
+              severity: 'warning',
+              message: 'Token storage should be reviewed.',
+              path: 'src/app.js'
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe('passed');
+    expect(result.securityReport.app.aiReview).toEqual({
+      status: 'warning',
+      findings: [
+        {
+          severity: 'warning',
+          message: 'Token storage should be reviewed.',
+          path: 'src/app.js'
+        }
+      ]
+    });
+    expect(result.securityReport.app.finalStatus).toBe('warning');
+  });
 });

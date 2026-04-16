@@ -30,9 +30,17 @@ export function createTestAdapters(options = {}) {
       }
     },
     ai: {
-      agent() {
+      agent(name) {
+        if (name === 'security-reviewer' && !options.securityReviewResult) {
+          throw new Error('security-reviewer agent is not configured');
+        }
+
         return {
           async run(input) {
+            if (name === 'security-reviewer') {
+              return options.securityReviewResult;
+            }
+
             return input;
           }
         };

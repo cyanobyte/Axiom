@@ -11,6 +11,7 @@ import { checkReadiness } from './check-readiness.js';
 import { createEventStream } from './create-event-stream.js';
 import { formatRuntimeError } from './format-runtime-error.js';
 import { auditAppSecurity } from '../security/audit-app-security.js';
+import { runAiSecurityReview } from '../security/run-ai-security-review.js';
 
 /**
  * Execute an authored intent file with an adapter set.
@@ -42,7 +43,7 @@ export async function runIntent(file, adapters, options = {}) {
   const ctx = createRunContext(file, adapters, state, result);
   try {
     result.finalValue = await file.runFn(ctx);
-    applyAppSecurityAudit(file.definition.security?.app, result, state.materializedFiles);
+    await applyAppSecurityAudit(file.definition.security?.app, result, state.materializedFiles, adapters);
   } catch (error) {
     result.status = error.code === 'INTERRUPTED' ? 'interrupted' : 'failed';
     result.diagnostics.push(formatRuntimeError(error));
@@ -51,31 +52,33 @@ export async function runIntent(file, adapters, options = {}) {
   return result;
 }
 
-function applyAppSecurityAudit(appSecurity, result, files) {
+async function applyAppSecurityAudit(appSecurity, result, files, adapters) {
   if (!appSecurity || !result.securityReport?.app) {
     return;
   }
 
   const audit = auditAppSecurity(appSecurity, files);
-  result.securityReport.app.staticChecks = audit.staticChecks;
-  result.securityReport.app.aiReview = {
-    status: 'not-run',
-    findings: []
-  };
+  const aiReview = await runAiSecurityReview({ adapters, appSecurity, files });
 
-  if (audit.finalStatus === 'failed' && appSecurity.violationAction === 'warn') {
+  result.securityReport.app.staticChecks = audit.staticChecks;
+  result.securityReport.app.aiReview = aiReview;
+
+  const failed = audit.finalStatus === 'failed' || aiReview.status === 'failed';
+  const warned = aiReview.status === 'warning';
+
+  if ((failed || warned) && appSecurity.violationAction === 'warn') {
     result.securityReport.app.finalStatus = 'warning';
     result.diagnostics.push({
       kind: 'security',
       message: 'Application security policy produced warnings.',
-      nextAction: 'Review securityReport.app.staticChecks.findings before release.'
+      nextAction: 'Review securityReport.app findings before release.'
     });
     return;
   }
 
-  result.securityReport.app.finalStatus = audit.finalStatus;
+  result.securityReport.app.finalStatus = failed ? 'failed' : warned ? 'warning' : 'pass';
 
-  if (audit.finalStatus === 'failed') {
+  if (failed) {
     result.status = 'failed';
     result.diagnostics.push({
       kind: 'security',
