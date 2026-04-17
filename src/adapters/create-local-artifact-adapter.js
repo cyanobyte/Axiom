@@ -16,10 +16,15 @@ import fs from 'node:fs/promises';
  * @returns {object}
  */
 export function createLocalArtifactAdapter(workspaceRoot, artifactRoot) {
-  const resolvedRoot = path.join(workspaceRoot, artifactRoot);
+  const resolvedRoot = path.isAbsolute(artifactRoot)
+    ? artifactRoot
+    : path.join(workspaceRoot, artifactRoot);
   const artifactDirectoryName = path.basename(path.normalize(resolvedRoot));
 
   return {
+    root() {
+      return resolvedRoot;
+    },
     async read(relativePath) {
       const normalizedPath = relativePath.startsWith(`${artifactDirectoryName}/`)
         ? relativePath.slice(artifactDirectoryName.length + 1)

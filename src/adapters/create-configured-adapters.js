@@ -18,11 +18,22 @@ import { createLocalShellAdapter } from './create-local-shell-adapter.js';
  *
  * @param {object} options
  * @param {object} options.runtimeConfig
+ * @param {object} [options.environment=process.env]
  * @returns {object}
  */
-export function createConfiguredAdapters({ runtimeConfig }) {
-  const workspace = createLocalWorkspaceAdapter(runtimeConfig.workspace.root);
-  const artifacts = createLocalArtifactAdapter(runtimeConfig.workspace.root, runtimeConfig.artifacts.root);
+export function createConfiguredAdapters({ runtimeConfig, environment = process.env }) {
+  const insideRunner = environment.AXIOM_RUNNER === '1';
+  const workspaceRoot =
+    insideRunner && environment.AXIOM_WORKSPACE_ROOT
+      ? environment.AXIOM_WORKSPACE_ROOT
+      : runtimeConfig.workspace.root;
+  const artifactRoot =
+    insideRunner && environment.AXIOM_ARTIFACTS_ROOT
+      ? environment.AXIOM_ARTIFACTS_ROOT
+      : runtimeConfig.artifacts.root;
+
+  const workspace = createLocalWorkspaceAdapter(workspaceRoot);
+  const artifacts = createLocalArtifactAdapter(workspaceRoot, artifactRoot);
   const shellType = runtimeConfig.workers?.shell?.type;
 
   return {

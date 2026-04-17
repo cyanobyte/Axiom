@@ -31,7 +31,8 @@ export async function runIntentFile(intentFilePath, options = {}) {
   const runtimeConfig = validateRuntimeConfig(await loadRuntimeConfig(resolvedPath));
   const adapters = createConfiguredAdapters({
     intentFilePath: resolvedPath,
-    runtimeConfig
+    runtimeConfig,
+    environment: options.environment ?? process.env
   });
 
   const buildState = await readBuildState(
