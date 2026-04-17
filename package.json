@@ -10,7 +10,9 @@
     ".": "./src/index.js"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "docker:runner:build": "docker build -f docker/runner/node-webapp/Dockerfile -t ghcr.io/science451/axiom-build-node-webapp:latest .",
+    "docker:runner:smoke": "docker run --rm ghcr.io/science451/axiom-build-node-webapp:latest sh -lc \"command -v ax\""
   },
   "devDependencies": {
     "vitest": "^3.2.4"
