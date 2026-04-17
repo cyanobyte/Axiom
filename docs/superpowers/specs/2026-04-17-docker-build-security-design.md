@@ -1,35 +1,20 @@
-# Docker Build Security Design
+# Docker Build Runner Security Design
 
 ## Goal
 
-Implement real Docker-backed build command execution for source-declared `security.build.mode: "docker"` while preserving the existing security policy model and leaving VirtualBox VM execution as a shaped follow-up.
+Implement Docker-backed build isolation by having the host Axiom CLI launch a local Docker runner that executes the full Axiom build inside the container.
 
-The current security layer validates build policies and reports them, but all shell work still runs through the configured worker adapter. This design makes the normalized build security policy affect command execution without moving adapter credentials or provider details into `.axiom.js`.
+The previous New MVP security work validates `security.build` and produces reports, but build execution still happens on the host. This design changes Docker mode from "policy only" to "run the actual build in an isolated runner," while keeping VirtualBox VM execution as a future backend that can use the same runner contract.
 
-## Scope
+## Core Direction
 
-In scope:
+When a user runs:
 
-- route runtime shell commands through Docker when `security.build.mode` is `"docker"`
-- derive Docker command flags from official normalized build profiles
-- keep `security.build.mode: "local"` behavior unchanged
-- return a clear unsupported execution error for `security.build.mode: "vm"` when shell execution is attempted
-- keep VM profile shape and reporting intact for future execution work
-- keep tests deterministic by testing generated Docker invocations through fake process runners
+```bash
+ax build examples/basic/counter-webapp.axiom.js
+```
 
-Out of scope:
-
-- building Docker images
-- accepting arbitrary user Docker images
-- cloud VM execution
-- VirtualBox/Packer execution
-- long-running container lifecycle management
-- per-step mixed execution modes
-- moving runtime adapter credentials into `.axiom.js`
-
-## Source And Config Model
-
-`.axiom.js` remains the source of security policy:
+and the intent declares:
 
 ```js
 security: {
@@ -40,252 +25,407 @@ security: {
 }
 ```
 
-Runtime config remains the source of concrete adapter wiring:
+the host `ax build` process should not execute the authored workflow directly. It should:
 
-```js
-export default {
-  workers: {
-    shell: { type: "local-shell" }
-  },
-  workspace: {
-    root: "./generated"
-  }
-};
+1. inspect enough intent metadata to discover and normalize `security.build`
+2. see `mode: "docker"`
+3. launch an official Axiom runner Docker image for that profile
+4. mount the project/source and writable output locations
+5. pass explicit allowlisted environment variables and secrets
+6. run `ax build <intent-file> --inside-runner` inside the container
+7. stream output and return the inner build exit code
+
+Inside the container, Axiom runs normally. It loads the `.axiom.js`, executes the workflow, calls AI agents, materializes files, runs shell workers, performs verification, and writes reports from inside the runner.
+
+## Why Runner Instead Of Worker Wrapper
+
+The worker-wrapper approach only isolates individual shell commands:
+
+```text
+host Axiom runtime -> Docker runs npm test
 ```
 
-Docker build security does not introduce a new runtime config worker type. Instead, runtime creates a security-aware worker wrapper around the configured shell worker. The wrapper decides how `ctx.worker("shell").exec(...)` runs based on the normalized `file.definition.security.build`.
+That is useful locally, but it is the wrong shape for future cloud execution. At cloud scale, the isolated environment should own the whole build:
 
-This keeps one source of truth for security intent and one source of truth for local capabilities.
+```text
+host/client submits job -> runner executes ax build -> runner emits events/results
+```
 
-## Architecture
+The local Docker runner is the small version of that future cloud runner. The host starts Docker directly for now. Later, the same runner contract can be submitted to a remote control plane instead of local Docker.
 
-Add a secure worker boundary between `ctx.worker(name)` and the configured worker adapter.
+## Scope
 
-For each worker request:
+In scope:
 
-1. `createRunContext` receives `file.definition.security`.
-2. `ctx.worker(name)` resolves the configured worker adapter through `adapters.workers.worker(name)`.
-3. The configured worker is wrapped by `createSecureWorkerAdapter`.
-4. `exec(spec, options)` is handled according to `security.build.mode`.
+- add a Docker runner launch path for `security.build.mode: "docker"`
+- run the full inner `ax build` inside the Docker runner
+- add an `--inside-runner` guard to prevent recursive Docker launch
+- preserve local mode behavior
+- keep VM mode validated and reported, but fail with a clear unsupported execution error when host build tries to launch it
+- define a runner payload/contract that can later back cloud runners
+- keep tests deterministic by injecting fake Docker/process runners
 
-Mode behavior:
+Out of scope:
 
-- no `security.build`: use configured worker unchanged
-- `local`: use configured worker unchanged
-- `docker`: run the command through `createDockerShellAdapter`
-- `vm`: throw a clear unsupported execution error
+- cloud control plane
+- remote job queue
+- source bundle upload
+- artifact object storage
+- VM/VirtualBox execution
+- Packer image creation
+- building runner images during `ax build`
+- arbitrary user-supplied Docker images
+- Docker-in-Docker
+- running mixed local and Docker steps in one build
 
-The wrapper should preserve the existing worker response shape:
+## Execution Model
+
+### Local Mode
+
+For no `security.build`, or:
+
+```js
+security: {
+  build: { mode: "local" }
+}
+```
+
+the existing host runtime behavior stays unchanged.
+
+### Docker Mode
+
+For:
+
+```js
+security: {
+  build: {
+    mode: "docker",
+    profile: "node-webapp"
+  }
+}
+```
+
+host execution becomes a launcher:
+
+```text
+host ax build
+  -> inspect security.build
+  -> normalize profile
+  -> launch Docker runner
+  -> stream output
+  -> exit with runner status
+```
+
+runner execution becomes the real build:
+
+```text
+container ax build --inside-runner
+  -> load .axiom.js
+  -> create runtime context
+  -> call AI agents using configured adapters
+  -> materialize files
+  -> run worker commands inside the container
+  -> perform verification
+  -> write build/security reports
+```
+
+### VM Mode
+
+For:
+
+```js
+security: {
+  build: {
+    mode: "vm",
+    provider: "virtualbox",
+    profile: "node-webapp"
+  }
+}
+```
+
+the policy continues to validate. Execution should fail before the authored workflow runs with:
+
+```text
+security.build.mode "vm" is validated but VM build runners are not implemented yet.
+```
+
+Error code:
+
+```text
+UNSUPPORTED_BUILD_RUNNER
+```
+
+## Bootstrap Guard
+
+The runner must not recursively launch itself.
+
+Add an explicit CLI flag:
+
+```bash
+ax build app.axiom.js --inside-runner
+```
+
+and set an environment marker in the Docker container:
+
+```bash
+AXIOM_RUNNER=1
+AXIOM_RUNNER_KIND=docker
+```
+
+Bootstrap rules:
+
+- host `ax build` with Docker security and no `--inside-runner`: launch Docker runner
+- inner `ax build --inside-runner`: execute normally inside current process
+- if `--inside-runner` is set but `AXIOM_RUNNER` is missing: fail with a clear invalid runner environment error
+- if `AXIOM_RUNNER` is set but `--inside-runner` is missing: allow normal execution, but do not launch a nested runner
+
+The CLI flag is the primary guard because it is explicit. The environment marker records where the build is running and helps diagnostics.
+
+## Intent Inspection
+
+The host needs to discover `security.build` before deciding whether to launch Docker.
+
+For the first implementation, it may use the existing intent loading path because that matches current Axiom source behavior. The design acknowledges that loading `.axiom.js` can execute JavaScript module top-level code. Future hardening can introduce a statically extractable security manifest or sidecar metadata.
+
+Host inspection should stop after normalized definition loading. It must not execute the intent workflow callback before launching Docker.
+
+## Runner Contract
+
+Represent the local Docker runner launch with an internal payload:
 
 ```js
 {
-  ...spec,
-  stdout: "string",
-  stderr: "string",
-  exitCode: 0
+  intentPath: "examples/basic/counter-webapp.axiom.js",
+  projectRoot: "/repo",
+  workspaceRoot: "/repo/examples/basic/generated",
+  artifactsRoot: "/repo/examples/basic/reports",
+  runtimeConfigPath: "/repo/examples/basic/axiom.config.js",
+  buildSecurity: {
+    mode: "docker",
+    profile: "node-webapp",
+    image: "ghcr.io/science451/axiom-build-node-webapp:latest",
+    network: "restricted",
+    env: { allow: ["PATH", "HOME", "NODE_ENV"] },
+    resources: { cpu: 2, memory: "4g" },
+    tools: ["node", "npm"]
+  },
+  env: {
+    NODE_ENV: "development"
+  }
 }
 ```
 
-Non-zero exit codes remain runtime step failures because `createRunContext` already throws when a worker result has a non-zero `exitCode`.
+This contract should live in code as a plain object, not as a public file format yet. It creates the seam for future cloud submission.
 
-## Components
+## Docker Runner Command
 
-### `src/security/create-secure-worker-adapter.js`
+The Docker launcher should run the official runner image from the normalized build profile.
 
-Responsible for applying build security policy to worker execution.
-
-Public API:
-
-```js
-export function createSecureWorkerAdapter({ worker, buildSecurity, workspace }) {
-  return {
-    exec(spec, options) {
-      // mode-based execution
-    }
-  };
-}
-```
-
-Rules:
-
-- if `buildSecurity` is missing, call `worker.exec(spec, options)`
-- if `buildSecurity.mode === "local"`, call `worker.exec(spec, options)`
-- if `buildSecurity.mode === "docker"`, call a Docker shell adapter
-- if `buildSecurity.mode === "vm"`, throw an error with code `UNSUPPORTED_BUILD_SECURITY_MODE`
-
-The thrown VM error message should be:
-
-```text
-security.build.mode "vm" is validated but VM command execution is not implemented yet.
-```
-
-### `src/security/create-docker-shell-adapter.js`
-
-Responsible for converting a worker command spec into a Docker command executed by a process runner.
-
-Public API:
-
-```js
-export function createDockerShellAdapter({ buildSecurity, workspace, runner = defaultRunner }) {
-  return {
-    exec(spec, options) {
-      // docker run ...
-    }
-  };
-}
-```
-
-The adapter builds a `docker run --rm` command using the normalized Docker profile:
-
-- image: `buildSecurity.image`
-- network: `--network none` when `buildSecurity.network === "restricted"`
-- workspace mount: `-v <workspace.root()>:/workspace`
-- working directory: map `spec.cwd` under the workspace to `/workspace/...`
-- env allowlist: pass only allowed variables present in `process.env`
-- resources: `--cpus <cpu>` and `--memory <memory>`
-- command: run through `sh -lc <spec.command>`
-
-The command should be executed without `shell: true` by spawning:
-
-```js
-spawn("docker", args, { cwd: workspace.root() })
-```
-
-Testing should inject a fake runner so unit tests do not require Docker.
-
-### `src/runtime/create-run-context.js`
-
-Responsible for applying the secure worker wrapper when runtime code calls `ctx.worker(name)`.
-
-Existing behavior:
-
-```js
-const worker = adapters.workers.worker(name);
-```
-
-New behavior:
-
-```js
-const worker = createSecureWorkerAdapter({
-  worker: adapters.workers.worker(name),
-  buildSecurity: file.definition.security?.build,
-  workspace: adapters.workspace
-});
-```
-
-The rest of `ctx.worker(name).exec(...)` remains unchanged.
-
-### `src/adapters/create-configured-adapters.js`
-
-No new worker type is required for the first implementation.
-
-The existing `local-shell` worker remains the process runner that can invoke `docker`. The security wrapper decides when Docker is required.
-
-### `src/security/create-security-report.js`
-
-No schema change is required in the first slice. The report already records `mode`, `profile`, `provider`, status, and warnings. Docker execution failures should surface through normal step diagnostics.
-
-## Docker Command Mapping
-
-Given:
-
-```js
-buildSecurity: {
-  mode: "docker",
-  profile: "node-webapp",
-  image: "ghcr.io/science451/axiom-build-node-webapp:latest",
-  network: "restricted",
-  env: { allow: ["PATH", "HOME", "NODE_ENV"] },
-  resources: { cpu: 2, memory: "4g" }
-}
-```
-
-And:
-
-```js
-spec: {
-  command: "npm test",
-  cwd: "/repo/generated"
-}
-```
-
-The Docker adapter should run equivalent arguments:
+Conceptual command:
 
 ```bash
 docker run --rm \
   --network none \
   --cpus 2 \
   --memory 4g \
-  -e PATH=<value> \
-  -e HOME=<value> \
-  -e NODE_ENV=<value> \
-  -v /repo/generated:/workspace \
-  -w /workspace \
+  -e AXIOM_RUNNER=1 \
+  -e AXIOM_RUNNER_KIND=docker \
+  -e NODE_ENV=development \
+  -v /repo:/workspace/source:ro \
+  -v /repo/examples/basic/generated:/workspace/generated \
+  -v /repo/examples/basic/reports:/workspace/reports \
+  -w /workspace/source \
   ghcr.io/science451/axiom-build-node-webapp:latest \
-  sh -lc "npm test"
+  ax build examples/basic/counter-webapp.axiom.js --inside-runner
 ```
 
-If `spec.cwd` is inside the workspace root, map it to the corresponding `/workspace/...` path. If `spec.cwd` is missing, use `/workspace`. If `spec.cwd` is outside the workspace root, reject the command before Docker execution with:
+Mount rules:
+
+- project root mounted read-only at `/workspace/source`
+- generated workspace mounted writable at `/workspace/generated`
+- artifact/report directory mounted writable at `/workspace/reports`
+
+The first implementation may use existing runtime config values to determine `workspaceRoot` and `artifactsRoot`. If a path is relative, resolve it from the runtime config file directory, matching existing adapter behavior.
+
+## Runner Image Assumptions
+
+The official Docker profile image must contain:
+
+- Node.js
+- npm
+- Axiom CLI/runtime
+- the package manager/tooling required by the profile
+- a shell compatible with `sh -lc`
+
+The first implementation should not build this image. It should generate the Docker command for the configured profile image and fail clearly if Docker cannot pull or start it.
+
+## Secrets And Environment
+
+Do not pass the full host environment into the runner.
+
+Use the normalized profile allowlist:
+
+```js
+env: { allow: ["PATH", "HOME", "NODE_ENV"] }
+```
+
+Only variables present in both the allowlist and `process.env` should be passed.
+
+Future profiles can add explicit AI credential variables, but those must remain allowlisted. This design intentionally avoids implicit secret sharing.
+
+The Docker command construction must avoid logging secret values in diagnostics. Tests should assert the selected variable names and argument shape without requiring real secret values.
+
+## Runtime Config Inside Runner
+
+Runtime config remains project-local:
 
 ```text
-Docker build security only allows command cwd inside the configured workspace.
+examples/basic/axiom.config.js
 ```
 
-This preserves the workspace boundary promised by the security profile.
+The inner runner loads it normally. Config must be valid inside the mounted paths. For the Docker MVP:
+
+- source paths resolve under `/workspace/source`
+- workspace paths should resolve to `/workspace/generated`
+- artifact paths should resolve to `/workspace/reports`
+
+If existing config path resolution cannot support this cleanly, the implementation should introduce runner path overrides through environment variables:
+
+```bash
+AXIOM_WORKSPACE_ROOT=/workspace/generated
+AXIOM_ARTIFACTS_ROOT=/workspace/reports
+```
+
+The overrides should be applied only inside runner mode.
+
+## Output And Results
+
+MVP output streaming:
+
+- host streams Docker stdout/stderr to the current process stdout/stderr
+- host exits with the Docker process exit code
+
+Structured follow-up:
+
+- inner runner writes normal Axiom result/artifact files into mounted report directories
+- future cloud runners can stream structured events over an API instead of stdout
+
+The local Docker MVP does not need a separate event protocol as long as existing reports are available through mounted artifacts.
 
 ## Error Handling
 
 Docker unavailable:
 
-- If the Docker process cannot start, propagate the spawn error through the existing runtime error path.
-- The final run result should have `status: "failed"` and a diagnostic produced by existing runtime error formatting.
+- host launcher fails before inner build starts
+- host result is a failed CLI command
+- message should include `Docker build runner could not start`
 
-Docker command exits non-zero:
+Docker exits non-zero:
 
-- Return the worker result with the Docker process `exitCode`.
-- Existing `createRunContext` worker handling converts non-zero exit codes into a failed step.
+- host `ax build` exits with the same non-zero code
+- stdout/stderr from the inner build is preserved
 
-Unsupported VM execution:
+Unsupported VM:
 
-- Throw an `Error` with `code: "UNSUPPORTED_BUILD_SECURITY_MODE"`.
-- Existing runtime error formatting records the failure.
-- The message must make clear that VM policy validation exists but VM command execution is not implemented in this slice.
+- host `ax build` fails before workflow execution
+- error code: `UNSUPPORTED_BUILD_RUNNER`
+- message: `security.build.mode "vm" is validated but VM build runners are not implemented yet.`
 
-Workspace escape:
+Invalid runner flag:
 
-- Reject before spawning Docker.
-- Error code: `SECURITY_WORKSPACE_BOUNDARY`.
-- Message: `Docker build security only allows command cwd inside the configured workspace.`
+- `--inside-runner` without `AXIOM_RUNNER=1` fails
+- error code: `INVALID_RUNNER_ENVIRONMENT`
+- message: `--inside-runner requires AXIOM_RUNNER=1.`
 
-## Testing
+Missing runner image or Docker pull failure:
 
-Unit tests should avoid requiring Docker.
+- rely on Docker process stderr
+- add a short Axiom diagnostic prefix so users know the failure occurred while launching the build runner
+
+## Components
+
+### `src/security/create-build-runner-plan.js`
+
+Creates the internal runner payload from:
+
+- intent path
+- loaded intent definition
+- runtime config path/config
+- normalized `security.build`
+
+This module performs path resolution and env allowlist selection. It does not spawn Docker.
+
+### `src/security/create-docker-build-runner.js`
+
+Converts a runner payload into a Docker process invocation.
+
+Public API:
+
+```js
+export function createDockerBuildRunner({ runner = defaultRunner } = {}) {
+  return {
+    run(plan, options) {
+      // spawn docker with deterministic args
+    }
+  };
+}
+```
+
+Tests inject `runner` to avoid requiring Docker.
+
+### `src/cli/build-command.js`
+
+Adds the bootstrap decision:
+
+- parse `--inside-runner`
+- load intent/config enough to inspect security
+- if Docker and not inside runner, create and run Docker build runner
+- if VM and not inside runner, fail unsupported
+- otherwise call existing `runIntentFile`
+
+The existing local path remains the default.
+
+### `bin/ax.js`
+
+Accepts and forwards the `--inside-runner` flag for `ax build`.
+
+### `src/public/run-intent-file.js`
+
+May need runner-aware path overrides for workspace/artifact roots if runtime config paths cannot be made correct through mounts alone.
+
+The first implementation should prefer environment overrides only if tests show current resolution is insufficient.
+
+## Tests
+
+Unit tests should not require Docker.
 
 New tests:
 
-- `test/security/create-secure-worker-adapter.test.js`
-  - local mode delegates to the configured worker
-  - missing build security delegates to the configured worker
-  - docker mode uses Docker adapter behavior
-  - vm mode throws the unsupported execution error
+- `test/security/create-build-runner-plan.test.js`
+  - creates a Docker runner plan from normalized `node-webapp` security
+  - resolves relative workspace and artifact roots from runtime config directory
+  - passes only allowlisted environment variables
+  - includes `AXIOM_RUNNER` and `AXIOM_RUNNER_KIND`
 
-- `test/security/create-docker-shell-adapter.test.js`
-  - builds expected Docker args from the normalized `node-webapp` profile
-  - maps workspace root cwd to `/workspace`
-  - maps nested workspace cwd to `/workspace/<relative>`
-  - rejects cwd outside workspace
-  - passes only env allowlist variables that exist
+- `test/security/create-docker-build-runner.test.js`
+  - builds expected `docker run` args
+  - mounts source read-only
+  - mounts workspace and reports writable
+  - applies network/resource flags
+  - runs `ax build <intent> --inside-runner`
+  - returns the runner exit code/stdout/stderr shape
 
-- `test/runtime/build-security-worker.test.js`
-  - `runIntent` under docker build security routes `ctx.worker("shell").exec(...)` through Docker
-  - local build security keeps existing fake worker behavior
-  - VM build security fails when workflow tries to execute a worker command
+- `test/cli/build-command-runner.test.js`
+  - Docker build security launches the Docker runner instead of local `runIntentFile`
+  - `--inside-runner` executes the normal local build path
+  - VM build security fails with `UNSUPPORTED_BUILD_RUNNER`
+  - `--inside-runner` without `AXIOM_RUNNER=1` fails with `INVALID_RUNNER_ENVIRONMENT`
 
-Existing tests:
+Existing regression tests:
 
 ```bash
-npm test -- test/runtime/run-intent.test.js test/runtime/create-run-context.test.js test/runtime/security-report.test.js
-npm test -- test/security/normalize-security-policy.test.js
+npm test -- test/cli/build-command.test.js test/public/run-intent-file.test.js
+npm test -- test/security/normalize-security-policy.test.js test/runtime/security-report.test.js
 ```
 
 Final verification:
@@ -296,36 +436,52 @@ npm test
 
 ## Migration And Compatibility
 
-Existing intent files without `security.build` keep their current behavior.
+Existing intent files without `security.build` keep current local behavior.
 
-Existing intent files with `security.build.mode: "local"` keep their current behavior.
+Existing intent files with `security.build.mode: "local"` keep current local behavior.
 
-Intent files that declare Docker build security start executing shell commands through Docker. This is an intentional behavior change because the source now declares an isolation policy.
+Intent files with `security.build.mode: "docker"` change from "validated and reported" to "executed inside Docker." This is the intended behavior because the source declares Docker isolation.
 
-Intent files that declare VM build security continue to validate and report the VM profile, but workflow shell execution fails with a clear unsupported execution error until VM execution is implemented.
+Intent files with `security.build.mode: "vm"` continue to validate, but `ax build` fails before workflow execution until a VM runner backend exists.
 
-## Future VM Execution Shape
+## Future Cloud Runner Shape
 
-The Docker work should leave these interfaces usable by a later VM adapter:
+The local Docker runner plan should be close to a future cloud job payload:
 
 ```js
-createSecureWorkerAdapter({ worker, buildSecurity, workspace })
+{
+  intentPath,
+  sourceBundleRef,
+  runtimeConfig,
+  buildSecurity,
+  env,
+  secretsRefs,
+  artifactDestination
+}
 ```
 
-When `buildSecurity.mode === "vm"`, a future `createVirtualBoxShellAdapter` can replace the current unsupported error. It should consume:
+The future cloud version should replace:
 
-- `buildSecurity.provider`
-- `buildSecurity.profile`
-- `buildSecurity.packerTemplate`
-- shared network/env/resource/tool profile fields
+```text
+host CLI -> local docker run
+```
 
-The future VM adapter should not change `.axiom.js` source shape or runtime config shape.
+with:
+
+```text
+host CLI -> submit build job -> cloud runner executes ax build --inside-runner
+```
+
+The inner runner behavior should remain the same.
 
 ## Acceptance Criteria
 
-- Docker build security changes command execution, not just reporting.
-- Docker command construction is deterministic and unit-tested without Docker.
-- Local build security remains backward compatible.
-- VM build security has a clear execution error instead of silently running locally.
-- Workspace boundary checks prevent Docker mode from running commands outside the configured workspace.
+- `ax build` with Docker build security launches a Docker runner instead of executing the workflow on the host.
+- The Docker runner executes `ax build <intent> --inside-runner`.
+- The recursion guard prevents nested runner launches.
+- Docker command construction is deterministic and tested without Docker.
+- Local build behavior is unchanged.
+- VM build security fails with a clear unsupported runner error.
+- Environment passing is explicit and allowlisted.
+- Source is mounted read-only; generated workspace and reports are writable.
 - Full automated test suite passes.
