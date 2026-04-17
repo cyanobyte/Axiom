@@ -24,7 +24,7 @@ describe('buildCommand', () => {
 
     const exitCode = await buildCommand(
       ['examples/basic/counter-webapp.axiom.js'],
-      { runIntentFile, logger }
+      { runIntentFile, logger, ...localBuildInspection() }
     );
 
     expect(exitCode).toBe(0);
@@ -50,7 +50,8 @@ describe('buildCommand', () => {
     const exitCode = await buildCommand([], {
       runIntentFile,
       resolveBuildTarget,
-      logger
+      logger,
+      ...localBuildInspection()
     });
 
     expect(exitCode).toBe(0);
@@ -116,7 +117,7 @@ describe('buildCommand', () => {
 
     const exitCode = await buildCommand(
       ['examples/basic/counter-webapp.axiom.js'],
-      { runIntentFile, logger }
+      { runIntentFile, logger, ...localBuildInspection() }
     );
 
     expect(exitCode).toBe(0);
@@ -141,7 +142,7 @@ describe('buildCommand', () => {
 
     const exitCode = await buildCommand(
       ['--verbose', 'examples/live-counter/counter-webapp.axiom.js'],
-      { runIntentFile, logger }
+      { runIntentFile, logger, ...localBuildInspection() }
     );
 
     expect(exitCode).toBe(0);
@@ -167,7 +168,8 @@ describe('buildCommand', () => {
             interruptHandler = handler;
           },
           unregister() {}
-        }
+        },
+        ...localBuildInspection()
       }
     );
 
@@ -191,7 +193,7 @@ describe('buildCommand', () => {
 
     const exitCode = await buildCommand(
       ['examples/live-counter/counter-webapp.axiom.js'],
-      { runIntentFile, logger }
+      { runIntentFile, logger, ...localBuildInspection() }
     );
 
     expect(exitCode).toBe(1);
@@ -218,4 +220,155 @@ describe('buildCommand', () => {
       'Multiple .axiom.js files found in /repo: app.axiom.js, api.axiom.js. Run `ax build <file.axiom.js>`.'
     );
   });
+
+  it('launches Docker runner on the host and skips local runtime execution', async () => {
+    const loadIntentFile = vi.fn(async () => ({
+      definition: {
+        security: {
+          build: {
+            mode: 'docker',
+            profile: 'node-webapp',
+            image: 'image',
+            network: 'restricted',
+            env: { allow: [] },
+            resources: { cpu: 2, memory: '4g' },
+            tools: ['node', 'npm']
+          }
+        }
+      }
+    }));
+    const loadRuntimeConfig = vi.fn(async () => ({
+      workspace: { root: './generated' },
+      artifacts: { root: './reports' }
+    }));
+    const validateRuntimeConfig = vi.fn((config) => config);
+    const createBuildRunnerPlan = vi.fn(() => ({ kind: 'docker-build-runner-plan' }));
+    const dockerBuildRunner = { run: vi.fn(async () => ({ exitCode: 23 })) };
+    const createDockerBuildRunner = vi.fn(() => dockerBuildRunner);
+    const runIntentFile = vi.fn();
+    const logger = { log: vi.fn(), error: vi.fn() };
+
+    const exitCode = await buildCommand(['app.axiom.js'], {
+      runIntentFile,
+      logger,
+      loadIntentFile,
+      loadRuntimeConfig,
+      validateRuntimeConfig,
+      createBuildRunnerPlan,
+      createDockerBuildRunner,
+      environment: {}
+    });
+
+    expect(exitCode).toBe(23);
+    expect(runIntentFile).not.toHaveBeenCalled();
+    expect(createBuildRunnerPlan).toHaveBeenCalledWith(expect.objectContaining({
+      intentPath: 'app.axiom.js',
+      runtimeConfig: {
+        workspace: { root: './generated' },
+        artifacts: { root: './reports' }
+      }
+    }));
+    expect(dockerBuildRunner.run).toHaveBeenCalledWith(
+      { kind: 'docker-build-runner-plan' },
+      expect.objectContaining({ signal: expect.any(AbortSignal), onOutput: expect.any(Function) })
+    );
+  });
+
+  it('runs local runtime inside a valid runner environment', async () => {
+    const runIntentFile = vi.fn(async () => ({ status: 'passed', events: [] }));
+    const logger = { log: vi.fn(), error: vi.fn() };
+
+    const exitCode = await buildCommand(['app.axiom.js', '--inside-runner'], {
+      runIntentFile,
+      logger,
+      environment: { AXIOM_RUNNER: '1' }
+    });
+
+    expect(exitCode).toBe(0);
+    expect(runIntentFile).toHaveBeenCalledWith(
+      'app.axiom.js',
+      expect.objectContaining({
+        environment: { AXIOM_RUNNER: '1' }
+      })
+    );
+  });
+
+  it('rejects inside-runner flag without runner environment marker', async () => {
+    const runIntentFile = vi.fn();
+    const logger = { log: vi.fn(), error: vi.fn() };
+
+    const exitCode = await buildCommand(['app.axiom.js', '--inside-runner'], {
+      runIntentFile,
+      logger,
+      environment: {}
+    });
+
+    expect(exitCode).toBe(1);
+    expect(runIntentFile).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith('--inside-runner requires AXIOM_RUNNER=1.');
+  });
+
+  it('does not launch a nested runner when AXIOM_RUNNER is already set', async () => {
+    const runIntentFile = vi.fn(async () => ({ status: 'passed', events: [] }));
+    const createDockerBuildRunner = vi.fn();
+    const logger = { log: vi.fn(), error: vi.fn() };
+
+    const exitCode = await buildCommand(['app.axiom.js'], {
+      runIntentFile,
+      logger,
+      createDockerBuildRunner,
+      environment: { AXIOM_RUNNER: '1' }
+    });
+
+    expect(exitCode).toBe(0);
+    expect(createDockerBuildRunner).not.toHaveBeenCalled();
+    expect(runIntentFile).toHaveBeenCalled();
+  });
+
+  it('fails VM build mode before executing authored workflow', async () => {
+    const loadIntentFile = vi.fn(async () => ({
+      definition: {
+        security: {
+          build: {
+            mode: 'vm',
+            provider: 'virtualbox',
+            profile: 'node-webapp'
+          }
+        }
+      }
+    }));
+    const loadRuntimeConfig = vi.fn(async () => ({
+      workspace: { root: './generated' },
+      artifacts: { root: './reports' }
+    }));
+    const validateRuntimeConfig = vi.fn((config) => config);
+    const runIntentFile = vi.fn();
+    const logger = { log: vi.fn(), error: vi.fn() };
+
+    const exitCode = await buildCommand(['app.axiom.js'], {
+      runIntentFile,
+      logger,
+      loadIntentFile,
+      loadRuntimeConfig,
+      validateRuntimeConfig,
+      environment: {}
+    });
+
+    expect(exitCode).toBe(1);
+    expect(runIntentFile).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(
+      '[error:UNSUPPORTED_BUILD_RUNNER] security.build.mode "vm" is validated but VM build runners are not implemented yet.'
+    );
+  });
 });
+
+function localBuildInspection() {
+  return {
+    loadIntentFile: vi.fn(async () => ({ definition: {} })),
+    loadRuntimeConfig: vi.fn(async () => ({
+      workspace: { root: './generated' },
+      artifacts: { root: './reports' }
+    })),
+    validateRuntimeConfig: vi.fn((config) => config)
+  };
+}

@@ -7,6 +7,11 @@
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { loadIntentFile as loadIntentFileDefault } from '../public/load-intent-file.js';
+import { loadRuntimeConfig as loadRuntimeConfigDefault } from '../public/load-runtime-config.js';
+import { validateRuntimeConfig as validateRuntimeConfigDefault } from '../config/validate-runtime-config.js';
+import { createBuildRunnerPlan as createBuildRunnerPlanDefault } from '../security/create-build-runner-plan.js';
+import { createDockerBuildRunner as createDockerBuildRunnerDefault } from '../security/create-docker-build-runner.js';
 
 /**
  * Run the `ax build` command with local-file discovery when no explicit target is provided.
@@ -17,6 +22,13 @@ import path from 'node:path';
  * @param {object} dependencies.logger
  * @param {Function} [dependencies.resolveBuildTarget]
  * @param {object} [dependencies.signalHandlers]
+ * @param {Function} [dependencies.loadIntentFile]
+ * @param {Function} [dependencies.loadRuntimeConfig]
+ * @param {Function} [dependencies.validateRuntimeConfig]
+ * @param {Function} [dependencies.createBuildRunnerPlan]
+ * @param {Function} [dependencies.createDockerBuildRunner]
+ * @param {object} [dependencies.environment]
+ * @param {string} [dependencies.projectRoot]
  * @returns {Promise<number>}
  */
 export async function buildCommand(
@@ -25,25 +37,56 @@ export async function buildCommand(
     runIntentFile,
     logger,
     resolveBuildTarget = resolveBuildTargetDefault,
-    signalHandlers = defaultSignalHandlers
+    signalHandlers = defaultSignalHandlers,
+    loadIntentFile = loadIntentFileDefault,
+    loadRuntimeConfig = loadRuntimeConfigDefault,
+    validateRuntimeConfig = validateRuntimeConfigDefault,
+    createBuildRunnerPlan = createBuildRunnerPlanDefault,
+    createDockerBuildRunner = createDockerBuildRunnerDefault,
+    environment = process.env,
+    projectRoot = process.cwd()
   }
 ) {
   const verbose = args.includes('--verbose');
-  let filePath = args.find((arg) => arg !== '--verbose');
+  const insideRunner = args.includes('--inside-runner');
+  let filePath = args.find((arg) => !['--verbose', '--inside-runner'].includes(arg));
 
   if (!filePath) {
     try {
-      filePath = await resolveBuildTarget(process.cwd());
+      filePath = await resolveBuildTarget(projectRoot);
     } catch (error) {
       logger.error(error.message);
       return 1;
     }
   }
 
-  return executeBuild(filePath, { verbose, runIntentFile, logger, signalHandlers });
+  if (insideRunner && environment.AXIOM_RUNNER !== '1') {
+    logger.error('--inside-runner requires AXIOM_RUNNER=1.');
+    return 1;
+  }
+
+  if (!insideRunner && environment.AXIOM_RUNNER !== '1') {
+    const runnerExitCode = await maybeExecuteBuildRunner(filePath, {
+      logger,
+      loadIntentFile,
+      loadRuntimeConfig,
+      validateRuntimeConfig,
+      createBuildRunnerPlan,
+      createDockerBuildRunner,
+      environment,
+      projectRoot,
+      signalHandlers
+    });
+
+    if (runnerExitCode !== undefined) {
+      return runnerExitCode;
+    }
+  }
+
+  return executeBuild(filePath, { verbose, runIntentFile, logger, signalHandlers, environment });
 }
 
-async function executeBuild(filePath, { verbose, runIntentFile, logger, signalHandlers }) {
+async function executeBuild(filePath, { verbose, runIntentFile, logger, signalHandlers, environment }) {
   const controller = new AbortController();
   const handleInterrupt = () => {
     controller.abort();
@@ -53,6 +96,7 @@ async function executeBuild(filePath, { verbose, runIntentFile, logger, signalHa
   try {
     const result = await runIntentFile(filePath, {
       signal: controller.signal,
+      environment,
       onEvent(event) {
         if (event.type === 'step.started') {
           logger.log(`[step] ${event.stepId} started`);
@@ -87,6 +131,84 @@ async function executeBuild(filePath, { verbose, runIntentFile, logger, signalHa
     return result.status === 'passed' ? 0 : 1;
   } catch (error) {
     if (error.code === 'INTERRUPTED') {
+      return 130;
+    }
+
+    logger.error(error.message);
+    return 1;
+  } finally {
+    signalHandlers.unregister(handleInterrupt);
+  }
+}
+
+async function maybeExecuteBuildRunner(
+  filePath,
+  {
+    logger,
+    loadIntentFile,
+    loadRuntimeConfig,
+    validateRuntimeConfig,
+    createBuildRunnerPlan,
+    createDockerBuildRunner,
+    environment,
+    projectRoot,
+    signalHandlers
+  }
+) {
+  let file;
+  let runtimeConfig;
+  const resolvedFilePath = path.resolve(filePath);
+
+  try {
+    file = await loadIntentFile(resolvedFilePath);
+    runtimeConfig = validateRuntimeConfig(await loadRuntimeConfig(resolvedFilePath));
+  } catch (error) {
+    logger.error(error.message);
+    return 1;
+  }
+
+  const buildSecurity = file.definition.security?.build;
+  if (!buildSecurity || buildSecurity.mode === 'local') {
+    return undefined;
+  }
+
+  if (buildSecurity.mode === 'vm') {
+    logger.error(
+      '[error:UNSUPPORTED_BUILD_RUNNER] security.build.mode "vm" is validated but VM build runners are not implemented yet.'
+    );
+    return 1;
+  }
+
+  if (buildSecurity.mode !== 'docker') {
+    return undefined;
+  }
+
+  const controller = new AbortController();
+  const handleInterrupt = () => {
+    controller.abort();
+  };
+  signalHandlers.register(handleInterrupt);
+
+  try {
+    const runnerPlan = createBuildRunnerPlan({
+      intentPath: filePath,
+      runtimeConfigPath: path.join(path.dirname(resolvedFilePath), 'axiom.config.js'),
+      runtimeConfig,
+      buildSecurity,
+      environment,
+      projectRoot
+    });
+    const dockerBuildRunner = createDockerBuildRunner();
+    const result = await dockerBuildRunner.run(runnerPlan, {
+      signal: controller.signal,
+      onOutput(event) {
+        logger[event.stream === 'stderr' ? 'error' : 'log'](event.chunk.trimEnd());
+      }
+    });
+
+    return result.exitCode ?? 1;
+  } catch (error) {
+    if (error.code === 'ABORT_ERR' || controller.signal.aborted) {
       return 130;
     }
 
