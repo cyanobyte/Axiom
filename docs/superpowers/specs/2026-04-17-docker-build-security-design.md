@@ -259,6 +259,12 @@ The official Docker profile image must contain:
 
 The first implementation should not build this image. It should generate the Docker command for the configured profile image and fail clearly if Docker cannot pull or start it.
 
+## Implementation Notes
+
+- Runtime config workspace paths are resolved from the process project root for the first Docker runner implementation, matching current CLI execution behavior.
+- Artifact paths keep the existing adapter model: relative artifact roots resolve from the resolved workspace root.
+- Live Docker image pull and image build are outside this slice; deterministic coverage uses an injected process runner.
+
 ## Secrets And Environment
 
 Do not pass the full host environment into the runner.
