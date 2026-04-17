@@ -95,6 +95,52 @@ describe('runIntentFile', () => {
       generatedFiles: 2
     });
   });
+
+  it('writes generated files to runner override roots inside AXIOM_RUNNER mode', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'axiom-runner-'));
+    const generatedRoot = path.join(root, 'runner-generated');
+    const reportsRoot = path.join(root, 'runner-reports');
+    const intentPath = path.join(root, 'app.axiom.js');
+    const configPath = path.join(root, 'axiom.config.js');
+    const runtimeModuleUrl = pathToFileURL(path.resolve('src/index.js')).href;
+
+    await fs.writeFile(
+      configPath,
+      `export default {
+  agents: {
+    briefing: { provider: "fake", responses: { briefing: { ok: true } } }
+  },
+  workspace: { root: ${JSON.stringify(path.join(root, 'host-generated'))} },
+  workers: { shell: { type: "fake-shell" } },
+  artifacts: { root: "./reports" }
+};
+`,
+      'utf8'
+    );
+
+    await fs.writeFile(
+      intentPath,
+      createFixtureIntent({
+        runtimeModuleUrl,
+        version: '1.0.0',
+        outputFile: 'app.txt',
+        outputText: 'runner file'
+      }),
+      'utf8'
+    );
+
+    const result = await runIntentFile(intentPath, {
+      environment: {
+        AXIOM_RUNNER: '1',
+        AXIOM_WORKSPACE_ROOT: generatedRoot,
+        AXIOM_ARTIFACTS_ROOT: reportsRoot
+      }
+    });
+
+    expect(result.status).toBe('passed');
+    await expect(fs.readFile(path.join(generatedRoot, 'app.txt'), 'utf8')).resolves.toBe('runner file');
+    await expect(fs.access(path.join(root, 'host-generated'))).rejects.toThrow();
+  });
 });
 
 function createFixtureIntent({ runtimeModuleUrl, version, outputFile, outputText }) {
