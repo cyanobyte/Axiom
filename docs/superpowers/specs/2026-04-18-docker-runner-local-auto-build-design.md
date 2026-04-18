@@ -123,7 +123,7 @@ export function getAxiomPackageRoot() {
 }
 ```
 
-The helper walks up from its own module URL until it finds the `package.json` with `name: "axiom"`. This anchor is used to resolve the Dockerfile path and the Docker build context. If no matching `package.json` is found before reaching the filesystem root, the helper throws an error with code `AXIOM_PACKAGE_ROOT_NOT_FOUND`. The resolved root is cached for the process lifetime after the first successful lookup.
+The helper resolves the package root from its own module URL by fixed depth: `src/runtime/axiom-package-root.js` sits two directories below the package root, so `path.resolve(fileURLToPath(import.meta.url), '../../..')` returns the root deterministically. This anchor is used to resolve the Dockerfile path and the Docker build context. No scanning, no fallback logic, and no dependency on the npm package name (which is `@science451/intent-runtime`, not `axiom`).
 
 ## Image Ensurer
 
