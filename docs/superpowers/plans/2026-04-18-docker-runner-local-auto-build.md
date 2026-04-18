@@ -718,11 +718,13 @@ Run: `npx vitest run test/cli/build-command-auto-build.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Run the existing build-command tests to verify no regressions**
+- [ ] **Step 5: Run the existing build-command tests and update Docker-mode cases**
 
 Run: `npx vitest run test/cli/build-command.test.js`
 
-Expected: all existing tests PASS. If any fail because they did not inject `createDockerImageEnsurer` or `getAxiomPackageRoot`, update only the Docker-mode test cases to pass no-op stubs — the defaults should cover the rest.
+The existing "launches Docker runner on the host" test (and any other Docker-mode cases) will break: the default `createDockerImageEnsurer` spawns real `docker` via `child_process.spawn`, and any test that exercises the Docker bootstrap will now hit that path. This is expected — update those specific test cases to inject a stub `createDockerImageEnsurer: () => ({ ensure: vi.fn(async () => ({ built: true })) })` and, for consistency, `getAxiomPackageRoot: () => '/axiom'` (or any stable test path). Non-Docker test cases (local mode, VM mode, usage errors) do not require changes.
+
+Expected after stubs: all existing tests PASS.
 
 - [ ] **Step 6: Commit**
 
