@@ -53,6 +53,37 @@ describe('normalizeSecurityPolicy', () => {
     });
   });
 
+  it('normalizes opt-in live Codex docker build security', () => {
+    const policy = normalizeSecurityPolicy({
+      build: {
+        mode: 'docker',
+        profile: 'node-webapp-codex-live'
+      }
+    });
+
+    expect(policy.build).toMatchObject({
+      mode: 'docker',
+      profile: 'node-webapp-codex-live',
+      image: 'axiom-build-node-webapp:local',
+      dockerfile: 'docker/runner/node-webapp/Dockerfile',
+      network: 'bridge',
+      env: { allow: ['PATH', 'NODE_ENV'] },
+      tools: ['node', 'npm', 'codex'],
+      credentialMounts: [
+        {
+          source: '~/.codex/auth.json',
+          target: '/home/node/.codex/auth.json',
+          readonly: true
+        },
+        {
+          source: '~/.codex/config.toml',
+          target: '/home/node/.codex/config.toml',
+          readonly: true
+        }
+      ]
+    });
+  });
+
   it('normalizes virtualbox vm build security with an official profile', () => {
     const policy = normalizeSecurityPolicy({
       build: {

@@ -11,7 +11,10 @@ describe('node-webapp Docker runner image', () => {
 
     expect(dockerfile).toContain('FROM node:22-bookworm');
     expect(dockerfile).toContain('RUN npm ci --omit=optional');
+    expect(dockerfile).toContain('RUN npm install -g @openai/codex@0.118.0');
     expect(dockerfile).toContain('RUN npm link');
+    expect(dockerfile).toContain('ENV HOME=/home/node');
+    expect(dockerfile).toContain('USER node');
     expect(dockerfile).toContain('WORKDIR /workspace/source');
     expect(dockerfile).toContain('/workspace/generated');
     expect(dockerfile).toContain('/workspace/reports');
@@ -20,6 +23,9 @@ describe('node-webapp Docker runner image', () => {
     );
     expect(packageJson.scripts['docker:runner:smoke']).toBe(
       `docker run --rm ${imageTag} sh -lc "command -v ax"`
+    );
+    expect(packageJson.scripts['docker:runner:codex-live']).toBe(
+      'node bin/ax.js build examples/docker-codex-counter/counter-webapp.axiom.js'
     );
     expect(readme).toContain(imageTag);
   });

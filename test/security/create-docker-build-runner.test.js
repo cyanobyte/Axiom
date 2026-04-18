@@ -80,4 +80,42 @@ describe('createDockerBuildRunner', () => {
       message: 'Docker build runner could not start: spawn docker ENOENT'
     });
   });
+
+  it('runs live Codex docker builds with bridge networking and read-only credentials', async () => {
+    const processRunner = vi.fn(async () => ({ exitCode: 0 }));
+    const runner = createDockerBuildRunner({ processRunner });
+
+    await runner.run({
+      ...plan,
+      buildSecurity: {
+        ...plan.buildSecurity,
+        network: 'bridge'
+      },
+      credentialMounts: [
+        {
+          source: '/home/user/.codex/auth.json',
+          target: '/home/node/.codex/auth.json',
+          readonly: true
+        },
+        {
+          source: '/home/user/.codex/config.toml',
+          target: '/home/node/.codex/config.toml',
+          readonly: true
+        }
+      ]
+    });
+
+    expect(processRunner).toHaveBeenCalledWith(
+      'docker',
+      expect.arrayContaining([
+        '--network',
+        'bridge',
+        '-v',
+        '/home/user/.codex/auth.json:/home/node/.codex/auth.json:ro',
+        '-v',
+        '/home/user/.codex/config.toml:/home/node/.codex/config.toml:ro'
+      ]),
+      expect.any(Object)
+    );
+  });
 });

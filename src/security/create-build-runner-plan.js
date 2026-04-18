@@ -23,6 +23,8 @@ export function createBuildRunnerPlan({
     ? runtimeConfig.artifacts.root
     : path.resolve(workspaceRoot, runtimeConfig.artifacts.root);
 
+  const credentialMounts = resolveCredentialMounts(buildSecurity.credentialMounts ?? [], environment);
+
   return {
     kind: 'docker-build-runner-plan',
     intentPath: toPortableRelativePath(resolvedProjectRoot, resolvedIntentPath),
@@ -31,6 +33,7 @@ export function createBuildRunnerPlan({
     workspaceRoot,
     artifactsRoot,
     buildSecurity,
+    ...(credentialMounts.length > 0 ? { credentialMounts } : {}),
     env: {
       AXIOM_RUNNER: '1',
       AXIOM_RUNNER_KIND: 'docker',
@@ -39,6 +42,37 @@ export function createBuildRunnerPlan({
       ...pickAllowedEnvironment(buildSecurity.env?.allow ?? [], environment)
     }
   };
+}
+
+function resolveCredentialMounts(mounts, environment) {
+  return mounts.map((mount) => ({
+    ...mount,
+    source: resolveHostPath(mount.source, environment)
+  }));
+}
+
+function resolveHostPath(configuredPath, environment) {
+  if (configuredPath === '~') {
+    return requireHome(environment);
+  }
+
+  if (configuredPath.startsWith('~/')) {
+    return path.resolve(requireHome(environment), configuredPath.slice(2));
+  }
+
+  return path.resolve(configuredPath);
+}
+
+function requireHome(environment) {
+  if (environment.HOME === '/root' && environment.SUDO_USER) {
+    return path.join('/home', environment.SUDO_USER);
+  }
+
+  if (!environment.HOME) {
+    throw new Error('HOME is required to resolve docker credential mounts.');
+  }
+
+  return environment.HOME;
 }
 
 function resolveFromProjectRoot(projectRoot, configuredPath) {

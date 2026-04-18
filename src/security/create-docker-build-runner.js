@@ -29,6 +29,7 @@ function createDockerArgs(plan) {
     '--memory',
     plan.buildSecurity.resources.memory,
     ...Object.entries(plan.env).flatMap(([name, value]) => ['-e', `${name}=${value}`]),
+    ...formatCredentialMounts(plan.credentialMounts ?? []),
     '-v',
     `${plan.projectRoot}:/workspace/source:ro`,
     '-v',
@@ -43,6 +44,13 @@ function createDockerArgs(plan) {
     plan.intentPath,
     '--inside-runner'
   ];
+}
+
+function formatCredentialMounts(mounts) {
+  return mounts.flatMap((mount) => [
+    '-v',
+    `${mount.source}:${mount.target}${mount.readonly ? ':ro' : ''}`
+  ]);
 }
 
 function spawnProcess(command, args, { cwd, signal, onOutput } = {}) {

@@ -6,7 +6,7 @@ This image backs the Axiom Docker build profile:
 axiom-build-node-webapp:local
 ```
 
-It provides Node.js, npm, and the `ax` CLI inside the runner container. The host launcher mounts source read-only at `/workspace/source`, generated output at `/workspace/generated`, and reports at `/workspace/reports`.
+It provides Node.js, npm, Codex CLI, and the `ax` CLI inside the runner container. The host launcher mounts source read-only at `/workspace/source`, generated output at `/workspace/generated`, and reports at `/workspace/reports`.
 
 The image is intentionally local-only and is not published to any registry. `ax build` will build it automatically the first time you run a Docker-backed build; you can also build it manually with the script below.
 
@@ -51,6 +51,25 @@ The host `ax build` command launches this image and runs:
 
 ```bash
 ax build <intent-file> --inside-runner
+```
+
+## Live Codex Build Use
+
+Live Codex builds opt into a separate profile:
+
+```js
+security: {
+  build: {
+    mode: "docker",
+    profile: "node-webapp-codex-live"
+  }
+}
+```
+
+That profile enables bridge networking and mounts the host Codex `auth.json` and `config.toml` files read-only into `/home/node/.codex` so `codex exec` can run inside the container while keeping Codex runtime state writable. Use it only for explicit live runs:
+
+```bash
+npm run docker:runner:codex-live
 ```
 
 This is a development runner image. It is not yet a hardened production sandbox: image signing, provenance, SBOMs, and stricter runtime hardening are future work.
