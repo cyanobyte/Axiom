@@ -3,10 +3,12 @@
 This image backs the Axiom Docker build profile:
 
 ```text
-ghcr.io/science451/axiom-build-node-webapp:latest
+axiom-build-node-webapp:local
 ```
 
 It provides Node.js, npm, and the `ax` CLI inside the runner container. The host launcher mounts source read-only at `/workspace/source`, generated output at `/workspace/generated`, and reports at `/workspace/reports`.
+
+The image is intentionally local-only and is not published to any registry. `ax build` will build it automatically the first time you run a Docker-backed build; you can also build it manually with the script below.
 
 ## Build Locally
 
@@ -22,13 +24,15 @@ npm run docker:runner:smoke
 
 The smoke command starts the image and verifies that the `ax` command is available on `PATH`.
 
-## Publish
+## Rebuild After Axiom Changes
+
+The auto-build only triggers when the image is missing. After pulling Axiom source updates, force a rebuild with:
 
 ```bash
-docker push ghcr.io/science451/axiom-build-node-webapp:latest
+docker image rm axiom-build-node-webapp:local
 ```
 
-Publishing requires Docker authentication with permission to push to the Science451 GHCR package.
+The next `ax build` will rebuild the image from the updated source. Alternatively, run `npm run docker:runner:build` directly.
 
 ## Axiom Build Use
 

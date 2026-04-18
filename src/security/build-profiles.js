@@ -1,7 +1,7 @@
 export const BUILD_PROFILES = {
   'node-webapp': {
     docker: {
-      image: 'ghcr.io/science451/axiom-build-node-webapp:latest',
+      image: 'axiom-build-node-webapp:local',
       network: 'restricted',
       env: { allow: ['PATH', 'HOME', 'NODE_ENV'] },
       resources: { cpu: 2, memory: '4g' },
