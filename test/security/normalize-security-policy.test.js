@@ -47,6 +47,7 @@ describe('normalizeSecurityPolicy', () => {
       mode: 'docker',
       profile: 'node-webapp',
       image: 'axiom-build-node-webapp:local',
+      dockerfile: 'docker/runner/node-webapp/Dockerfile',
       network: 'restricted',
       env: { allow: ['PATH', 'HOME', 'NODE_ENV'] }
     });
