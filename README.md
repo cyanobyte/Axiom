@@ -68,6 +68,7 @@ When you run `ax build` with `security.build.mode: "docker"`, Axiom will build t
 
 ## Docs
 
+- [Developer Setup](/mnt/d/Science451/Axiom/docs/dev-setup.md)
 - [Getting Started](/mnt/d/Science451/Axiom/docs/getting-started.md)
 - [CLI Reference](/mnt/d/Science451/Axiom/docs/cli.md)
 - [Authoring Intents](/mnt/d/Science451/Axiom/docs/authoring-intents.md)
