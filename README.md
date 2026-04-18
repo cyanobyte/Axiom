@@ -62,6 +62,8 @@ security: {
 
 `security.build` controls where AI/build work runs. New MVP supports `local`, `docker`, and `vm`; VM execution supports `provider: "virtualbox"` first.
 
+When you run `ax build` with `security.build.mode: "docker"`, Axiom will build the runner image `axiom-build-node-webapp:local` from `docker/runner/node-webapp/Dockerfile` on first use. All Docker build output is streamed to your terminal. After pulling Axiom source updates, force a rebuild with `docker image rm axiom-build-node-webapp:local` (or `npm run docker:runner:build`).
+
 `security.app` controls what the generated application is allowed to do. Axiom runs static checks and an AI security review, then writes findings into the build security report.
 
 ## Docs
