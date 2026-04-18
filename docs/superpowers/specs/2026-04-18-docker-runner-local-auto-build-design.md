@@ -105,6 +105,8 @@ export const BUILD_PROFILES = {
 
 The `dockerfile` path is relative to the Axiom package root, not the user's project directory.
 
+The existing `normalizeSecurityPolicy` in `src/security/normalize-security-policy.js` spreads the profile's nested `docker` block into the normalized `buildSecurity` result (`...structuredClone(profile.docker)`). The new `dockerfile` field flows through the same spread unchanged, so downstream code accesses `buildSecurity.dockerfile` flat rather than `buildSecurity.docker.dockerfile`.
+
 ## Axiom Package Root
 
 `ax build` is installed into the user's environment through `npm link` from this repo, so the Axiom source tree lives at a known location at runtime. Add a small helper that resolves the Axiom package root from any module inside `src/`:
@@ -121,7 +123,7 @@ export function getAxiomPackageRoot() {
 }
 ```
 
-The helper walks up from its own module URL until it finds the `package.json` with `name: "axiom"`. This anchor is used to resolve the Dockerfile path and the Docker build context.
+The helper walks up from its own module URL until it finds the `package.json` with `name: "axiom"`. This anchor is used to resolve the Dockerfile path and the Docker build context. If no matching `package.json` is found before reaching the filesystem root, the helper throws an error with code `AXIOM_PACKAGE_ROOT_NOT_FOUND`. The resolved root is cached for the process lifetime after the first successful lookup.
 
 ## Image Ensurer
 
@@ -190,7 +192,7 @@ If the ensurer throws `DOCKER_BUILD_RUNNER_IMAGE_BUILD_FAILED`, `ax build` exits
 The ensurer distinguishes two failure shapes:
 
 - **Image inspect fails.** Docker exits non-zero when the image is missing and when the daemon is unavailable. The ensurer treats any non-zero inspect exit as "build required" and proceeds to `docker build`. If the daemon is genuinely down, the `docker build` invocation also fails and surfaces the daemon error through normal stderr.
-- **Image build fails.** Throw an error with code `DOCKER_BUILD_RUNNER_IMAGE_BUILD_FAILED`. The CLI has already streamed the Docker build output; it then exits non-zero.
+- **Image build fails.** Throw an error with code `DOCKER_BUILD_RUNNER_IMAGE_BUILD_FAILED`. The CLI has already streamed the Docker build output; it then exits non-zero. This is the error code for every build-phase failure, including daemon-down detected through the `docker build` invocation. No separate "daemon unavailable" error code is introduced by this design.
 
 Existing runner failures (`DOCKER_BUILD_RUNNER_START_FAILED`, `UNSUPPORTED_BUILD_RUNNER`, `INVALID_RUNNER_ENVIRONMENT`) are unchanged.
 
