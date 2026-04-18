@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs/promises';
 
-const imageTag = 'ghcr.io/science451/axiom-build-node-webapp:latest';
+const imageTag = 'axiom-build-node-webapp:local';
 
 describe('node-webapp Docker runner image', () => {
   it('defines the runtime image contract and package scripts', async () => {

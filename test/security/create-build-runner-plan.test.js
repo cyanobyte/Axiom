@@ -15,7 +15,8 @@ describe('createBuildRunnerPlan', () => {
       buildSecurity: {
         mode: 'docker',
         profile: 'node-webapp',
-        image: 'ghcr.io/science451/axiom-build-node-webapp:latest',
+        image: 'axiom-build-node-webapp:local',
+        dockerfile: 'docker/runner/node-webapp/Dockerfile',
         network: 'restricted',
         env: { allow: ['PATH', 'HOME', 'NODE_ENV', 'MISSING_ENV'] },
         resources: { cpu: 2, memory: '4g' },
@@ -39,7 +40,8 @@ describe('createBuildRunnerPlan', () => {
       buildSecurity: {
         mode: 'docker',
         profile: 'node-webapp',
-        image: 'ghcr.io/science451/axiom-build-node-webapp:latest',
+        image: 'axiom-build-node-webapp:local',
+        dockerfile: 'docker/runner/node-webapp/Dockerfile',
         network: 'restricted',
         env: { allow: ['PATH', 'HOME', 'NODE_ENV', 'MISSING_ENV'] },
         resources: { cpu: 2, memory: '4g' },

@@ -9,7 +9,7 @@ const plan = {
   artifactsRoot: '/repo/examples/basic/reports',
   buildSecurity: {
     mode: 'docker',
-    image: 'ghcr.io/science451/axiom-build-node-webapp:latest',
+    image: 'axiom-build-node-webapp:local',
     network: 'restricted',
     resources: { cpu: 2, memory: '4g' }
   },
@@ -59,7 +59,7 @@ describe('createDockerBuildRunner', () => {
         '/repo/examples/basic/reports:/workspace/reports',
         '-w',
         '/workspace/source',
-        'ghcr.io/science451/axiom-build-node-webapp:latest',
+        'axiom-build-node-webapp:local',
         'ax',
         'build',
         'examples/basic/counter-webapp.axiom.js',

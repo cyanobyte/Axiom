@@ -46,7 +46,8 @@ describe('normalizeSecurityPolicy', () => {
     expect(policy.build).toMatchObject({
       mode: 'docker',
       profile: 'node-webapp',
-      image: 'ghcr.io/science451/axiom-build-node-webapp:latest',
+      image: 'axiom-build-node-webapp:local',
+      dockerfile: 'docker/runner/node-webapp/Dockerfile',
       network: 'restricted',
       env: { allow: ['PATH', 'HOME', 'NODE_ENV'] }
     });

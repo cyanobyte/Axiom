@@ -43,7 +43,7 @@
 - Modify: `test/security/create-build-runner-plan.test.js`
 - Modify: `test/security/normalize-security-policy.test.js`
 
-- [ ] **Step 1: Update tag assertion in `test/docker/runner-image.test.js`**
+- [x] **Step 1: Update tag assertion in `test/docker/runner-image.test.js`**
 
 Replace the top-level `imageTag` constant:
 
@@ -51,25 +51,25 @@ Replace the top-level `imageTag` constant:
 const imageTag = 'axiom-build-node-webapp:local';
 ```
 
-- [ ] **Step 2: Update tag assertions in `test/security/create-docker-build-runner.test.js`**
+- [x] **Step 2: Update tag assertions in `test/security/create-docker-build-runner.test.js`**
 
 Replace every occurrence of `ghcr.io/science451/axiom-build-node-webapp:latest` with `axiom-build-node-webapp:local` in both the `plan` fixture (`buildSecurity.image`) and the expected docker args array.
 
-- [ ] **Step 3: Update tag assertion in `test/security/create-build-runner-plan.test.js`**
+- [x] **Step 3: Update tag assertion in `test/security/create-build-runner-plan.test.js`**
 
 Replace both occurrences of `ghcr.io/science451/axiom-build-node-webapp:latest` (one in the input `buildSecurity.image`, one in the expected `plan.buildSecurity.image`) with `axiom-build-node-webapp:local`.
 
-- [ ] **Step 4: Update tag assertion in `test/security/normalize-security-policy.test.js`**
+- [x] **Step 4: Update tag assertion in `test/security/normalize-security-policy.test.js`**
 
 Replace the `image` expectation in the `normalizes docker build security with an official profile` test (around line 49) with `axiom-build-node-webapp:local`.
 
-- [ ] **Step 5: Run all four tag tests to verify they FAIL**
+- [x] **Step 5: Run all four tag tests to verify they FAIL**
 
 Run: `npx vitest run test/docker/runner-image.test.js test/security/create-docker-build-runner.test.js test/security/create-build-runner-plan.test.js test/security/normalize-security-policy.test.js`
 
 Expected: FAIL — the source still uses the old GHCR tag.
 
-- [ ] **Step 6: Update the profile definition in `src/security/build-profiles.js`**
+- [x] **Step 6: Update the profile definition in `src/security/build-profiles.js`**
 
 Change the image string:
 
@@ -98,7 +98,7 @@ export const BUILD_PROFILES = {
 
 (The `dockerfile` field is added in Task 2; this step is image tag only.)
 
-- [ ] **Step 7: Update `package.json` scripts**
+- [x] **Step 7: Update `package.json` scripts**
 
 Replace both script values:
 
@@ -107,7 +107,7 @@ Replace both script values:
 "docker:runner:smoke": "docker run --rm axiom-build-node-webapp:local sh -lc \"command -v ax\""
 ```
 
-- [ ] **Step 8: Update `docker/runner/node-webapp/README.md`**
+- [x] **Step 8: Update `docker/runner/node-webapp/README.md`**
 
 Replace the three image-tag references (the headline code block, the `docker push` example, and any prose) with `axiom-build-node-webapp:local`. Remove the `## Publish` section entirely — the image is intentionally local-only. Add a short paragraph right after the intro explaining that this image is not published anywhere by default; `ax build` builds it on first use from this Dockerfile.
 
@@ -172,13 +172,13 @@ ax build <intent-file> --inside-runner
 This is a development runner image. It is not yet a hardened production sandbox: image signing, provenance, SBOMs, and stricter runtime hardening are future work.
 ```
 
-- [ ] **Step 9: Run all four tag tests to verify they PASS**
+- [x] **Step 9: Run all four tag tests to verify they PASS**
 
 Run: `npx vitest run test/docker/runner-image.test.js test/security/create-docker-build-runner.test.js test/security/create-build-runner-plan.test.js test/security/normalize-security-policy.test.js`
 
 Expected: all four test files PASS.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/security/build-profiles.js package.json docker/runner/node-webapp/README.md test/docker/runner-image.test.js test/security/create-docker-build-runner.test.js test/security/create-build-runner-plan.test.js test/security/normalize-security-policy.test.js
@@ -193,7 +193,7 @@ git commit -m "refactor: rename docker runner image tag to axiom-build-node-weba
 - Create: `src/runtime/axiom-package-root.js`
 - Create: `test/runtime/axiom-package-root.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/runtime/axiom-package-root.test.js`:
 
@@ -218,13 +218,13 @@ describe('getAxiomPackageRoot', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run test/runtime/axiom-package-root.test.js`
 
 Expected: FAIL — module does not exist yet.
 
-- [ ] **Step 3: Implement the helper**
+- [x] **Step 3: Implement the helper**
 
 Create `src/runtime/axiom-package-root.js`:
 
@@ -251,13 +251,13 @@ export function getAxiomPackageRoot() {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run test/runtime/axiom-package-root.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/runtime/axiom-package-root.js test/runtime/axiom-package-root.test.js
@@ -273,7 +273,7 @@ git commit -m "feat: add axiom package root helper"
 - Modify: `test/security/create-build-runner-plan.test.js`
 - Modify: `test/security/normalize-security-policy.test.js`
 
-- [ ] **Step 1: Extend `test/security/normalize-security-policy.test.js`**
+- [x] **Step 1: Extend `test/security/normalize-security-policy.test.js`**
 
 In the `normalizes docker build security with an official profile` test, extend the assertion to include the `dockerfile` field:
 
@@ -288,7 +288,7 @@ expect(policy.build).toMatchObject({
 });
 ```
 
-- [ ] **Step 2: Extend `test/security/create-build-runner-plan.test.js`**
+- [x] **Step 2: Extend `test/security/create-build-runner-plan.test.js`**
 
 Add `dockerfile` to both the input `buildSecurity` and the expected `plan.buildSecurity`:
 
@@ -307,13 +307,13 @@ Add `dockerfile` to both the input `buildSecurity` and the expected `plan.buildS
   ```
 - In the expected `plan.buildSecurity` (around line 39), mirror the same `dockerfile` field.
 
-- [ ] **Step 3: Run the two updated tests to verify they FAIL**
+- [x] **Step 3: Run the two updated tests to verify they FAIL**
 
 Run: `npx vitest run test/security/normalize-security-policy.test.js test/security/create-build-runner-plan.test.js`
 
 Expected: FAIL — `dockerfile` field not in normalized policy.
 
-- [ ] **Step 4: Add `dockerfile` field to the profile**
+- [x] **Step 4: Add `dockerfile` field to the profile**
 
 Modify `src/security/build-profiles.js` so `BUILD_PROFILES['node-webapp'].docker` includes:
 
@@ -330,13 +330,13 @@ docker: {
 
 No other changes are needed because `normalizeSecurityPolicy` already spreads `profile.docker` into the normalized result and `createBuildRunnerPlan` already carries the whole `buildSecurity` through.
 
-- [ ] **Step 5: Run the two updated tests to verify they PASS**
+- [x] **Step 5: Run the two updated tests to verify they PASS**
 
 Run: `npx vitest run test/security/normalize-security-policy.test.js test/security/create-build-runner-plan.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/security/build-profiles.js test/security/normalize-security-policy.test.js test/security/create-build-runner-plan.test.js
@@ -351,7 +351,7 @@ git commit -m "feat: add dockerfile path to node-webapp build profile"
 - Create: `src/security/ensure-docker-build-image.js`
 - Create: `test/security/ensure-docker-build-image.test.js`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `test/security/ensure-docker-build-image.test.js`:
 
@@ -434,13 +434,13 @@ describe('createDockerImageEnsurer', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run test/security/ensure-docker-build-image.test.js`
 
 Expected: FAIL — module does not exist.
 
-- [ ] **Step 3: Implement the ensurer**
+- [x] **Step 3: Implement the ensurer**
 
 Create `src/security/ensure-docker-build-image.js`:
 
@@ -500,13 +500,13 @@ function spawnProcess(command, args, { cwd, signal, onOutput } = {}) {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run test/security/ensure-docker-build-image.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/security/ensure-docker-build-image.js test/security/ensure-docker-build-image.test.js
@@ -521,7 +521,7 @@ git commit -m "feat: add docker runner image ensurer"
 - Modify: `src/cli/build-command.js`
 - Create: `test/cli/build-command-auto-build.test.js`
 
-- [ ] **Step 1: Write the failing wiring tests**
+- [x] **Step 1: Write the failing wiring tests**
 
 Create `test/cli/build-command-auto-build.test.js`:
 
@@ -636,13 +636,13 @@ describe('ax build docker-mode auto-build wiring', () => {
 });
 ```
 
-- [ ] **Step 2: Run the new test file to verify it fails**
+- [x] **Step 2: Run the new test file to verify it fails**
 
 Run: `npx vitest run test/cli/build-command-auto-build.test.js`
 
 Expected: FAIL — `createDockerImageEnsurer` and `getAxiomPackageRoot` are not yet dependencies of `buildCommand`.
 
-- [ ] **Step 3: Wire the ensurer into `src/cli/build-command.js`**
+- [x] **Step 3: Wire the ensurer into `src/cli/build-command.js`**
 
 Add imports at the top:
 
@@ -712,13 +712,13 @@ try {
 
 Note: the announcement line is printed *unconditionally* before the ensurer runs. This is acceptable because the ensurer is cheap when the image already exists and the line is short. If deferring to "only when building" is desired later, the ensurer can be split into `inspect` + `build` phases; the current plan keeps the announcement simple.
 
-- [ ] **Step 4: Run the wiring test file to verify it passes**
+- [x] **Step 4: Run the wiring test file to verify it passes**
 
 Run: `npx vitest run test/cli/build-command-auto-build.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Run the existing build-command tests and update Docker-mode cases**
+- [x] **Step 5: Run the existing build-command tests and update Docker-mode cases**
 
 Run: `npx vitest run test/cli/build-command.test.js`
 
@@ -726,7 +726,7 @@ The existing "launches Docker runner on the host" test (and any other Docker-mod
 
 Expected after stubs: all existing tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/cli/build-command.js test/cli/build-command-auto-build.test.js
@@ -740,11 +740,11 @@ git commit -m "feat: auto-build docker runner image before launch"
 **Files:**
 - Modify: `README.md`
 
-- [ ] **Step 1: Locate the existing security/docker section**
+- [x] **Step 1: Locate the existing security/docker section**
 
 Open `README.md` and find the section that describes `security.build.mode: "docker"`. If no such section exists, add a short subsection under the existing Security Policy block.
 
-- [ ] **Step 2: Add the auto-build note**
+- [x] **Step 2: Add the auto-build note**
 
 Add one short paragraph:
 
@@ -752,7 +752,7 @@ Add one short paragraph:
 When you run `ax build` with `security.build.mode: "docker"`, Axiom will build the runner image `axiom-build-node-webapp:local` from `docker/runner/node-webapp/Dockerfile` on first use. All Docker build output is streamed to your terminal. After pulling Axiom source updates, force a rebuild with `docker image rm axiom-build-node-webapp:local` (or `npm run docker:runner:build`).
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add README.md
@@ -766,13 +766,13 @@ git commit -m "docs: note docker runner auto-build behavior in main README"
 **Files:**
 - Modify: `docs/superpowers/plans/2026-04-18-docker-runner-local-auto-build.md` (this file — check off remaining steps as you complete the final verification)
 
-- [ ] **Step 1: Run the full automated suite**
+- [x] **Step 1: Run the full automated suite**
 
 Run: `npm test`
 
 Expected: all non-skipped tests PASS.
 
-- [ ] **Step 2: Manual Docker smoke (requires Docker daemon)**
+- [x] **Step 2: Manual Docker smoke (requires Docker daemon)**
 
 This step is optional and only if Docker is available:
 
@@ -788,11 +788,11 @@ Expected: exits 0 and prints the installed `ax` executable path.
 
 If Docker is not available locally, skip this step and note the skip in the commit body of Task 7 Step 4.
 
-- [ ] **Step 3: Reconcile plan**
+- [x] **Step 3: Reconcile plan**
 
 Edit this plan file and ensure every `- [ ]` checkbox from Tasks 1–6 is marked `- [x]` to reflect the completed work. Leave Task 7 steps that were not run (e.g., if Docker was unavailable for Step 2) as `- [ ]` with a note.
 
-- [ ] **Step 4: Commit the plan reconciliation**
+- [x] **Step 4: Commit the plan reconciliation**
 
 ```bash
 git add docs/superpowers/plans/2026-04-18-docker-runner-local-auto-build.md
