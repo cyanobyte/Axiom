@@ -40,7 +40,7 @@
 - Test: `test/security/normalize-security-policy.test.js`
 - Test: `test/definition/validate-definition.test.js`
 
-- [ ] **Step 1: Write failing normalization tests**
+- [x] **Step 1: Write failing normalization tests**
 
 Create `test/security/normalize-security-policy.test.js`:
 
@@ -193,7 +193,7 @@ describe('normalizeSecurityPolicy', () => {
 });
 ```
 
-- [ ] **Step 2: Add definition validation tests**
+- [x] **Step 2: Add definition validation tests**
 
 Append these tests to `test/definition/validate-definition.test.js`:
 
@@ -250,7 +250,7 @@ Append these tests to `test/definition/validate-definition.test.js`:
   });
 ```
 
-- [ ] **Step 3: Run tests to verify failure**
+- [x] **Step 3: Run tests to verify failure**
 
 Run:
 
@@ -260,7 +260,7 @@ npm test -- test/security/normalize-security-policy.test.js test/definition/vali
 
 Expected: FAIL because `src/security/normalize-security-policy.js` does not exist and `security` is not a recognized top-level section.
 
-- [ ] **Step 4: Add official build profiles**
+- [x] **Step 4: Add official build profiles**
 
 Create `src/security/build-profiles.js`:
 
@@ -291,7 +291,7 @@ export function getBuildProfile(profileName) {
 }
 ```
 
-- [ ] **Step 5: Add official app profiles**
+- [x] **Step 5: Add official app profiles**
 
 Create `src/security/app-profiles.js`:
 
@@ -334,7 +334,7 @@ export function getAppProfile(profileName) {
 }
 ```
 
-- [ ] **Step 6: Implement security normalization**
+- [x] **Step 6: Implement security normalization**
 
 Create `src/security/normalize-security-policy.js`:
 
@@ -484,7 +484,7 @@ function normalizeAccessList(value = {}) {
 }
 ```
 
-- [ ] **Step 7: Recognize the top-level security section**
+- [x] **Step 7: Recognize the top-level security section**
 
 Modify `src/definition/recognized-sections.js` so `OPTIONAL_SECTIONS` includes `security`:
 
@@ -509,7 +509,7 @@ export const OPTIONAL_SECTIONS = [
 
 Keep the existing section names from the file; add `security` as an optional top-level section.
 
-- [ ] **Step 8: Normalize security during definition validation**
+- [x] **Step 8: Normalize security during definition validation**
 
 Modify `src/definition/validate-definition.js`:
 
@@ -525,7 +525,7 @@ Then insert this block after unknown top-level section validation and before dom
   }
 ```
 
-- [ ] **Step 9: Export the normalizer**
+- [x] **Step 9: Export the normalizer**
 
 Modify `src/index.js`:
 
@@ -533,7 +533,7 @@ Modify `src/index.js`:
 export { normalizeSecurityPolicy } from './security/normalize-security-policy.js';
 ```
 
-- [ ] **Step 10: Run focused tests**
+- [x] **Step 10: Run focused tests**
 
 Run:
 
@@ -543,7 +543,7 @@ npm test -- test/security/normalize-security-policy.test.js test/definition/vali
 
 Expected: PASS.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add src/security/build-profiles.js src/security/app-profiles.js src/security/normalize-security-policy.js src/definition/recognized-sections.js src/definition/validate-definition.js src/index.js test/security/normalize-security-policy.test.js test/definition/validate-definition.test.js
@@ -560,7 +560,7 @@ git commit -m "feat: add security policy normalization"
 - Modify: `src/index.js`
 - Test: `test/runtime/security-report.test.js`
 
-- [ ] **Step 1: Write failing runtime report tests**
+- [x] **Step 1: Write failing runtime report tests**
 
 Create `test/runtime/security-report.test.js`:
 
@@ -637,7 +637,7 @@ describe('runtime security report', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run:
 
@@ -647,7 +647,7 @@ npm test -- test/runtime/security-report.test.js
 
 Expected: FAIL because `securityReport` and `ctx.security` are not implemented.
 
-- [ ] **Step 3: Create security report helpers**
+- [x] **Step 3: Create security report helpers**
 
 Create `src/security/create-security-report.js`:
 
@@ -691,7 +691,7 @@ function createAppReport(app) {
 }
 ```
 
-- [ ] **Step 4: Add securityReport to result model**
+- [x] **Step 4: Add securityReport to result model**
 
 Modify `src/runtime/result-model.js`:
 
@@ -718,7 +718,7 @@ Add the import at the top:
 import { createSecurityReport } from '../security/create-security-report.js';
 ```
 
-- [ ] **Step 5: Pass the definition to createRunResult**
+- [x] **Step 5: Pass the definition to createRunResult**
 
 Modify `src/runtime/run-intent.js`:
 
@@ -726,7 +726,7 @@ Modify `src/runtime/run-intent.js`:
   const result = createRunResult(file.definition);
 ```
 
-- [ ] **Step 6: Expose security on runtime context**
+- [x] **Step 6: Expose security on runtime context**
 
 Modify the object returned by `createRunContext` in `src/runtime/create-run-context.js`:
 
@@ -736,7 +736,7 @@ Modify the object returned by `createRunContext` in `src/runtime/create-run-cont
 
 Place it near `intent: file.definition`.
 
-- [ ] **Step 7: Export report helper**
+- [x] **Step 7: Export report helper**
 
 Modify `src/index.js`:
 
@@ -744,7 +744,7 @@ Modify `src/index.js`:
 export { createSecurityReport } from './security/create-security-report.js';
 ```
 
-- [ ] **Step 8: Run focused tests**
+- [x] **Step 8: Run focused tests**
 
 Run:
 
@@ -754,7 +754,7 @@ npm test -- test/runtime/security-report.test.js
 
 Expected: PASS.
 
-- [ ] **Step 9: Run existing runtime tests**
+- [x] **Step 9: Run existing runtime tests**
 
 Run:
 
@@ -764,7 +764,7 @@ npm test -- test/runtime/run-intent.test.js test/runtime/result-model.test.js
 
 Expected: PASS. If `test/runtime/result-model.test.js` does not exist, run only `test/runtime/run-intent.test.js`.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/security/create-security-report.js src/runtime/result-model.js src/runtime/run-intent.js src/runtime/create-run-context.js src/index.js test/runtime/security-report.test.js
@@ -780,7 +780,7 @@ git commit -m "feat: add runtime security report"
 - Test: `test/security/audit-app-security.test.js`
 - Test: `test/runtime/security-report.test.js`
 
-- [ ] **Step 1: Write failing app audit tests**
+- [x] **Step 1: Write failing app audit tests**
 
 Create `test/security/audit-app-security.test.js`:
 
@@ -846,7 +846,7 @@ describe('auditAppSecurity', () => {
 });
 ```
 
-- [ ] **Step 2: Extend runtime security tests for break/warn**
+- [x] **Step 2: Extend runtime security tests for break/warn**
 
 Append these tests to `test/runtime/security-report.test.js`:
 
@@ -924,7 +924,7 @@ Append these tests to `test/runtime/security-report.test.js`:
   });
 ```
 
-- [ ] **Step 3: Run tests to verify failure**
+- [x] **Step 3: Run tests to verify failure**
 
 Run:
 
@@ -934,7 +934,7 @@ npm test -- test/security/audit-app-security.test.js test/runtime/security-repor
 
 Expected: FAIL because `auditAppSecurity` is not implemented and runtime does not audit materialized files.
 
-- [ ] **Step 4: Implement deterministic app audit**
+- [x] **Step 4: Implement deterministic app audit**
 
 Create `src/security/audit-app-security.js`:
 
@@ -1032,7 +1032,7 @@ function auditShell(appSecurity, path, content) {
 }
 ```
 
-- [ ] **Step 5: Track materialized files in runtime state**
+- [x] **Step 5: Track materialized files in runtime state**
 
 Modify `src/runtime/run-intent.js` state creation:
 
@@ -1057,7 +1057,7 @@ Modify `ctx.materialize.files` in `src/runtime/create-run-context.js`:
       }
 ```
 
-- [ ] **Step 6: Run app audit after successful workflow execution**
+- [x] **Step 6: Run app audit after successful workflow execution**
 
 Modify `src/runtime/run-intent.js`:
 
@@ -1109,7 +1109,7 @@ function applyAppSecurityAudit(appSecurity, result, files) {
 }
 ```
 
-- [ ] **Step 7: Export audit helper**
+- [x] **Step 7: Export audit helper**
 
 Modify `src/index.js`:
 
@@ -1117,7 +1117,7 @@ Modify `src/index.js`:
 export { auditAppSecurity } from './security/audit-app-security.js';
 ```
 
-- [ ] **Step 8: Run focused tests**
+- [x] **Step 8: Run focused tests**
 
 Run:
 
@@ -1127,7 +1127,7 @@ npm test -- test/security/audit-app-security.test.js test/runtime/security-repor
 
 Expected: PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/security/audit-app-security.js src/runtime/run-intent.js src/runtime/create-run-context.js src/index.js test/security/audit-app-security.test.js test/runtime/security-report.test.js
@@ -1144,7 +1144,7 @@ git commit -m "feat: audit app security policy"
 - Test: `test/security/run-ai-security-review.test.js`
 - Test: `test/runtime/security-report.test.js`
 
-- [ ] **Step 1: Write failing AI review tests**
+- [x] **Step 1: Write failing AI review tests**
 
 Create `test/security/run-ai-security-review.test.js`:
 
@@ -1221,7 +1221,7 @@ describe('runAiSecurityReview', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run:
 
@@ -1231,7 +1231,7 @@ npm test -- test/security/run-ai-security-review.test.js
 
 Expected: FAIL because `runAiSecurityReview` does not exist.
 
-- [ ] **Step 3: Implement AI review helper**
+- [x] **Step 3: Implement AI review helper**
 
 Create `src/security/run-ai-security-review.js`:
 
@@ -1291,7 +1291,7 @@ function deriveStatus(findings) {
 }
 ```
 
-- [ ] **Step 4: Run AI review from runtime app audit**
+- [x] **Step 4: Run AI review from runtime app audit**
 
 Modify `src/runtime/run-intent.js`:
 
@@ -1345,7 +1345,7 @@ async function applyAppSecurityAudit(appSecurity, result, files, adapters) {
 }
 ```
 
-- [ ] **Step 5: Export AI review helper**
+- [x] **Step 5: Export AI review helper**
 
 Modify `src/index.js`:
 
@@ -1353,7 +1353,7 @@ Modify `src/index.js`:
 export { runAiSecurityReview } from './security/run-ai-security-review.js';
 ```
 
-- [ ] **Step 6: Run focused tests**
+- [x] **Step 6: Run focused tests**
 
 Run:
 
@@ -1363,7 +1363,7 @@ npm test -- test/security/run-ai-security-review.test.js test/runtime/security-r
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/security/run-ai-security-review.js src/runtime/run-intent.js src/index.js test/security/run-ai-security-review.test.js test/runtime/security-report.test.js
@@ -1379,7 +1379,7 @@ git commit -m "feat: add ai security review hook"
 - Modify: `examples/basic/counter-webapp.axiom.js`
 - Test: `test/examples/examples-load.test.js`
 
-- [ ] **Step 1: Add security block to the basic example**
+- [x] **Step 1: Add security block to the basic example**
 
 Modify `examples/basic/counter-webapp.axiom.js` so its definition includes:
 
@@ -1398,7 +1398,7 @@ security: {
 
 Use `warn` for the example so beginner local builds demonstrate reporting without blocking adoption.
 
-- [ ] **Step 2: Add README security quickstart**
+- [x] **Step 2: Add README security quickstart**
 
 Add this section to `README.md` after the CLI examples:
 
@@ -1426,7 +1426,7 @@ security: {
 `security.app` controls what the generated application is allowed to do. Axiom runs static checks and an AI security review, then writes findings into the build security report.
 ```
 
-- [ ] **Step 3: Document authoring details**
+- [x] **Step 3: Document authoring details**
 
 Add a `## Security` section to `docs/authoring-intents.md` with the source shapes for:
 
@@ -1460,7 +1460,7 @@ security: {
 
 Explain that `profileFile`, inline `policy`, and `overrides` are accepted app policy sources, and that `profileFile` plus `policy` is invalid.
 
-- [ ] **Step 4: Document runtime config expectations**
+- [x] **Step 4: Document runtime config expectations**
 
 Add a note to `docs/runtime-config.md`:
 
@@ -1468,7 +1468,7 @@ Add a note to `docs/runtime-config.md`:
 Security policy is declared in `.axiom.js`, not runtime config. Runtime config still provides concrete adapters and credentials. New MVP Docker and VM security modes validate official profiles in source; full Docker/VM execution adapter wiring is a follow-up implementation layer.
 ```
 
-- [ ] **Step 5: Run example load tests**
+- [x] **Step 5: Run example load tests**
 
 Run:
 
@@ -1478,7 +1478,7 @@ npm test -- test/examples/examples-load.test.js
 
 Expected: PASS.
 
-- [ ] **Step 6: Run security tests**
+- [x] **Step 6: Run security tests**
 
 Run:
 
@@ -1488,7 +1488,7 @@ npm test -- test/security/normalize-security-policy.test.js test/security/audit-
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add README.md docs/authoring-intents.md docs/runtime-config.md examples/basic/counter-webapp.axiom.js test/examples/examples-load.test.js
@@ -1500,7 +1500,7 @@ git commit -m "docs: document new mvp security policy"
 **Files:**
 - No source files expected unless verification exposes a defect.
 
-- [ ] **Step 1: Run the full test suite**
+- [x] **Step 1: Run the full test suite**
 
 Run:
 
@@ -1510,7 +1510,7 @@ npm test
 
 Expected: PASS.
 
-- [ ] **Step 2: Inspect git status**
+- [x] **Step 2: Inspect git status**
 
 Run:
 
@@ -1520,7 +1520,7 @@ git status --short
 
 Expected: no unstaged or uncommitted changes unless the final verification exposed a defect that was fixed.
 
-- [ ] **Step 3: Leave the branch clean**
+- [x] **Step 3: Leave the branch clean**
 
 If Step 1 exposed a defect, fix it with a small patch, rerun `npm test`, and inspect:
 

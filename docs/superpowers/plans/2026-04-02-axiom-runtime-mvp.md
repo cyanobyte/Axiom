@@ -96,7 +96,7 @@ Every implementation task that touches runtime behavior should preserve this rul
 - Modify: `.gitignore`
 - Test: `npm test`
 
-- [ ] **Step 1: Write the package and config files**
+- [x] **Step 1: Write the package and config files**
 
 ```json
 {
@@ -131,7 +131,7 @@ coverage/
 .worktrees/
 ```
 
-- [ ] **Step 2: Install dependencies and verify the empty suite runs**
+- [x] **Step 2: Install dependencies and verify the empty suite runs**
 
 Run: `npm install`
 Expected: install completes and creates `package-lock.json`
@@ -139,7 +139,7 @@ Expected: install completes and creates `package-lock.json`
 Run: `npm test`
 Expected: PASS with `No test files found, exiting with code 0`
 
-- [ ] **Step 3: Commit the tooling baseline**
+- [x] **Step 3: Commit the tooling baseline**
 
 ```bash
 git add package.json package-lock.json vitest.config.js .gitignore
@@ -155,7 +155,7 @@ git commit -m "chore: initialize axiom runtime package"
 - Create: `test/definition/validate-definition.test.js`
 - Test: `test/definition/validate-definition.test.js`
 
-- [ ] **Step 1: Write the failing helper and definition construction tests**
+- [x] **Step 1: Write the failing helper and definition construction tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -202,12 +202,12 @@ describe('intent helpers', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/definition/validate-definition.test.js`
 Expected: FAIL with missing exports from `src/index.js`
 
-- [ ] **Step 3: Write the minimal API and helpers**
+- [x] **Step 3: Write the minimal API and helpers**
 
 ```js
 // src/definition/helpers.js
@@ -255,12 +255,12 @@ export { intent } from './public/intent.js';
 export { must, should, outcome, verify } from './definition/helpers.js';
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/definition/validate-definition.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit the helper slice**
+- [x] **Step 5: Commit the helper slice**
 
 ```bash
 git add src/index.js src/public/intent.js src/definition/helpers.js test/definition/validate-definition.test.js
@@ -276,7 +276,7 @@ git commit -m "feat: add intent constructor and helper records"
 - Modify: `test/definition/validate-definition.test.js`
 - Test: `test/definition/validate-definition.test.js`
 
-- [ ] **Step 1: Extend the test with validation failures**
+- [x] **Step 1: Extend the test with validation failures**
 
 ```js
 it('fails when an unknown top-level section is present', () => {
@@ -324,12 +324,12 @@ it('fails when verification covers an unknown clause id', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -- test/definition/validate-definition.test.js`
 Expected: FAIL because validation is not implemented
 
-- [ ] **Step 3: Implement minimal validation**
+- [x] **Step 3: Implement minimal validation**
 
 ```js
 // src/definition/recognized-sections.js
@@ -427,12 +427,12 @@ export function intent(definition, runFn) {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -- test/definition/validate-definition.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit the validation slice**
+- [x] **Step 5: Commit the validation slice**
 
 ```bash
 git add src/definition/recognized-sections.js src/definition/validate-definition.js src/public/intent.js test/definition/validate-definition.test.js
@@ -449,7 +449,7 @@ git commit -m "feat: validate intent definitions and coverage"
 - Test: `test/public/load-intent-file.test.js`
 - Test: `test/examples/examples-load.test.js`
 
-- [ ] **Step 1: Write the failing load tests**
+- [x] **Step 1: Write the failing load tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -482,12 +482,12 @@ describe('canonical examples', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -- test/public/load-intent-file.test.js test/examples/examples-load.test.js`
 Expected: FAIL with missing `loadIntentFile` export
 
-- [ ] **Step 3: Implement file loading**
+- [x] **Step 3: Implement file loading**
 
 ```js
 // src/public/load-intent-file.js
@@ -513,12 +513,12 @@ export { loadIntentFile } from './public/load-intent-file.js';
 export { must, should, outcome, verify } from './definition/helpers.js';
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -- test/public/load-intent-file.test.js test/examples/examples-load.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit the loading slice**
+- [x] **Step 5: Commit the loading slice**
 
 ```bash
 git add src/public/load-intent-file.js src/index.js test/public/load-intent-file.test.js test/examples/examples-load.test.js
@@ -537,7 +537,7 @@ git commit -m "feat: load authored intent files from disk"
 - Modify: `src/index.js`
 - Test: `test/runtime/run-intent.test.js`
 
-- [ ] **Step 1: Write the failing runtime execution test**
+- [x] **Step 1: Write the failing runtime execution test**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -584,12 +584,12 @@ describe('runIntent', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/runtime/run-intent.test.js`
 Expected: FAIL with missing `runIntent` export
 
-- [ ] **Step 3: Implement minimal runtime execution**
+- [x] **Step 3: Implement minimal runtime execution**
 
 ```js
 // src/runtime/result-model.js
@@ -745,12 +745,12 @@ export { runIntent } from './runtime/run-intent.js';
 export { must, should, outcome, verify } from './definition/helpers.js';
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/runtime/run-intent.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit the runtime execution slice**
+- [x] **Step 5: Commit the runtime execution slice**
 
 ```bash
 git add src/runtime/result-model.js src/runtime/step-runner.js src/runtime/create-run-context.js src/runtime/run-intent.js src/adapters/test-adapters.js src/index.js test/runtime/run-intent.test.js
@@ -766,7 +766,7 @@ git commit -m "feat: execute intent runtime steps in source order"
 - Create: `test/runtime/verification.test.js`
 - Test: `test/runtime/verification.test.js`
 
-- [ ] **Step 1: Write the failing verification test**
+- [x] **Step 1: Write the failing verification test**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -817,12 +817,12 @@ describe('verification execution', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/runtime/verification.test.js`
 Expected: FAIL because verification records are not stored
 
-- [ ] **Step 3: Implement minimal verification execution**
+- [x] **Step 3: Implement minimal verification execution**
 
 ```js
 // src/verification/find-verification.js
@@ -914,12 +914,12 @@ export async function runIntent(file, adapters) {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/runtime/verification.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit the verification slice**
+- [x] **Step 5: Commit the verification slice**
 
 ```bash
 git add src/verification/find-verification.js src/verification/execute-verification.js src/runtime/create-run-context.js src/runtime/run-intent.js test/runtime/verification.test.js
@@ -939,7 +939,7 @@ git commit -m "feat: execute declared verification by id"
 - Test: `test/runtime/checkpoints.test.js`
 - Test: `test/runtime/intent-revision.test.js`
 
-- [ ] **Step 1: Write the failing checkpoint and intent revision tests**
+- [x] **Step 1: Write the failing checkpoint and intent revision tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -1026,12 +1026,12 @@ describe('intent revision', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -- test/runtime/checkpoints.test.js test/runtime/intent-revision.test.js`
 Expected: FAIL because pending checkpoint and intent revision state are not stored
 
-- [ ] **Step 3: Implement checkpoint and revision handling**
+- [x] **Step 3: Implement checkpoint and revision handling**
 
 ```js
 // src/runtime/checkpoints.js
@@ -1180,12 +1180,12 @@ export function createRunContext(file, adapters, state, result) {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -- test/runtime/checkpoints.test.js test/runtime/intent-revision.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit the checkpoint and revision slice**
+- [x] **Step 5: Commit the checkpoint and revision slice**
 
 ```bash
 git add src/runtime/checkpoints.js src/runtime/intent-revision.js src/runtime/result-model.js src/runtime/create-run-context.js src/adapters/test-adapters.js test/runtime/checkpoints.test.js test/runtime/intent-revision.test.js
@@ -1198,7 +1198,7 @@ git commit -m "feat: add checkpoints and intent revision state"
 - Modify: `test/examples/examples-load.test.js`
 - Test: `npm test`
 
-- [ ] **Step 1: Add one regression assertion per canonical example**
+- [x] **Step 1: Add one regression assertion per canonical example**
 
 ```js
 // add to test/examples/examples-load.test.js
@@ -1211,12 +1211,12 @@ expect(file.runFn).toBeTypeOf('function');
 expect(file.definition.library.kind).toBe('package');
 ```
 
-- [ ] **Step 2: Run the full test suite**
+- [x] **Step 2: Run the full test suite**
 
 Run: `npm test`
 Expected: PASS with all `test/**/*.test.js` files green
 
-- [ ] **Step 3: Commit the full-suite verification pass**
+- [x] **Step 3: Commit the full-suite verification pass**
 
 ```bash
 git add test/examples/examples-load.test.js

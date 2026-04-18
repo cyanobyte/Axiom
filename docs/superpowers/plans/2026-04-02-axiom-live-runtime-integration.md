@@ -71,7 +71,7 @@ The default `npm test` path must not call live AI services.
 - Create: `test/public/load-runtime-config.test.js`
 - Test: `test/public/load-runtime-config.test.js`
 
-- [ ] **Step 1: Write the failing config loader tests**
+- [x] **Step 1: Write the failing config loader tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -93,12 +93,12 @@ describe('loadRuntimeConfig', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/public/load-runtime-config.test.js`
 Expected: FAIL with missing module `src/public/load-runtime-config.js`
 
-- [ ] **Step 3: Implement the minimal config loader**
+- [x] **Step 3: Implement the minimal config loader**
 
 ```js
 // src/public/load-runtime-config.js
@@ -121,12 +121,12 @@ export async function loadRuntimeConfig(intentFilePath) {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/public/load-runtime-config.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/public/load-runtime-config.js test/public/load-runtime-config.test.js
@@ -140,7 +140,7 @@ git commit -m "feat: load sibling runtime config files"
 - Create: `test/config/validate-runtime-config.test.js`
 - Test: `test/config/validate-runtime-config.test.js`
 
-- [ ] **Step 1: Write the failing config validation tests**
+- [x] **Step 1: Write the failing config validation tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -172,12 +172,12 @@ describe('validateRuntimeConfig', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/config/validate-runtime-config.test.js`
 Expected: FAIL with missing module `src/config/validate-runtime-config.js`
 
-- [ ] **Step 3: Implement minimal validation**
+- [x] **Step 3: Implement minimal validation**
 
 ```js
 // src/config/validate-runtime-config.js
@@ -198,12 +198,12 @@ export function validateRuntimeConfig(config) {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/config/validate-runtime-config.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/config/validate-runtime-config.js test/config/validate-runtime-config.test.js
@@ -219,7 +219,7 @@ git commit -m "feat: validate runtime config files"
 - Create: `test/adapters/create-configured-adapters.test.js`
 - Test: `test/adapters/create-configured-adapters.test.js`
 
-- [ ] **Step 1: Write the failing local adapter tests**
+- [x] **Step 1: Write the failing local adapter tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -244,12 +244,12 @@ describe('local adapters', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/adapters/create-configured-adapters.test.js`
 Expected: FAIL with missing local adapter modules
 
-- [ ] **Step 3: Implement minimal local adapters**
+- [x] **Step 3: Implement minimal local adapters**
 
 ```js
 // src/adapters/create-local-workspace-adapter.js
@@ -291,12 +291,12 @@ export function createLocalArtifactAdapter(workspaceRoot, artifactRoot) {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/adapters/create-configured-adapters.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/adapters/create-local-workspace-adapter.js src/adapters/create-local-artifact-adapter.js test/adapters/create-configured-adapters.test.js
@@ -312,7 +312,7 @@ git commit -m "feat: add local workspace and artifact adapters"
 - Modify: `src/index.js`
 - Test: `test/adapters/create-configured-adapters.test.js`
 
-- [ ] **Step 1: Extend the adapter factory test with provider mapping**
+- [x] **Step 1: Extend the adapter factory test with provider mapping**
 
 ```js
 it('maps capability names to configured agent providers', async () => {
@@ -333,12 +333,12 @@ it('maps capability names to configured agent providers', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/adapters/create-configured-adapters.test.js`
 Expected: FAIL because `createConfiguredAdapters` does not exist
 
-- [ ] **Step 3: Implement provider-backed factories**
+- [x] **Step 3: Implement provider-backed factories**
 
 ```js
 // src/adapters/providers/create-fake-agent-adapter.js
@@ -415,12 +415,12 @@ export function createConfiguredAdapters({ runtimeConfig }) {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/adapters/create-configured-adapters.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/adapters/providers/create-fake-agent-adapter.js src/adapters/providers/create-openai-agent-adapter.js src/adapters/create-configured-adapters.js src/index.js test/adapters/create-configured-adapters.test.js
@@ -435,7 +435,7 @@ git commit -m "feat: build adapters from runtime config"
 - Create: `test/public/run-intent-file.test.js`
 - Test: `test/public/run-intent-file.test.js`
 
-- [ ] **Step 1: Write the failing file-runtime test**
+- [x] **Step 1: Write the failing file-runtime test**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -456,12 +456,12 @@ describe('runIntentFile', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/public/run-intent-file.test.js`
 Expected: FAIL with missing export `runIntentFile`
 
-- [ ] **Step 3: Implement the file runtime entrypoint**
+- [x] **Step 3: Implement the file runtime entrypoint**
 
 ```js
 // src/public/run-intent-file.js
@@ -485,12 +485,12 @@ export async function runIntentFile(intentFilePath) {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/public/run-intent-file.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/public/run-intent-file.js src/index.js src/config/validate-runtime-config.js test/public/run-intent-file.test.js
@@ -506,7 +506,7 @@ git commit -m "feat: run intent files with sibling config"
 - Create: `test/cli/build-command.test.js`
 - Test: `test/cli/build-command.test.js`
 
-- [ ] **Step 1: Write the failing CLI test**
+- [x] **Step 1: Write the failing CLI test**
 
 ```js
 import { describe, expect, it, vi } from 'vitest';
@@ -528,12 +528,12 @@ describe('buildCommand', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/cli/build-command.test.js`
 Expected: FAIL with missing module `src/cli/build-command.js`
 
-- [ ] **Step 3: Implement the minimal CLI**
+- [x] **Step 3: Implement the minimal CLI**
 
 ```js
 // src/cli/build-command.js
@@ -571,12 +571,12 @@ console.error('Usage: ax build <file.axiom.js>');
 process.exit(1);
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/cli/build-command.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/cli/build-command.js bin/ax.js package.json test/cli/build-command.test.js
@@ -589,7 +589,7 @@ git commit -m "feat: add ax build cli"
 - Create: `test/examples/counter-webapp-file-runtime.test.js`
 - Test: `test/examples/counter-webapp-file-runtime.test.js`
 
-- [ ] **Step 1: Write the failing file-runtime example test**
+- [x] **Step 1: Write the failing file-runtime example test**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -605,12 +605,12 @@ describe('basic counter example via file runtime', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/examples/counter-webapp-file-runtime.test.js`
 Expected: FAIL because `runIntentFile(...)` or configured adapters are incomplete
 
-- [ ] **Step 3: Wire the example config for deterministic local execution**
+- [x] **Step 3: Wire the example config for deterministic local execution**
 
 Update `examples/basic/axiom.config.js` so it can run under default test conditions:
 
@@ -657,12 +657,12 @@ Also create `examples/basic/reports/counter-ui.json`:
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/examples/counter-webapp-file-runtime.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add examples/basic/axiom.config.js examples/basic/reports/counter-ui.json test/examples/counter-webapp-file-runtime.test.js
@@ -675,7 +675,7 @@ git commit -m "test: run beginner example through file runtime"
 - Modify: `README.md`
 - Test: `npm test`
 
-- [ ] **Step 1: Document the runnable MVP path**
+- [x] **Step 1: Document the runnable MVP path**
 
 Add to `README.md`:
 
@@ -700,12 +700,12 @@ This loads:
 - `examples/basic/axiom.config.js`
 ```
 
-- [ ] **Step 2: Run the full suite**
+- [x] **Step 2: Run the full suite**
 
 Run: `npm test`
 Expected: PASS with all tests green
 
-- [ ] **Step 3: Manual live smoke-test note**
+- [x] **Step 3: Manual live smoke-test note**
 
 Document one manual command in `README.md` for later provider wiring:
 
@@ -713,7 +713,7 @@ Document one manual command in `README.md` for later provider wiring:
 When a live provider adapter is implemented, replace the fake agent entries in `examples/basic/axiom.config.js` with provider-backed entries and rerun the same CLI command.
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add README.md
@@ -727,7 +727,7 @@ git commit -m "docs: document runnable file-based runtime flow"
 - Create: `test/adapters/create-local-shell-adapter.test.js`
 - Test: `test/adapters/create-local-shell-adapter.test.js`
 
-- [ ] **Step 1: Write the failing shell adapter tests**
+- [x] **Step 1: Write the failing shell adapter tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -747,12 +747,12 @@ describe('createLocalShellAdapter', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/adapters/create-local-shell-adapter.test.js`
 Expected: FAIL because the current shell adapter returns a stub result with no real stdout
 
-- [ ] **Step 3: Implement real local process execution**
+- [x] **Step 3: Implement real local process execution**
 
 ```js
 // src/adapters/create-local-shell-adapter.js
@@ -788,12 +788,12 @@ export function createLocalShellAdapter() {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/adapters/create-local-shell-adapter.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/adapters/create-local-shell-adapter.js test/adapters/create-local-shell-adapter.test.js
@@ -808,7 +808,7 @@ git commit -m "feat: execute local shell commands"
 - Create: `examples/basic/axiom.live.config.js`
 - Test: `test/adapters/create-openai-agent-adapter.test.js`
 
-- [ ] **Step 1: Write the failing live-provider adapter tests**
+- [x] **Step 1: Write the failing live-provider adapter tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -825,12 +825,12 @@ describe('createOpenAIAgentAdapter', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/adapters/create-openai-agent-adapter.test.js`
 Expected: FAIL because the current placeholder error message does not validate config
 
-- [ ] **Step 3: Implement the minimal live-provider request path**
+- [x] **Step 3: Implement the minimal live-provider request path**
 
 ```js
 // src/adapters/providers/create-openai-agent-adapter.js
@@ -873,12 +873,12 @@ export default {
 };
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm test -- test/adapters/create-openai-agent-adapter.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/adapters/providers/create-openai-agent-adapter.js test/adapters/create-openai-agent-adapter.test.js examples/basic/axiom.live.config.js
@@ -892,7 +892,7 @@ git commit -m "feat: validate live provider configuration"
 - Modify: `examples/basic/README.md`
 - Test: `npm test`
 
-- [ ] **Step 1: Document the live smoke command**
+- [x] **Step 1: Document the live smoke command**
 
 Add to `README.md`:
 
@@ -910,12 +910,12 @@ This path is manual-only and should not be part of the default automated suite. 
 should prefer `codex-cli` or `claude-cli` so the runtime can reuse an existing local CLI session.
 ```
 
-- [ ] **Step 2: Re-run the full suite**
+- [x] **Step 2: Re-run the full suite**
 
 Run: `npm test`
 Expected: PASS with all tests green
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add README.md examples/basic/README.md
@@ -935,7 +935,7 @@ git commit -m "docs: add live smoke path documentation"
 - Test: `test/adapters/create-codex-cli-agent-adapter.test.js`
 - Test: `test/adapters/create-claude-cli-agent-adapter.test.js`
 
-- [ ] **Step 1: Write the failing CLI-provider adapter tests**
+- [x] **Step 1: Write the failing CLI-provider adapter tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -962,12 +962,12 @@ describe('createCodexCliAgentAdapter', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -- test/adapters/create-codex-cli-agent-adapter.test.js test/adapters/create-claude-cli-agent-adapter.test.js`
 Expected: FAIL because the CLI provider modules do not exist yet
 
-- [ ] **Step 3: Implement the real CLI provider calls**
+- [x] **Step 3: Implement the real CLI provider calls**
 
 ```js
 // src/adapters/providers/create-codex-cli-agent-adapter.js
@@ -991,7 +991,7 @@ export function createCodexCliAgentAdapter(agentName, config = {}) {
 }
 ```
 
-- [ ] **Step 4: Run the automated suite and the manual live smoke test**
+- [x] **Step 4: Run the automated suite and the manual live smoke test**
 
 Run: `npm test`
 Expected: PASS with no live-provider calls in the default suite
@@ -1008,7 +1008,7 @@ Expected:
 - local AI CLI adapter is invoked
 - the run reaches real planning/coding calls instead of throwing "not implemented yet"
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/adapters/providers/run-cli-command.js src/adapters/providers/create-codex-cli-agent-adapter.js src/adapters/providers/create-claude-cli-agent-adapter.js src/adapters/create-configured-adapters.js test/adapters/create-codex-cli-agent-adapter.test.js test/adapters/create-claude-cli-agent-adapter.test.js README.md examples/basic/axiom.live.config.js examples/basic/README.md
@@ -1023,7 +1023,7 @@ git commit -m "feat: execute live provider requests through local ai clis"
 - Create: `docs/superpowers/specs/axiom-mvp-acceptance.md`
 - Test: `npm test`
 
-- [ ] **Step 1: Write explicit MVP acceptance criteria**
+- [x] **Step 1: Write explicit MVP acceptance criteria**
 
 Create `docs/superpowers/specs/axiom-mvp-acceptance.md`:
 
@@ -1043,12 +1043,12 @@ The MVP is considered fully functional only when all of the following are true:
 9. The default automated suite still passes without calling live AI.
 ```
 
-- [ ] **Step 2: Run the default suite**
+- [x] **Step 2: Run the default suite**
 
 Run: `npm test`
 Expected: PASS with all tests green and no live-provider calls in the default suite
 
-- [ ] **Step 3: Run the real end-to-end manual smoke**
+- [x] **Step 3: Run the real end-to-end manual smoke**
 
 Manual smoke command:
 
@@ -1064,7 +1064,7 @@ Expected:
 - artifact-backed verification executes
 - the run finishes with a structured result instead of throwing a provider placeholder error
 
-- [ ] **Step 4: Restore the deterministic example config after the smoke**
+- [x] **Step 4: Restore the deterministic example config after the smoke**
 
 ```bash
 git checkout -- examples/basic/axiom.config.js
@@ -1072,7 +1072,7 @@ git checkout -- examples/basic/axiom.config.js
 
 Expected: the beginner example returns to the deterministic fake-agent config used by the default suite
 
-- [ ] **Step 5: Document the completion state**
+- [x] **Step 5: Document the completion state**
 
 Add to `README.md` and `examples/basic/README.md`:
 
@@ -1082,7 +1082,7 @@ The MVP is fully functional when:
 - the live smoke path succeeds with a real provider configuration
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add README.md examples/basic/README.md docs/superpowers/specs/axiom-mvp-acceptance.md
@@ -1100,7 +1100,7 @@ git commit -m "docs: define full MVP acceptance criteria"
 - Modify: `test/adapters/create-claude-cli-agent-adapter.test.js`
 - Test: `test/adapters/parse-json-output.test.js`
 
-- [ ] **Step 1: Write the failing parser tests**
+- [x] **Step 1: Write the failing parser tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -1119,12 +1119,12 @@ describe('parseJsonOutput', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/adapters/parse-json-output.test.js`
 Expected: FAIL with missing module `src/adapters/providers/parse-json-output.js`
 
-- [ ] **Step 3: Implement the minimal JSON output contract**
+- [x] **Step 3: Implement the minimal JSON output contract**
 
 ```js
 // src/adapters/providers/parse-json-output.js
@@ -1139,12 +1139,12 @@ export function parseJsonOutput(output, agentName = 'agent') {
 
 Update the CLI adapters so `config.output === 'json'` parses stdout through `parseJsonOutput(...)`.
 
-- [ ] **Step 4: Run the targeted adapter tests**
+- [x] **Step 4: Run the targeted adapter tests**
 
 Run: `npm test -- test/adapters/parse-json-output.test.js test/adapters/create-codex-cli-agent-adapter.test.js test/adapters/create-claude-cli-agent-adapter.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/adapters/providers/parse-json-output.js src/adapters/providers/create-codex-cli-agent-adapter.js src/adapters/providers/create-claude-cli-agent-adapter.js test/adapters/parse-json-output.test.js test/adapters/create-codex-cli-agent-adapter.test.js test/adapters/create-claude-cli-agent-adapter.test.js
@@ -1161,7 +1161,7 @@ git commit -m "feat: add structured output contracts for cli providers"
 - Modify: `test/examples/counter-webapp-runtime.test.js`
 - Test: `test/runtime/materialize-files.test.js`
 
-- [ ] **Step 1: Write the failing file-materialization tests**
+- [x] **Step 1: Write the failing file-materialization tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -1188,12 +1188,12 @@ describe('materializeFiles', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/runtime/materialize-files.test.js`
 Expected: FAIL with missing module `src/runtime/materialize-files.js`
 
-- [ ] **Step 3: Implement the minimal file writer**
+- [x] **Step 3: Implement the minimal file writer**
 
 ```js
 // src/runtime/materialize-files.js
@@ -1207,12 +1207,12 @@ export async function materializeFiles(workspace, files = []) {
 Update `examples/basic/counter-webapp.axiom.js` so the `implement` step expects `{ files: [...] }`
 from the `coder` capability and writes them into the workspace before the `test` step runs.
 
-- [ ] **Step 4: Run the targeted runtime tests**
+- [x] **Step 4: Run the targeted runtime tests**
 
 Run: `npm test -- test/runtime/materialize-files.test.js test/examples/counter-webapp-runtime.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/runtime/materialize-files.js src/adapters/create-local-workspace-adapter.js examples/basic/counter-webapp.axiom.js test/runtime/materialize-files.test.js test/examples/counter-webapp-runtime.test.js
@@ -1230,12 +1230,12 @@ git commit -m "feat: materialize generated files into workspaces"
 - Modify: `docs/superpowers/specs/axiom-mvp-acceptance.md`
 - Test: `npm test`
 
-- [ ] **Step 1: Create a dedicated live-smoke example**
+- [x] **Step 1: Create a dedicated live-smoke example**
 
 Add a separate `examples/live-counter/` example so the manual live path can generate files into its
 own workspace without mutating the deterministic beginner example used by the automated suite.
 
-- [ ] **Step 2: Configure live agents for structured JSON output**
+- [x] **Step 2: Configure live agents for structured JSON output**
 
 Set `examples/live-counter/axiom.config.js` to use `codex-cli` with `output: 'json'` for:
 - `briefing`
@@ -1253,12 +1253,12 @@ The `coder` capability should be prompted to return:
 }
 ```
 
-- [ ] **Step 3: Run the default automated suite**
+- [x] **Step 3: Run the default automated suite**
 
 Run: `npm test`
 Expected: PASS with no live-provider calls in the default suite
 
-- [ ] **Step 4: Run the real manual acceptance smoke**
+- [x] **Step 4: Run the real manual acceptance smoke**
 
 Manual smoke command:
 
@@ -1273,7 +1273,7 @@ Expected:
 - artifact-backed verification passes
 - the run returns a structured passing result
 
-- [ ] **Step 5: Document and commit**
+- [x] **Step 5: Document and commit**
 
 ```bash
 git add README.md examples/basic/README.md examples/live-counter docs/superpowers/specs/axiom-mvp-acceptance.md
@@ -1290,7 +1290,7 @@ git commit -m "docs: add live smoke workspace for full mvp acceptance"
 - Modify: `test/examples/counter-webapp-runtime.test.js`
 - Test: `test/runtime/output-contracts.test.js`
 
-- [ ] **Step 1: Write the failing output-contract tests**
+- [x] **Step 1: Write the failing output-contract tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -1309,12 +1309,12 @@ describe('buildJsonContractPrompt', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/runtime/output-contracts.test.js`
 Expected: FAIL with missing module `src/runtime/output-contracts.js`
 
-- [ ] **Step 3: Implement minimal prompt-contract helpers**
+- [x] **Step 3: Implement minimal prompt-contract helpers**
 
 ```js
 // src/runtime/output-contracts.js
@@ -1334,12 +1334,12 @@ Update `examples/live-counter/counter-webapp.axiom.js` so:
 - `coder` receives a `prompt` string built with `buildJsonContractPrompt(...)`
 - the expected planner fields and coder `{ files: [...] }` shape are explicit in those prompts
 
-- [ ] **Step 4: Run the targeted tests**
+- [x] **Step 4: Run the targeted tests**
 
 Run: `npm test -- test/runtime/output-contracts.test.js test/examples/counter-webapp-runtime.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Re-run the manual live smoke**
+- [x] **Step 5: Re-run the manual live smoke**
 
 Run:
 
@@ -1352,7 +1352,7 @@ Expected:
 - `coder` returns valid JSON with a `files` array
 - the run progresses past the planning step
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add examples/live-counter/counter-webapp.axiom.js examples/live-counter/axiom.config.js src/runtime/output-contracts.js test/runtime/output-contracts.test.js test/examples/counter-webapp-runtime.test.js
@@ -1373,7 +1373,7 @@ git commit -m "feat: add explicit json output contracts for live smoke"
 - Modify: `test/cli/build-command.test.js`
 - Test: `test/runtime/event-stream.test.js`
 
-- [ ] **Step 1: Write the failing event-stream tests**
+- [x] **Step 1: Write the failing event-stream tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -1397,12 +1397,12 @@ describe('createEventStream', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- test/runtime/event-stream.test.js`
 Expected: FAIL with missing module `src/runtime/create-event-stream.js`
 
-- [ ] **Step 3: Implement the minimal event stream**
+- [x] **Step 3: Implement the minimal event stream**
 
 ```js
 // src/runtime/create-event-stream.js
@@ -1424,12 +1424,12 @@ Update the runtime so:
 - shell/provider adapters can emit `step.output` chunks
 - `buildCommand(...)` prints those events in a readable live form
 
-- [ ] **Step 4: Run the targeted tests**
+- [x] **Step 4: Run the targeted tests**
 
 Run: `npm test -- test/runtime/event-stream.test.js test/cli/build-command.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/runtime/create-event-stream.js src/runtime/run-intent.js src/runtime/step-runner.js src/runtime/create-run-context.js src/cli/build-command.js src/adapters/create-local-shell-adapter.js src/adapters/providers/run-cli-command.js test/runtime/event-stream.test.js test/cli/build-command.test.js
@@ -1448,7 +1448,7 @@ git commit -m "feat: stream live step output through runtime"
 - Modify: `test/cli/build-command.test.js`
 - Test: `test/runtime/interrupts.test.js`
 
-- [ ] **Step 1: Write the failing interrupt tests**
+- [x] **Step 1: Write the failing interrupt tests**
 
 ```js
 import { describe, expect, it } from 'vitest';
@@ -1464,12 +1464,12 @@ describe('interrupt handling', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails for the right reason**
+- [x] **Step 2: Run the test to verify it fails for the right reason**
 
 Run: `npm test -- test/runtime/interrupts.test.js`
 Expected: FAIL because `interrupted` is not part of the supported live lifecycle yet
 
-- [ ] **Step 3: Implement minimal interrupt propagation**
+- [x] **Step 3: Implement minimal interrupt propagation**
 
 Update the runtime so:
 - the active shell/provider child process is tracked
@@ -1477,12 +1477,12 @@ Update the runtime so:
 - the run returns `status: 'interrupted'`
 - the CLI prints that the run was interrupted and at which step
 
-- [ ] **Step 4: Run the targeted tests**
+- [x] **Step 4: Run the targeted tests**
 
 Run: `npm test -- test/runtime/interrupts.test.js test/cli/build-command.test.js`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/adapters/create-local-shell-adapter.js src/adapters/providers/run-cli-command.js src/runtime/run-intent.js src/runtime/result-model.js src/cli/build-command.js test/runtime/interrupts.test.js test/cli/build-command.test.js
