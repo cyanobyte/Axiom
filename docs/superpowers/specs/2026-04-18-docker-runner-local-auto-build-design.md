@@ -259,7 +259,7 @@ Deferred until a registry publishing path exists.
 
 ### Docker-backed integration smoke fixture
 
-Add a minimal Docker-mode intent fixture and a Docker-gated end-to-end test that proves the full runner flow, including mounts, live output streaming, and report generation. This separate plan complements the unit-level coverage in this design.
+Completed by `examples/docker-counter/counter-webapp.axiom.js` and the opt-in `npm run docker:runner:integration` command. Future work can still add CI gating around that smoke when a Docker-enabled runner is available.
 
 ### Intent-level sandbox requires declaration
 

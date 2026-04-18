@@ -79,6 +79,7 @@ When you run `ax build` with `security.build.mode: "docker"`, Axiom will build t
 ## Examples
 
 - Beginner example: `examples/basic/counter-webapp.axiom.js`
+- Docker runner smoke example: `examples/docker-counter/counter-webapp.axiom.js`
 - CLI example: `examples/cli/echo-tool.axiom.js`
 - Live smoke example: `examples/live-counter/counter-webapp.axiom.js`
 - Dogfood slice example: `examples/dogfood/axiom-runtime-slice.axiom.js`
@@ -94,4 +95,10 @@ Manual live smoke:
 
 ```bash
 ax build examples/live-counter/counter-webapp.axiom.js
+```
+
+Manual Docker runner smoke:
+
+```bash
+npm run docker:runner:integration
 ```

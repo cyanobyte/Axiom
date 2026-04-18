@@ -122,4 +122,3 @@ If Docker is not installed or the daemon is not running, the package scripts sho
 - add CI workflow to publish the image to GHCR
 - add immutable version tags in addition to `latest`
 - add image signing and provenance
-- add a permanent Docker-backed integration smoke fixture

@@ -19,6 +19,15 @@ describe('canonical examples', () => {
     expect(file.runFn).toBeTypeOf('function');
   });
 
+  it('loads the Docker counter web app example', async () => {
+    const file = await loadIntentFile('examples/docker-counter/counter-webapp.axiom.js');
+    expect(file.definition.id).toBe('counter-webapp-docker');
+    expect(file.definition.security.build.mode).toBe('docker');
+    expect(file.definition.security.build.profile).toBe('node-webapp');
+    expect(file.definition.web.kind).toBe('full-stack');
+    expect(file.runFn).toBeTypeOf('function');
+  });
+
   it('loads the live counter web app example', async () => {
     const file = await loadIntentFile('examples/live-counter/counter-webapp.axiom.js');
     expect(file.definition.id).toBe('counter-webapp-live');

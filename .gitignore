@@ -146,6 +146,7 @@ vite.config.ts.timestamp-*
 node_modules/
 coverage/
 examples/basic/generated/
+examples/docker-counter/generated/
 examples/cli/generated/
 examples/live-counter/generated/
 **/.axiom-build.json

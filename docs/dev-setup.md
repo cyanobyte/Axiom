@@ -114,6 +114,14 @@ Smoke-test the image:
 npm run docker:runner:smoke
 ```
 
+Run the full host-to-container integration smoke:
+
+```bash
+npm run docker:runner:integration
+```
+
+This uses `examples/docker-counter/counter-webapp.axiom.js`, which declares `security.build.mode: "docker"` and `profile: "node-webapp"`.
+
 See `docker/runner/node-webapp/README.md` for full details.
 
 ## Working on the Codebase
