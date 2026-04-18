@@ -12,6 +12,8 @@ import { loadRuntimeConfig as loadRuntimeConfigDefault } from '../public/load-ru
 import { validateRuntimeConfig as validateRuntimeConfigDefault } from '../config/validate-runtime-config.js';
 import { createBuildRunnerPlan as createBuildRunnerPlanDefault } from '../security/create-build-runner-plan.js';
 import { createDockerBuildRunner as createDockerBuildRunnerDefault } from '../security/create-docker-build-runner.js';
+import { createDockerImageEnsurer as createDockerImageEnsurerDefault } from '../security/ensure-docker-build-image.js';
+import { getAxiomPackageRoot as getAxiomPackageRootDefault } from '../runtime/axiom-package-root.js';
 
 /**
  * Run the `ax build` command with local-file discovery when no explicit target is provided.
@@ -43,6 +45,8 @@ export async function buildCommand(
     validateRuntimeConfig = validateRuntimeConfigDefault,
     createBuildRunnerPlan = createBuildRunnerPlanDefault,
     createDockerBuildRunner = createDockerBuildRunnerDefault,
+    createDockerImageEnsurer = createDockerImageEnsurerDefault,
+    getAxiomPackageRoot = getAxiomPackageRootDefault,
     environment = process.env,
     projectRoot = process.cwd()
   }
@@ -73,6 +77,8 @@ export async function buildCommand(
       validateRuntimeConfig,
       createBuildRunnerPlan,
       createDockerBuildRunner,
+      createDockerImageEnsurer,
+      getAxiomPackageRoot,
       environment,
       projectRoot,
       signalHandlers
@@ -150,6 +156,8 @@ async function maybeExecuteBuildRunner(
     validateRuntimeConfig,
     createBuildRunnerPlan,
     createDockerBuildRunner,
+    createDockerImageEnsurer,
+    getAxiomPackageRoot,
     environment,
     projectRoot,
     signalHandlers
@@ -198,12 +206,33 @@ async function maybeExecuteBuildRunner(
       environment,
       projectRoot
     });
+
+    const axiomPackageRoot = getAxiomPackageRoot();
+    const dockerfilePath = path.resolve(
+      axiomPackageRoot,
+      runnerPlan.buildSecurity.dockerfile
+    );
+
+    const writeThrough = (event) => {
+      logger[event.stream === 'stderr' ? 'error' : 'log'](event.chunk.trimEnd());
+    };
+
+    logger.log(`Building Axiom runner image ${runnerPlan.buildSecurity.image} ...`);
+
+    const ensurer = createDockerImageEnsurer();
+    await ensurer.ensure(
+      {
+        image: runnerPlan.buildSecurity.image,
+        dockerfile: dockerfilePath,
+        buildContext: axiomPackageRoot
+      },
+      { signal: controller.signal, onOutput: writeThrough }
+    );
+
     const dockerBuildRunner = createDockerBuildRunner();
     const result = await dockerBuildRunner.run(runnerPlan, {
       signal: controller.signal,
-      onOutput(event) {
-        logger[event.stream === 'stderr' ? 'error' : 'log'](event.chunk.trimEnd());
-      }
+      onOutput: writeThrough
     });
 
     return result.exitCode ?? 1;

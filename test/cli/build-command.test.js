@@ -242,9 +242,19 @@ describe('buildCommand', () => {
       artifacts: { root: './reports' }
     }));
     const validateRuntimeConfig = vi.fn((config) => config);
-    const createBuildRunnerPlan = vi.fn(() => ({ kind: 'docker-build-runner-plan' }));
+    const runnerPlan = {
+      kind: 'docker-build-runner-plan',
+      buildSecurity: {
+        image: 'axiom-build-node-webapp:local',
+        dockerfile: 'docker/runner/node-webapp/Dockerfile'
+      }
+    };
+    const createBuildRunnerPlan = vi.fn(() => runnerPlan);
     const dockerBuildRunner = { run: vi.fn(async () => ({ exitCode: 23 })) };
     const createDockerBuildRunner = vi.fn(() => dockerBuildRunner);
+    const imageEnsurer = { ensure: vi.fn(async () => ({ built: false })) };
+    const createDockerImageEnsurer = vi.fn(() => imageEnsurer);
+    const getAxiomPackageRoot = vi.fn(() => '/axiom');
     const runIntentFile = vi.fn();
     const logger = { log: vi.fn(), error: vi.fn() };
 
@@ -256,6 +266,8 @@ describe('buildCommand', () => {
       validateRuntimeConfig,
       createBuildRunnerPlan,
       createDockerBuildRunner,
+      createDockerImageEnsurer,
+      getAxiomPackageRoot,
       environment: {}
     });
 
@@ -268,8 +280,9 @@ describe('buildCommand', () => {
         artifacts: { root: './reports' }
       }
     }));
+    expect(imageEnsurer.ensure).toHaveBeenCalled();
     expect(dockerBuildRunner.run).toHaveBeenCalledWith(
-      { kind: 'docker-build-runner-plan' },
+      runnerPlan,
       expect.objectContaining({ signal: expect.any(AbortSignal), onOutput: expect.any(Function) })
     );
   });
