@@ -124,7 +124,7 @@ That CLI track should remain primary. Editor integrations should sit on top of i
 - Test: `test/definition/validate-definition.test.js`
 - Test: `test/examples/echo-tool-runtime.test.js`
 
-- [ ] **Step 1: Define a compact-mode rule**
+- [x] **Step 1: Define a compact-mode rule**
 
 Allow a reduced authored surface for tiny projects, likely centered on:
 - `meta`
@@ -133,22 +133,22 @@ Allow a reduced authored surface for tiny projects, likely centered on:
 - one domain section like `cli` or `library`
 - optional `build`
 
-- [ ] **Step 2: Expand compact definitions internally**
+- [x] **Step 2: Expand compact definitions internally**
 
 Normalize compact definitions into the richer runtime shape so the execution engine does not need two separate code paths.
 
-- [ ] **Step 3: Rewrite the echo example into compact mode**
+- [x] **Step 3: Rewrite the echo example into compact mode**
 
 Use `echo-tool` as the proving ground for whether Axiom really compresses for tiny projects.
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run:
 ```bash
 npm test -- test/definition/validate-definition.test.js test/examples/echo-tool-runtime.test.js
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/definition/recognized-sections.js src/definition/validate-definition.js src/public/intent.js examples/cli/echo-tool.axiom.js test/definition/validate-definition.test.js test/examples/echo-tool-runtime.test.js
@@ -172,7 +172,7 @@ git commit -m "feat: add compact intent mode for tiny projects"
 - Create: `test/cli/analyze-command.test.js`
 - Modify: `README.md`
 
-- [ ] **Step 1: Add failing tests for `ax analyze`**
+- [x] **Step 1: Add failing tests for `ax analyze`**
 
 Require:
 - schema validation
@@ -185,7 +185,7 @@ Do not require:
 - output artifact validation
 - replaying or rebuilding the project
 
-- [ ] **Step 2: Implement validation analysis**
+- [x] **Step 2: Implement validation analysis**
 
 Return:
 - errors
@@ -194,14 +194,14 @@ Return:
 
 Do not modify the `.axiom.js` file in this command.
 
-- [ ] **Step 3: Run focused tests**
+- [x] **Step 3: Run focused tests**
 
 Run:
 ```bash
 npm test -- test/cli/analyze-command.test.js
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/cli/analyze-command.js src/index.js bin/ax.js src/public/load-intent-file.js src/public/load-runtime-config.js test/cli/analyze-command.test.js README.md
@@ -221,31 +221,31 @@ git commit -m "feat: add ax analyze command"
 - Test: `test/examples/live-counter-runtime.test.js`
 - Modify: `docs/superpowers/specs/axiom-mvp-acceptance.md`
 
-- [ ] **Step 1: Add failing tests for stronger live verification expectations**
+- [x] **Step 1: Add failing tests for stronger live verification expectations**
 
 Require the generated project to prove more than “report file exists”, for example:
 - server starts
 - report reflects an actual HTTP or browser-driven check
 
-- [ ] **Step 2: Tighten the coder contract**
+- [x] **Step 2: Tighten the coder contract**
 
 Require generated files to include:
 - a real test script
 - a report generator driven by actual app behavior
 - any minimal helper code needed for realistic verification
 
-- [ ] **Step 3: Update the live acceptance notes**
+- [x] **Step 3: Update the live acceptance notes**
 
 Document the stronger acceptance rule so the smoke path proves more than a synthetic file write.
 
-- [ ] **Step 4: Run targeted tests**
+- [x] **Step 4: Run targeted tests**
 
 Run:
 ```bash
 npm test -- test/examples/live-counter-runtime.test.js
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add examples/live-counter/counter-webapp.axiom.js examples/live-counter/README.md examples/live-counter/axiom.config.js test/examples/live-counter-runtime.test.js docs/superpowers/specs/axiom-mvp-acceptance.md
@@ -267,11 +267,11 @@ git commit -m "test: strengthen live smoke verification"
 - Test: `test/runtime/event-stream.test.js`
 - Test: `test/cli/build-command.test.js`
 
-- [ ] **Step 1: Add failing tests for event/result compaction**
+- [x] **Step 1: Add failing tests for event/result compaction**
 
 Assert that default runs keep compact event payloads while `--verbose` still shows raw provider output live.
 
-- [ ] **Step 2: Compact stored step output events**
+- [x] **Step 2: Compact stored step output events**
 
 Keep only normalized summaries in `result.events`, for example:
 - `visibility`
@@ -280,18 +280,18 @@ Keep only normalized summaries in `result.events`, for example:
 
 Avoid storing full raw prompts or duplicate giant JSON blobs unless verbose artifacts are explicitly requested later.
 
-- [ ] **Step 3: Preserve live visibility**
+- [x] **Step 3: Preserve live visibility**
 
 Ensure the CLI still receives live progress/result output even if the stored event record is compacted.
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run:
 ```bash
 npm test -- test/runtime/event-stream.test.js test/cli/build-command.test.js
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/runtime/create-event-stream.js src/runtime/create-run-context.js src/adapters/providers/create-codex-cli-agent-adapter.js src/adapters/providers/create-claude-cli-agent-adapter.js src/cli/build-command.js test/runtime/event-stream.test.js test/cli/build-command.test.js
@@ -311,7 +311,7 @@ git commit -m "feat: compact stored compiler events"
 - Test: `test/public/run-intent-file.test.js`
 - Test: `test/cli/build-command.test.js`
 
-- [ ] **Step 1: Add failing tests for a compact health summary**
+- [x] **Step 1: Add failing tests for a compact health summary**
 
 Require a summary that includes:
 - intent file path
@@ -322,22 +322,22 @@ Require a summary that includes:
 - verification counts
 - generated file count
 
-- [ ] **Step 2: Generate the health report after each run**
+- [x] **Step 2: Generate the health report after each run**
 
 Keep it small and deterministic, suitable for both CLI rendering and later documentation generation.
 
-- [ ] **Step 3: Render a short compiler-style summary**
+- [x] **Step 3: Render a short compiler-style summary**
 
 Print a concise final summary before the raw JSON result.
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run:
 ```bash
 npm test -- test/public/run-intent-file.test.js test/cli/build-command.test.js
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/runtime/create-health-report.js src/public/run-intent-file.js src/cli/build-command.js test/public/run-intent-file.test.js test/cli/build-command.test.js
@@ -360,14 +360,14 @@ git commit -m "feat: add compiler health summary"
 - Modify: `test/examples/examples-load.test.js`
 - Modify: `README.md`
 
-- [ ] **Step 1: Add failing tests for the dogfood slice example**
+- [x] **Step 1: Add failing tests for the dogfood slice example**
 
 Require a deterministic example that:
 - loads successfully
 - runs through the runtime
 - generates into its own workspace
 
-- [ ] **Step 2: Add the first isolated Axiom-targeted example**
+- [x] **Step 2: Add the first isolated Axiom-targeted example**
 
 Keep scope narrow. The generated target should be a small runtime slice, not a full self-hosting rewrite.
 Model the flow after:
@@ -375,14 +375,14 @@ Model the flow after:
 - refine the generated Axiom source
 - build into an isolated dogfood workspace
 
-- [ ] **Step 3: Run targeted tests**
+- [x] **Step 3: Run targeted tests**
 
 Run:
 ```bash
 npm test -- test/examples/examples-load.test.js test/examples/axiom-runtime-slice-runtime.test.js
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add examples/dogfood README.md test/examples/examples-load.test.js test/examples/axiom-runtime-slice-runtime.test.js
@@ -399,7 +399,7 @@ git commit -m "docs: add first dogfood runtime slice example"
 - Create: `docs/superpowers/specs/axiom-source-compression.md`
 - Modify: `README.md`
 
-- [ ] **Step 1: Record baseline comparisons**
+- [x] **Step 1: Record baseline comparisons**
 
 Measure at least:
 - `.axiom.js` vs old `.md` docs for the same project intent
@@ -407,15 +407,15 @@ Measure at least:
   - `counter-webapp`
   - `echo-tool`
 
-- [ ] **Step 2: Document where Axiom wins and where it does not**
+- [x] **Step 2: Document where Axiom wins and where it does not**
 
 Be explicit that tiny projects may not compress well enough to justify the abstraction.
 
-- [ ] **Step 3: Publish the result**
+- [x] **Step 3: Publish the result**
 
 Summarize the compression findings in both the spec doc and the README.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/specs/axiom-source-compression.md README.md
@@ -435,11 +435,11 @@ git commit -m "docs: record axiom source compression baselines"
 - Create: `test/cli/init-command.test.js`
 - Modify: `README.md`
 
-- [ ] **Step 1: Add a failing CLI test for `ax init --existing`**
+- [x] **Step 1: Add a failing CLI test for `ax init --existing`**
 
 Require a bootstrap flow that inspects the current repo and emits a starter `.axiom.js`.
 
-- [ ] **Step 2: Implement the first bootstrap pass**
+- [x] **Step 2: Implement the first bootstrap pass**
 
 Keep it simple:
 - detect stack
@@ -447,14 +447,14 @@ Keep it simple:
 - detect build/test commands
 - emit a starter Axiom file plus local config guidance
 
-- [ ] **Step 3: Run focused tests**
+- [x] **Step 3: Run focused tests**
 
 Run:
 ```bash
 npm test -- test/cli/init-command.test.js
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/cli/init-command.js src/index.js bin/ax.js test/cli/init-command.test.js README.md
@@ -474,20 +474,20 @@ git commit -m "feat: add existing-project ax init bootstrap"
 - Modify: `README.md`
 - Test: `test/cli/build-command.test.js`
 
-- [ ] **Step 1: Add failing tests for `ax build` local-file discovery**
+- [x] **Step 1: Add failing tests for `ax build` local-file discovery**
 
 Require:
 - `ax build` resolves the local canonical Axiom file
 - `ax build <file>` still works
 - clear failure when zero or multiple candidates exist
 
-- [ ] **Step 2: Implement canonical local-file discovery**
+- [x] **Step 2: Implement canonical local-file discovery**
 
 Prefer the local project file in the current working directory so the common workflow becomes:
 - edit `.axiom.js`
 - run `ax build`
 
-- [ ] **Step 3: Document the compiler workflow**
+- [x] **Step 3: Document the compiler workflow**
 
 Update docs to reflect:
 - `ax init`
@@ -497,14 +497,14 @@ Update docs to reflect:
 - `ax fix`
 - later `ax debug`
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run:
 ```bash
 npm test -- test/cli/build-command.test.js
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json bin/ax.js src/cli/build-command.js README.md test/cli/build-command.test.js
@@ -524,28 +524,28 @@ git commit -m "feat: add compiler-style ax build workflow"
 - Modify: `README.md`
 - Create: `test/cli/fix-command.test.js`
 
-- [ ] **Step 1: Add failing tests for `ax fix`**
+- [x] **Step 1: Add failing tests for `ax fix`**
 
 Require:
 - explicit application of proposed changes
 - no source mutation during `ax analyze`
 - clear reporting of what changed
 
-- [ ] **Step 2: Implement the first update flow**
+- [x] **Step 2: Implement the first update flow**
 
 Start simple:
 - apply suggested changes directly
 - optionally show a patch preview
 - avoid creating persistent patch files by default
 
-- [ ] **Step 3: Run focused tests**
+- [x] **Step 3: Run focused tests**
 
 Run:
 ```bash
 npm test -- test/cli/fix-command.test.js
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/cli/fix-command.js src/index.js bin/ax.js README.md test/cli/fix-command.test.js
@@ -560,21 +560,21 @@ git commit -m "feat: add ax fix command"
 - Modify: `README.md`
 - Modify: `docs/superpowers/specs/axiom-mvp-acceptance.md`
 
-- [ ] **Step 1: Run the full automated suite**
+- [x] **Step 1: Run the full automated suite**
 
 Run:
 ```bash
 npm test
 ```
 
-- [ ] **Step 2: Run the live smoke again**
+- [x] **Step 2: Run the live smoke again**
 
 Run:
 ```bash
 node bin/ax.js build examples/live-counter/counter-webapp.axiom.js
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add README.md docs/superpowers/specs/axiom-mvp-acceptance.md

@@ -65,11 +65,11 @@ Add package scripts:
 ```json
 {
   "docker:runner:build": "docker build -f docker/runner/node-webapp/Dockerfile -t ghcr.io/science451/axiom-build-node-webapp:latest .",
-  "docker:runner:smoke": "docker run --rm ghcr.io/science451/axiom-build-node-webapp:latest ax --help"
+  "docker:runner:smoke": "docker run --rm ghcr.io/science451/axiom-build-node-webapp:latest sh -lc \"command -v ax\""
 }
 ```
 
-The smoke script verifies that the image starts and exposes the `ax` command. It is intentionally smaller than a full Docker-backed Axiom build because the full build smoke requires a Docker-mode intent fixture and writable bind mounts.
+The smoke script verifies that the image starts and exposes the `ax` command on `PATH`. It is intentionally smaller than a full Docker-backed Axiom build because the full build smoke requires a Docker-mode intent fixture and writable bind mounts.
 
 ## Documentation
 

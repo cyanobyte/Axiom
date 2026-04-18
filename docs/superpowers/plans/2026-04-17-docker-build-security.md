@@ -34,7 +34,7 @@
 - Modify: `src/public/run-intent-file.js`
 - Create: `test/adapters/create-configured-adapters-runner-overrides.test.js`
 
-- [ ] **Step 1: Write failing adapter override tests**
+- [x] **Step 1: Write failing adapter override tests**
 
 Add `test/adapters/create-configured-adapters-runner-overrides.test.js`:
 
@@ -79,13 +79,13 @@ describe('createConfiguredAdapters runner overrides', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run: `npx vitest run test/adapters/create-configured-adapters-runner-overrides.test.js`
 
 Expected: FAIL because `environment` is ignored and `artifacts.root()` does not exist yet.
 
-- [ ] **Step 3: Implement artifact adapter root reporting and absolute root handling**
+- [x] **Step 3: Implement artifact adapter root reporting and absolute root handling**
 
 In `src/adapters/create-local-artifact-adapter.js`, replace `const resolvedRoot = ...` and return object with:
 
@@ -109,7 +109,7 @@ In `src/adapters/create-local-artifact-adapter.js`, replace `const resolvedRoot 
   };
 ```
 
-- [ ] **Step 4: Implement configured adapter runner overrides**
+- [x] **Step 4: Implement configured adapter runner overrides**
 
 In `src/adapters/create-configured-adapters.js`, change the function signature and root selection:
 
@@ -131,7 +131,7 @@ export function createConfiguredAdapters({ runtimeConfig, environment = process.
 
 Keep the remaining provider and worker logic unchanged.
 
-- [ ] **Step 5: Pass environment through runIntentFile**
+- [x] **Step 5: Pass environment through runIntentFile**
 
 In `src/public/run-intent-file.js`, change adapter creation to:
 
@@ -143,13 +143,13 @@ In `src/public/run-intent-file.js`, change adapter creation to:
   });
 ```
 
-- [ ] **Step 6: Run focused tests**
+- [x] **Step 6: Run focused tests**
 
 Run: `npx vitest run test/adapters/create-configured-adapters-runner-overrides.test.js test/public/run-intent-file.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/adapters/create-configured-adapters.js src/adapters/create-local-artifact-adapter.js src/public/run-intent-file.js test/adapters/create-configured-adapters-runner-overrides.test.js
@@ -162,7 +162,7 @@ git commit -m "feat: support runner path overrides"
 - Create: `src/security/create-build-runner-plan.js`
 - Create: `test/security/create-build-runner-plan.test.js`
 
-- [ ] **Step 1: Write failing plan contract tests**
+- [x] **Step 1: Write failing plan contract tests**
 
 Add `test/security/create-build-runner-plan.test.js`:
 
@@ -244,13 +244,13 @@ describe('createBuildRunnerPlan', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run: `npx vitest run test/security/create-build-runner-plan.test.js`
 
 Expected: FAIL because the module does not exist.
 
-- [ ] **Step 3: Implement plan creation**
+- [x] **Step 3: Implement plan creation**
 
 Create `src/security/create-build-runner-plan.js`:
 
@@ -317,13 +317,13 @@ function toPortableRelativePath(root, target) {
 }
 ```
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run: `npx vitest run test/security/create-build-runner-plan.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/security/create-build-runner-plan.js test/security/create-build-runner-plan.test.js
@@ -336,7 +336,7 @@ git commit -m "feat: create docker build runner plan"
 - Create: `src/security/create-docker-build-runner.js`
 - Create: `test/security/create-docker-build-runner.test.js`
 
-- [ ] **Step 1: Write failing Docker launcher tests**
+- [x] **Step 1: Write failing Docker launcher tests**
 
 Add `test/security/create-docker-build-runner.test.js`:
 
@@ -426,13 +426,13 @@ describe('createDockerBuildRunner', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run: `npx vitest run test/security/create-docker-build-runner.test.js`
 
 Expected: FAIL because the module does not exist.
 
-- [ ] **Step 3: Implement Docker argument generation and spawn runner**
+- [x] **Step 3: Implement Docker argument generation and spawn runner**
 
 Create `src/security/create-docker-build-runner.js`:
 
@@ -500,13 +500,13 @@ function spawnProcess(command, args, { cwd, signal, onOutput } = {}) {
 }
 ```
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run: `npx vitest run test/security/create-docker-build-runner.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/security/create-docker-build-runner.js test/security/create-docker-build-runner.test.js
@@ -520,7 +520,7 @@ git commit -m "feat: add docker build runner launcher"
 - Modify: `bin/ax.js`
 - Modify: `test/cli/build-command.test.js`
 
-- [ ] **Step 1: Add failing CLI bootstrap tests**
+- [x] **Step 1: Add failing CLI bootstrap tests**
 
 First add this helper at the bottom of `test/cli/build-command.test.js`:
 
@@ -692,13 +692,13 @@ Then append these cases to `test/cli/build-command.test.js`:
   });
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run: `npx vitest run test/cli/build-command.test.js`
 
 Expected: FAIL because `buildCommand` lacks the runner bootstrap dependencies and flag handling.
 
-- [ ] **Step 3: Add dependencies and flag parsing to buildCommand**
+- [x] **Step 3: Add dependencies and flag parsing to buildCommand**
 
 In `src/cli/build-command.js`, add imports:
 
@@ -729,7 +729,7 @@ Change the dependency destructuring and argument parsing:
   let filePath = args.find((arg) => !['--verbose', '--inside-runner'].includes(arg));
 ```
 
-- [ ] **Step 4: Add runner bootstrap before executeBuild**
+- [x] **Step 4: Add runner bootstrap before executeBuild**
 
 In `src/cli/build-command.js`, before `return executeBuild(...)`, add:
 
@@ -769,7 +769,7 @@ Update `executeBuild` to pass `environment`:
       onEvent(event) {
 ```
 
-- [ ] **Step 5: Add maybeExecuteBuildRunner helper**
+- [x] **Step 5: Add maybeExecuteBuildRunner helper**
 
 Add this helper below `executeBuild`:
 
@@ -850,7 +850,7 @@ async function maybeExecuteBuildRunner(
 }
 ```
 
-- [ ] **Step 6: Wire real dependencies in bin/ax.js**
+- [x] **Step 6: Wire real dependencies in bin/ax.js**
 
 In `bin/ax.js`, import these modules:
 
@@ -876,13 +876,13 @@ Change the build command call to:
     });
 ```
 
-- [ ] **Step 7: Run CLI tests**
+- [x] **Step 7: Run CLI tests**
 
 Run: `npx vitest run test/cli/build-command.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/cli/build-command.js bin/ax.js test/cli/build-command.test.js
@@ -894,7 +894,7 @@ git commit -m "feat: launch docker build runner from cli"
 **Files:**
 - Modify: `test/public/run-intent-file.test.js`
 
-- [ ] **Step 1: Add runner environment regression test**
+- [x] **Step 1: Add runner environment regression test**
 
 Append this test to `test/public/run-intent-file.test.js`. It uses the imports and `createFixtureIntent` helper already present in that file.
 
@@ -946,13 +946,13 @@ Append this test to `test/public/run-intent-file.test.js`. It uses the imports a
   });
 ```
 
-- [ ] **Step 2: Run test to verify behavior**
+- [x] **Step 2: Run test to verify behavior**
 
 Run: `npx vitest run test/public/run-intent-file.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add test/public/run-intent-file.test.js
@@ -964,25 +964,25 @@ git commit -m "test: cover runner mode file execution roots"
 **Files:**
 - Modify if needed: `docs/superpowers/specs/2026-04-17-docker-build-security-design.md`
 
-- [ ] **Step 1: Run full test suite**
+- [x] **Step 1: Run full test suite**
 
 Run: `npm test`
 
 Expected: all non-skipped tests pass.
 
-- [ ] **Step 2: Run a non-Docker local smoke build**
+- [x] **Step 2: Run a non-Docker local smoke build**
 
 Run: `node bin/ax.js build examples/basic/counter-webapp.axiom.js`
 
 Expected: exits `0` and prints a passed build result. This confirms local mode and normal build behavior still work after the CLI bootstrap change.
 
-- [ ] **Step 3: Run deterministic Docker-mode CLI unit coverage**
+- [x] **Step 3: Run deterministic Docker-mode CLI unit coverage**
 
 Run: `npx vitest run test/cli/build-command.test.js test/security/create-build-runner-plan.test.js test/security/create-docker-build-runner.test.js`
 
 Expected: PASS. This is the deterministic substitute for a live Docker pull/run because the runner image is not built by this feature.
 
-- [ ] **Step 4: Update design notes only if implementation narrowed the contract**
+- [x] **Step 4: Update design notes only if implementation narrowed the contract**
 
 If the implementation changed the approved contract, append this section to `docs/superpowers/specs/2026-04-17-docker-build-security-design.md`:
 
@@ -995,7 +995,7 @@ If the implementation changed the approved contract, append this section to `doc
 
 If the implementation matches the spec without narrowing it, leave the spec unchanged.
 
-- [ ] **Step 5: Commit verification docs if changed**
+- [x] **Step 5: Commit verification docs if changed**
 
 If the spec was modified:
 
