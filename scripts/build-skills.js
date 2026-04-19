@@ -115,6 +115,42 @@ export async function buildAgentsMd({
   return { skills: skills.length, bytes: content.length };
 }
 
+export async function checkAgentsMd({
+  skillsDir = DEFAULT_SKILLS_DIR,
+  agentsPath = DEFAULT_AGENTS_PATH
+} = {}) {
+  const skills = await readSkills(skillsDir);
+  const expected = assembleAgentsMd(skills);
+
+  let actual;
+  try {
+    actual = await fs.readFile(agentsPath, 'utf8');
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return { ok: false, missing: true };
+    }
+    throw error;
+  }
+
+  if (expected === actual) return { ok: true };
+  return { ok: false, diff: computeLineDiff(expected, actual) };
+}
+
+function computeLineDiff(expected, actual) {
+  const expectedLines = expected.split('\n');
+  const actualLines = actual.split('\n');
+  const lines = [];
+  const max = Math.max(expectedLines.length, actualLines.length);
+  for (let index = 0; index < max; index += 1) {
+    const e = expectedLines[index];
+    const a = actualLines[index];
+    if (e === a) continue;
+    if (e !== undefined) lines.push(`+${index + 1}: ${e}`);
+    if (a !== undefined) lines.push(`-${index + 1}: ${a}`);
+  }
+  return lines.join('\n');
+}
+
 async function main() {
   console.error('build-skills.js: not yet implemented');
   process.exit(1);

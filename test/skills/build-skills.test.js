@@ -129,3 +129,57 @@ describe('buildAgentsMd', () => {
     await fs.rm(outDir, { recursive: true, force: true });
   });
 });
+
+import { checkAgentsMd } from '../../scripts/build-skills.js';
+
+describe('checkAgentsMd', () => {
+  it('reports ok: true when the file matches the expected output', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-check-'));
+    const target = path.join(dir, 'AGENTS.md');
+    await buildAgentsMd({ skillsDir: path.join(FIXTURES, 'valid-pair'), agentsPath: target });
+
+    const result = await checkAgentsMd({
+      skillsDir: path.join(FIXTURES, 'valid-pair'),
+      agentsPath: target
+    });
+
+    expect(result.ok).toBe(true);
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it('reports ok: false with a diff when the file has drifted', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-check-'));
+    const target = path.join(dir, 'AGENTS.md');
+    await buildAgentsMd({ skillsDir: path.join(FIXTURES, 'valid-pair'), agentsPath: target });
+
+    const current = await fs.readFile(target, 'utf8');
+    await fs.writeFile(target, current.replace('axiom-authoring', 'axiom-authoring-OLD'));
+
+    const result = await checkAgentsMd({
+      skillsDir: path.join(FIXTURES, 'valid-pair'),
+      agentsPath: target
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.missing).toBeUndefined();
+    expect(result.diff).toContain('axiom-authoring');
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it('reports ok: false with missing: true when the file is absent', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-check-'));
+    const target = path.join(dir, 'AGENTS.md');
+
+    const result = await checkAgentsMd({
+      skillsDir: path.join(FIXTURES, 'valid-pair'),
+      agentsPath: target
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.missing).toBe(true);
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+});
