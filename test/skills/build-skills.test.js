@@ -81,3 +81,51 @@ describe('assembleAgentsMd', () => {
     expect(md).not.toContain('##');
   });
 });
+
+import { writeAtomic, buildAgentsMd } from '../../scripts/build-skills.js';
+
+describe('writeAtomic', () => {
+  it('writes content via a temp path + rename', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-write-'));
+    const target = path.join(dir, 'out.txt');
+
+    await writeAtomic(target, 'hello');
+
+    expect(await fs.readFile(target, 'utf8')).toBe('hello');
+    const leftoverTemps = (await fs.readdir(dir)).filter((name) => name !== 'out.txt');
+    expect(leftoverTemps).toEqual([]);
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it('overwrites an existing file', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-write-'));
+    const target = path.join(dir, 'out.txt');
+    await fs.writeFile(target, 'old');
+
+    await writeAtomic(target, 'new');
+
+    expect(await fs.readFile(target, 'utf8')).toBe('new');
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+});
+
+describe('buildAgentsMd', () => {
+  it('writes AGENTS.md at the configured output path and returns a summary', async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-out-'));
+    const target = path.join(outDir, 'AGENTS.md');
+
+    const result = await buildAgentsMd({
+      skillsDir: path.join(FIXTURES, 'valid-pair'),
+      agentsPath: target
+    });
+
+    expect(result.skills).toBe(2);
+    expect(result.bytes).toBeGreaterThan(0);
+    const written = await fs.readFile(target, 'utf8');
+    expect(written).toContain('## axiom-authoring');
+    expect(written).toContain('## axiom-build');
+
+    await fs.rm(outDir, { recursive: true, force: true });
+  });
+});

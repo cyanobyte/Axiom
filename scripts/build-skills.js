@@ -94,6 +94,27 @@ export function assembleAgentsMd(skills) {
   return lines.join('\n');
 }
 
+export async function writeAtomic(target, content) {
+  const tmp = `${target}.tmp-${process.pid}`;
+  await fs.writeFile(tmp, content);
+  try {
+    await fs.rename(tmp, target);
+  } catch (error) {
+    await fs.rm(tmp, { force: true });
+    throw error;
+  }
+}
+
+export async function buildAgentsMd({
+  skillsDir = DEFAULT_SKILLS_DIR,
+  agentsPath = DEFAULT_AGENTS_PATH
+} = {}) {
+  const skills = await readSkills(skillsDir);
+  const content = assembleAgentsMd(skills);
+  await writeAtomic(agentsPath, content);
+  return { skills: skills.length, bytes: content.length };
+}
+
 async function main() {
   console.error('build-skills.js: not yet implemented');
   process.exit(1);
