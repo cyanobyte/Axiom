@@ -183,3 +183,43 @@ describe('checkAgentsMd', () => {
     await fs.rm(dir, { recursive: true, force: true });
   });
 });
+
+import { spawnSync } from 'node:child_process';
+
+describe('scripts/build-skills.js CLI', () => {
+  it('prints a success summary when invoked with no args and there are zero skills', async () => {
+    const repoRoot = path.resolve(__dirname, '..', '..');
+
+    const backupSkills = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-backup-'));
+    const liveSkillsDir = path.join(repoRoot, '.claude', 'skills');
+    const liveAgentsPath = path.join(repoRoot, 'AGENTS.md');
+
+    await fs.cp(liveSkillsDir, path.join(backupSkills, 'skills'), { recursive: true });
+    const hadAgents = await fs.access(liveAgentsPath).then(() => true).catch(() => false);
+    if (hadAgents) await fs.copyFile(liveAgentsPath, path.join(backupSkills, 'AGENTS.md'));
+
+    try {
+      await fs.rm(liveSkillsDir, { recursive: true, force: true });
+      await fs.mkdir(liveSkillsDir, { recursive: true });
+      await fs.rm(liveAgentsPath, { force: true });
+
+      const outcome = spawnSync('node', [path.join('scripts', 'build-skills.js')], {
+        cwd: repoRoot,
+        encoding: 'utf8'
+      });
+
+      expect(outcome.status).toBe(0);
+      expect(outcome.stdout).toMatch(/Wrote AGENTS\.md \(0 skills/);
+      expect(await fs.readFile(liveAgentsPath, 'utf8')).toContain('# Axiom Agent Instructions');
+    } finally {
+      await fs.rm(liveSkillsDir, { recursive: true, force: true });
+      await fs.cp(path.join(backupSkills, 'skills'), liveSkillsDir, { recursive: true });
+      if (hadAgents) {
+        await fs.copyFile(path.join(backupSkills, 'AGENTS.md'), liveAgentsPath);
+      } else {
+        await fs.rm(liveAgentsPath, { force: true });
+      }
+      await fs.rm(backupSkills, { recursive: true, force: true });
+    }
+  });
+});

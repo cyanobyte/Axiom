@@ -152,8 +152,31 @@ function computeLineDiff(expected, actual) {
 }
 
 async function main() {
-  console.error('build-skills.js: not yet implemented');
-  process.exit(1);
+  const args = process.argv.slice(2);
+  const check = args.includes('--check');
+
+  try {
+    if (check) {
+      const result = await checkAgentsMd();
+      if (result.ok) {
+        console.log('ok');
+        process.exit(0);
+      }
+      if (result.missing) {
+        console.error('ERROR: AGENTS.md not found. Run `npm run skills:build` to create it.');
+        process.exit(1);
+      }
+      console.error('AGENTS.md is out of date. Run `npm run skills:build` and commit the result.\n');
+      console.error(result.diff);
+      process.exit(1);
+    }
+
+    const result = await buildAgentsMd();
+    console.log(`Wrote AGENTS.md (${result.skills} skills, ${result.bytes} bytes)`);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    process.exit(1);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
