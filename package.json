@@ -14,6 +14,8 @@
   },
   "scripts": {
     "test": "vitest run",
+    "skills:build": "node scripts/build-skills.js",
+    "skills:check": "node scripts/build-skills.js --check",
     "docker:runner:build": "docker build -f docker/runner/node-webapp/Dockerfile -t axiom-build-node-webapp:local .",
     "docker:runner:smoke": "docker run --rm axiom-build-node-webapp:local sh -lc \"command -v ax\"",
     "docker:runner:integration": "node bin/ax.js build examples/docker-counter/counter-webapp.axiom.js",
