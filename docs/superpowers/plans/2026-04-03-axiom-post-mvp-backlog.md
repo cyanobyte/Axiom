@@ -87,6 +87,22 @@ Likely second-wave items:
 3. richer generated-output analysis in `ax analyze`
 4. stronger dogfooding on larger Axiom-targeted slices
 
+### Axiom Skills As Compiler Primitives
+
+A future-wave direction: treat reusable generation guidance as a first-class Axiom concept — "Axiom Skills" that intent files can declare and the runtime pulls into planner/coder context during generation. This is compiler-primitive territory, not a port of the superpowers workflow that humans use to author intent files (those stay above Axiom, not inside it).
+
+Three framings to consider:
+
+1. **Build-time skills (most likely near-term).** Reusable prompts/patterns that shape how the runtime's planner and coder agents generate code. An intent file declares `uses: ["react-best-practices", "tdd-verification", "accessible-by-default"]` and Axiom's adapters pull the referenced skills into generation context. Reusable quality improvements; testable LLM behavior; eventual ecosystem for third-party skills.
+
+2. **Author-workflow skills (tied to the shell).** If the deferred `2026-04-18-axiom-shell-v0-design.md` shell ships, it gets its own skill system for conversational authoring, debugging, and iteration. Scoped narrower than superpowers; specific to the shell's workflow. Only makes sense if/when the shell is built.
+
+3. **Meta-workflow intents (long-term big swing).** Axiom becomes a platform for codifying meta-workflows *as intent files* — brainstorming, planning, review cycles authored in `.axiom.js` and compiled/run with Axiom's verification + security discipline. Would make Axiom a rival to superpowers rather than a complement. Strategically ambitious; dilutes the "AI compiler" positioning if it doesn't land.
+
+(1) is the natural medium-term extension. (3) is the long-term vision if Axiom wants to compete at the workflow-platform tier. (2) is tactical, tied to the shell.
+
+None of these are commitments yet — this section exists so the idea does not get lost between the near-term backlog and whatever shell/skills work comes next.
+
 ### Compiler Tool Track
 
 The CLI should evolve into the main compiler/build-tool interface:
