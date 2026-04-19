@@ -76,6 +76,37 @@ When you run `ax build` with `security.build.mode: "docker"`, Axiom will build t
 - [Examples](/mnt/d/Science451/Axiom/docs/examples.md)
 - [Troubleshooting](/mnt/d/Science451/Axiom/docs/troubleshooting.md)
 
+## Skills
+
+Axiom ships four Claude Code skills under `.claude/skills/` that drive the `ax` CLI conversationally:
+
+- `axiom-authoring` — co-author a new `.axiom.js` file.
+- `axiom-build` — run `ax build` and summarize the result.
+- `axiom-analyze` — run `ax analyze` and interpret diagnostics.
+- `axiom-security-review` — read the most recent build's `securityReport` and guide tightening.
+
+The same guidance is available to Codex (and other `AGENTS.md`-aware agents) via the repo-root `AGENTS.md`, generated from `.claude/skills/`.
+
+### Authoring
+
+Edit a skill file under `.claude/skills/`, then regenerate:
+
+```bash
+npm run skills:build
+```
+
+Commit both the edited skill file and the updated `AGENTS.md`.
+
+### Drift check
+
+`npm test` includes a check that `AGENTS.md` is in sync with `.claude/skills/`. To run it directly:
+
+```bash
+npm run skills:check
+```
+
+After substantive skill changes, walk `docs/skills-smoke-checklist.md` once in Claude Code and once in Codex to confirm the guidance produces sensible behavior.
+
 ## Examples
 
 - Beginner example: `examples/basic/counter-webapp.axiom.js`
