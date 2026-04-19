@@ -46,6 +46,54 @@ export function parseFrontmatter(source, filename) {
   return { frontmatter, body: body.trim() };
 }
 
+export async function readSkills(skillsDir) {
+  let entries;
+  try {
+    entries = await fs.readdir(skillsDir);
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
+
+  const mdFiles = entries.filter((name) => name.endsWith('.md')).sort();
+  const skills = [];
+  const seenNames = new Map();
+
+  for (const filename of mdFiles) {
+    const fullPath = path.join(skillsDir, filename);
+    const source = await fs.readFile(fullPath, 'utf8');
+    const parsed = parseFrontmatter(source, filename);
+    const existing = seenNames.get(parsed.frontmatter.name);
+    if (existing) {
+      throw new Error(
+        `duplicate skill name "${parsed.frontmatter.name}" in ${existing} and ${filename}`
+      );
+    }
+    seenNames.set(parsed.frontmatter.name, filename);
+    skills.push({ filename, ...parsed });
+  }
+
+  return skills;
+}
+
+export function assembleAgentsMd(skills) {
+  const lines = [
+    '# Axiom Agent Instructions',
+    '',
+    '<!-- Generated from .claude/skills/*.md by scripts/build-skills.js. Do not edit by hand; run `npm run skills:build`. -->',
+    ''
+  ];
+  for (const skill of skills) {
+    lines.push(`## ${skill.frontmatter.name}`);
+    lines.push('');
+    lines.push(`**When to use:** ${skill.frontmatter.description}`);
+    lines.push('');
+    lines.push(skill.body);
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
 async function main() {
   console.error('build-skills.js: not yet implemented');
   process.exit(1);

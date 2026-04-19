@@ -37,3 +37,47 @@ describe('parseFrontmatter', () => {
     expect(() => parseFrontmatter(source, 'bad.md')).toThrow(/invalid frontmatter YAML/);
   });
 });
+
+import { readSkills, assembleAgentsMd } from '../../scripts/build-skills.js';
+import os from 'node:os';
+
+describe('readSkills', () => {
+  it('reads and parses every .md file in the directory, sorted by filename', async () => {
+    const skills = await readSkills(path.join(FIXTURES, 'valid-pair'));
+    expect(skills.map((skill) => skill.filename)).toEqual(['axiom-authoring.md', 'axiom-build.md']);
+    expect(skills[0].frontmatter.name).toBe('axiom-authoring');
+    expect(skills[1].frontmatter.name).toBe('axiom-build');
+  });
+
+  it('throws when two files share the same frontmatter name', async () => {
+    await expect(readSkills(path.join(FIXTURES, 'duplicate-names'))).rejects.toThrow(
+      /duplicate skill name "same-name" in a\.md and b\.md/
+    );
+  });
+
+  it('returns an empty array when the directory has no .md files', async () => {
+    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-empty-'));
+    const skills = await readSkills(tmp);
+    expect(skills).toEqual([]);
+    await fs.rm(tmp, { recursive: true, force: true });
+  });
+});
+
+describe('assembleAgentsMd', () => {
+  it('produces a deterministic AGENTS.md from parsed skills', async () => {
+    const skills = await readSkills(path.join(FIXTURES, 'valid-pair'));
+    const md = assembleAgentsMd(skills);
+    expect(md.startsWith('# Axiom Agent Instructions')).toBe(true);
+    expect(md).toContain('<!-- Generated from .claude/skills/*.md');
+    expect(md).toContain('## axiom-authoring');
+    expect(md).toContain('**When to use:** Use when the user wants to create or refine a .axiom.js intent file.');
+    expect(md.indexOf('## axiom-authoring')).toBeLessThan(md.indexOf('## axiom-build'));
+    expect(md.endsWith('\n')).toBe(true);
+  });
+
+  it('returns only the header when there are no skills', () => {
+    const md = assembleAgentsMd([]);
+    expect(md).toContain('# Axiom Agent Instructions');
+    expect(md).not.toContain('##');
+  });
+});
