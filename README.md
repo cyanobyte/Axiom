@@ -89,7 +89,7 @@ The same guidance is available to Codex (and other `AGENTS.md`-aware agents) via
 
 ### Authoring
 
-Edit a skill file under `.claude/skills/`, then regenerate:
+Each skill lives at `.claude/skills/<name>/SKILL.md` (directory-per-skill, as required by Claude Code's discovery). Edit the `SKILL.md`, then regenerate:
 
 ```bash
 npm run skills:build

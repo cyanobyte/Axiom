@@ -1,6 +1,6 @@
 # Axiom Agent Instructions
 
-<!-- Generated from .claude/skills/*.md by scripts/build-skills.js. Do not edit by hand; run `npm run skills:build`. -->
+<!-- Generated from .claude/skills/*/SKILL.md by scripts/build-skills.js. Do not edit by hand; run `npm run skills:build`. -->
 
 ## axiom-analyze
 

@@ -9,8 +9,8 @@ const FIXTURES = path.join(__dirname, '..', 'fixtures', 'skills');
 
 describe('parseFrontmatter', () => {
   it('parses a valid file into frontmatter + body', async () => {
-    const source = await fs.readFile(path.join(FIXTURES, 'valid-pair', 'axiom-authoring.md'), 'utf8');
-    const parsed = parseFrontmatter(source, 'axiom-authoring.md');
+    const source = await fs.readFile(path.join(FIXTURES, 'valid-pair', 'axiom-authoring', 'SKILL.md'), 'utf8');
+    const parsed = parseFrontmatter(source, 'axiom-authoring/SKILL.md');
     expect(parsed.frontmatter.name).toBe('axiom-authoring');
     expect(parsed.frontmatter.description).toBe('Use when the user wants to create or refine a .axiom.js intent file.');
     expect(parsed.body).toContain('# When to use');
@@ -42,21 +42,29 @@ import { readSkills, assembleAgentsMd } from '../../scripts/build-skills.js';
 import os from 'node:os';
 
 describe('readSkills', () => {
-  it('reads and parses every .md file in the directory, sorted by filename', async () => {
+  it('reads every subdirectory containing SKILL.md, sorted by directory name', async () => {
     const skills = await readSkills(path.join(FIXTURES, 'valid-pair'));
-    expect(skills.map((skill) => skill.filename)).toEqual(['axiom-authoring.md', 'axiom-build.md']);
+    expect(skills.map((skill) => skill.dir)).toEqual(['axiom-authoring', 'axiom-build']);
     expect(skills[0].frontmatter.name).toBe('axiom-authoring');
     expect(skills[1].frontmatter.name).toBe('axiom-build');
   });
 
-  it('throws when two files share the same frontmatter name', async () => {
+  it('throws when two skill directories share the same frontmatter name', async () => {
     await expect(readSkills(path.join(FIXTURES, 'duplicate-names'))).rejects.toThrow(
-      /duplicate skill name "same-name" in a\.md and b\.md/
+      /duplicate skill name "same-name" in a and b/
     );
   });
 
-  it('returns an empty array when the directory has no .md files', async () => {
+  it('returns an empty array when there are no skill subdirectories', async () => {
     const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-empty-'));
+    const skills = await readSkills(tmp);
+    expect(skills).toEqual([]);
+    await fs.rm(tmp, { recursive: true, force: true });
+  });
+
+  it('skips subdirectories without a SKILL.md', async () => {
+    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'skills-no-skill-'));
+    await fs.mkdir(path.join(tmp, 'empty-subdir'));
     const skills = await readSkills(tmp);
     expect(skills).toEqual([]);
     await fs.rm(tmp, { recursive: true, force: true });
@@ -68,7 +76,7 @@ describe('assembleAgentsMd', () => {
     const skills = await readSkills(path.join(FIXTURES, 'valid-pair'));
     const md = assembleAgentsMd(skills);
     expect(md.startsWith('# Axiom Agent Instructions')).toBe(true);
-    expect(md).toContain('<!-- Generated from .claude/skills/*.md');
+    expect(md).toContain('<!-- Generated from .claude/skills/*/SKILL.md');
     expect(md).toContain('## axiom-authoring');
     expect(md).toContain('**When to use:** Use when the user wants to create or refine a .axiom.js intent file.');
     expect(md.indexOf('## axiom-authoring')).toBeLessThan(md.indexOf('## axiom-build'));

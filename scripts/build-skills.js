@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Purpose: Assemble AGENTS.md from .claude/skills/*.md.
+ * Purpose: Assemble AGENTS.md from every SKILL.md under .claude/skills.
  * Responsibilities:
- * - Read every skill file, parse its YAML frontmatter and body.
+ * - Read every skill subdirectory SKILL.md, parse its YAML frontmatter and body.
  * - Emit a deterministic AGENTS.md to the repo root.
  * - Support --check mode for CI drift detection.
  */
@@ -49,28 +49,38 @@ export function parseFrontmatter(source, filename) {
 export async function readSkills(skillsDir) {
   let entries;
   try {
-    entries = await fs.readdir(skillsDir);
+    entries = await fs.readdir(skillsDir, { withFileTypes: true });
   } catch (error) {
     if (error.code === 'ENOENT') return [];
     throw error;
   }
 
-  const mdFiles = entries.filter((name) => name.endsWith('.md')).sort();
+  const dirs = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+
   const skills = [];
   const seenNames = new Map();
 
-  for (const filename of mdFiles) {
-    const fullPath = path.join(skillsDir, filename);
-    const source = await fs.readFile(fullPath, 'utf8');
-    const parsed = parseFrontmatter(source, filename);
+  for (const dir of dirs) {
+    const skillPath = path.join(skillsDir, dir, 'SKILL.md');
+    let source;
+    try {
+      source = await fs.readFile(skillPath, 'utf8');
+    } catch (error) {
+      if (error.code === 'ENOENT') continue;
+      throw error;
+    }
+    const parsed = parseFrontmatter(source, `${dir}/SKILL.md`);
     const existing = seenNames.get(parsed.frontmatter.name);
     if (existing) {
       throw new Error(
-        `duplicate skill name "${parsed.frontmatter.name}" in ${existing} and ${filename}`
+        `duplicate skill name "${parsed.frontmatter.name}" in ${existing} and ${dir}`
       );
     }
-    seenNames.set(parsed.frontmatter.name, filename);
-    skills.push({ filename, ...parsed });
+    seenNames.set(parsed.frontmatter.name, dir);
+    skills.push({ dir, ...parsed });
   }
 
   return skills;
@@ -80,7 +90,7 @@ export function assembleAgentsMd(skills) {
   const lines = [
     '# Axiom Agent Instructions',
     '',
-    '<!-- Generated from .claude/skills/*.md by scripts/build-skills.js. Do not edit by hand; run `npm run skills:build`. -->',
+    '<!-- Generated from .claude/skills/*/SKILL.md by scripts/build-skills.js. Do not edit by hand; run `npm run skills:build`. -->',
     ''
   ];
   for (const skill of skills) {
