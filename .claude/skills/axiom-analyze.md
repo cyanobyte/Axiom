@@ -17,18 +17,18 @@ Do NOT trigger for actual builds (use the `axiom-build` skill) or for authoring 
    - `errors` — blocking issues that will prevent a build or verification from working.
    - `warnings` — things the user should know about but that won't block a build.
    - `suggestions` — improvements proposed by the analyzer (may correspond to `ax fix` actions).
-4. Render findings grouped by severity. For each: cite the exact location (section, field), explain what the analyzer flagged, and quote any `nextAction` verbatim.
-5. If suggestions are safe and mechanical, offer to apply them via `ax fix`. If they require judgment, walk the user through them.
+4. Render findings grouped by severity. For each: cite the `section` and `kind`, explain what the analyzer flagged, and quote `nextAction` verbatim.
+5. If suggestions are safe and mechanical, offer to apply them via `ax fix <file> --apply <id>` (the finding's top-level `id` is the fix id). If they require judgment, walk the user through them.
 6. Do NOT silently modify the intent file. `ax analyze` is read-only by design.
 
 # Output shape
 
-`ax analyze` exits 0 when no errors exist (warnings/suggestions are non-blocking). Non-zero exit means at least one error.
+`ax analyze` exits 0 when `status === "passed"` (no errors; warnings/suggestions are non-blocking). Non-zero exit means at least one error. Top-level keys: `status` (`"passed"` or `"invalid"`), `targetFile`, `errors`, `warnings`, `suggestions`.
 
 Key JSON paths:
-- `errors[].{section, field, message, nextAction}`.
-- `warnings[].{section, field, message, nextAction}`.
-- `suggestions[].{section, field, message, proposedFix}`.
+- `errors[].{kind, section, message, nextAction}`. Fix-driven entries also include `id` and `fix: { type, label }`.
+- `warnings[].{kind, section, message, nextAction}` plus optional `id` and `fix` as above.
+- `suggestions[].{kind, section, message, nextAction}` plus optional `id` and `fix` as above. There is no `field` or `proposedFix` key — those names are not produced by the analyzer.
 
 # Common failure modes
 

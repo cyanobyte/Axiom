@@ -16,26 +16,28 @@ Do NOT trigger for analysis (use the `axiom-analyze` skill) or security review (
 # Instructions
 
 1. Confirm the target file. If the user does not specify, check the local directory for `*.axiom.js` candidates with `ls *.axiom.js`. If there's exactly one, use it; if none or multiple, ask.
-2. Run `ax build <target>` via Bash. Build output is streamed; the final JSON result includes a health report, verifications, diagnostics, security report, artifacts, and any final value returned by the intent's runFn.
+2. Run `ax build <target>` via Bash. `ax build` writes a mixed stream to stdout: zero or more progress lines like `[step] <id> started` / `[step] <id> passed`, followed by the final JSON result starting at the first line that is exactly `{`. Do NOT call `JSON.parse` on the entire stdout — slice from the first `{` line onward. The final object includes top-level `status`, `stepResults`, `events`, `verification`, `diagnostics`, `artifacts`, `finalValue`, `healthReport`, and (only when the intent declares a `security:` section) `securityReport`.
 3. Parse the JSON result. Focus on:
-   - `healthReport.status` — `"passed"` or `"failed"`.
+   - `status` and `healthReport.status` — `"passed"` or `"failed"`.
    - `healthReport.steps` and `healthReport.verification` — total/passed/failed counts.
-   - `verifications` — per-verification `status` and `severity`.
-   - `diagnostics` — array of human-readable issues with `kind` and `nextAction`.
-   - `securityReport` — build/app security status.
-4. Render a short summary to the user: pass/fail, key counts, and anything that failed.
-5. If anything failed, drill into the failure: cite the specific `verificationId` and `diagnostics` entry verbatim. Do NOT speculate about causes the JSON doesn't show.
-6. Offer follow-up actions: fix the intent with the `axiom-authoring` skill, analyze with the `axiom-analyze` skill, or review security with the `axiom-security-review` skill.
+   - `verification` (singular, top-level array) — per-verification `status`, `severity`, `verificationId`, `covers`, `diagnostics`, `evidence`.
+   - `diagnostics` — array of human-readable issues with `kind`, `message`, and `nextAction`.
+   - `securityReport` — build/app security status. May be absent; see step 4.
+4. If `securityReport` is present, summarize it briefly and offer the `axiom-security-review` skill for depth. If it is absent, say so — it means the intent didn't declare a `security:` section, not that security was skipped silently.
+5. Render a short summary to the user: pass/fail, key counts, and anything that failed.
+6. If anything failed, drill into the failure: cite the specific `verificationId` and `diagnostics` entry verbatim. Do NOT speculate about causes the JSON doesn't show.
+7. Offer follow-up actions: fix the intent with the `axiom-authoring` skill, analyze with the `axiom-analyze` skill, or review security with the `axiom-security-review` skill.
 
 # Output shape
 
 `ax build <target>` exits 0 when the build ran to completion (verifications may still have failed; check `healthReport.status`). Non-zero exit indicates a build error (schema invalid, runtime exception, etc.) — different from a verification failure.
 
 Key JSON paths:
+- Top-level: `status`, `stepResults`, `events`, `verification`, `diagnostics`, `artifacts`, `finalValue`, `healthReport`, optionally `securityReport`.
 - `healthReport.{status, steps.total, steps.passed, steps.failed, verification.total, verification.passed, verification.failed, generatedFiles}`.
-- `verifications[].{verificationId, status, severity, covers, diagnostics}`.
+- `verification[].{verificationId, kind, status, severity, covers, evidence, diagnostics}` — note this key is **singular** (`verification`), not `verifications`.
 - `diagnostics[].{kind, message, nextAction}`.
-- `securityReport.{build, app}` — see the `axiom-security-review` skill for details.
+- `securityReport.{build, app}` — present only when the intent declares `security:`. See the `axiom-security-review` skill for details.
 
 # Common failure modes
 

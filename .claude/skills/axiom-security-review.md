@@ -19,10 +19,11 @@ Do NOT trigger for general build runs (use the `axiom-build` skill) or intent au
    - The user's immediately previous `ax build` invocation (check conversation history).
    - A `result.json` or equivalent artifact the user points at.
    - A fresh build if the user authorizes it.
-2. Read `securityReport` from the build's JSON output:
+2. Check whether the build's JSON has a top-level `securityReport` key. It is present only when the intent declared a `security:` section. If absent, stop here: tell the user the intent doesn't have security declarations, and offer to help add a `security: { build, app, shell }` block to the `.axiom.js` rather than inventing findings.
+3. Read `securityReport` from the build's JSON output:
    - `securityReport.build.{mode, profile, status, warnings}` — how the build itself was sandboxed.
    - `securityReport.app.{target, profile, source, staticChecks, aiReview, finalStatus}` — how the generated app was audited.
-3. Summarize findings grouped by severity:
+4. Summarize findings grouped by severity:
    - `error` findings must be addressed before release.
    - `warning` findings should be reviewed.
    - Passed checks can be acknowledged briefly.
@@ -45,7 +46,8 @@ Key JSON paths:
 
 # Common failure modes
 
-- **Report absent** → explain that the build needs to be run first; offer to invoke the `axiom-build` skill.
+- **Report absent because no build has run yet** → offer to invoke the `axiom-build` skill.
+- **Report absent even though a build ran** → the intent doesn't declare a `security:` section, so the runtime produces no report (`createSecurityReport(undefined)` returns `undefined`). Do NOT invent findings. Offer to help add a `security:` block to the `.axiom.js` and rebuild.
 - **`finalStatus: "warning"`** → the app passed with non-blocking findings. Explain each; let the user decide whether to tighten `violationAction` to `"break"`.
 - **AI review unavailable** (`aiReview.status: "not-run"`) → explain that the AI security review did not execute (typically because no AI adapter was configured); the static findings still apply.
 - **Finding on test/verification code** (e.g., a `scripts/verify-*.js` path) — this is a known product gap: the app audit does not distinguish runtime code from test code. Explain this limitation; suggest the user treat such findings as reviewer judgment calls rather than hard blockers.
