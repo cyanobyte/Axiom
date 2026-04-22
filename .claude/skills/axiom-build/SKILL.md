@@ -43,5 +43,6 @@ Key JSON paths:
 
 - **Exit 0 but `healthReport.status: "failed"`** → the build ran but verifications failed. Summarize which ones and why.
 - **Exit non-zero** → the CLI failed to even run the build. Report the stderr verbatim; don't pretend to know the cause.
+- **`ax: command not found` in Codex or another repo-local shell** → this repo exposes the CLI at `node bin/ax.js`. Use `node bin/ax.js build <target>` rather than stopping, and mention that it is the repo-local equivalent of `ax build`.
 - **`diagnostics` array non-empty** → surface the `message` and `nextAction` for each diagnostic. Don't paraphrase `nextAction`; quote it.
 - **No `.axiom.js` in cwd** → ask the user where the file is. Do not invent a path.

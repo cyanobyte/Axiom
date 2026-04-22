@@ -36,6 +36,7 @@ Key JSON paths:
 # Common failure modes
 
 - **Analyzer reports a schema field the user hand-wrote and expected to be optional** → check the schema cheat sheet in the `axiom-authoring` skill. The analyzer is authoritative about what's recognized.
+- **`ax: command not found` in Codex or another repo-local shell** → this repo exposes the CLI at `node bin/ax.js`. Use `node bin/ax.js analyze <target>` rather than stopping, and mention that it is the repo-local equivalent of `ax analyze`.
 - **Suggestions look wrong** → don't force them. Explain the suggestion and let the user decide.
 - **No `.axiom.js` in cwd** → ask the user where the file is. Do not invent a path.
 
@@ -151,6 +152,7 @@ Key JSON paths:
 
 - **Exit 0 but `healthReport.status: "failed"`** → the build ran but verifications failed. Summarize which ones and why.
 - **Exit non-zero** → the CLI failed to even run the build. Report the stderr verbatim; don't pretend to know the cause.
+- **`ax: command not found` in Codex or another repo-local shell** → this repo exposes the CLI at `node bin/ax.js`. Use `node bin/ax.js build <target>` rather than stopping, and mention that it is the repo-local equivalent of `ax build`.
 - **`diagnostics` array non-empty** → surface the `message` and `nextAction` for each diagnostic. Don't paraphrase `nextAction`; quote it.
 - **No `.axiom.js` in cwd** → ask the user where the file is. Do not invent a path.
 
@@ -182,7 +184,7 @@ Do NOT trigger for general build runs (use the `axiom-build` skill) or intent au
    - `error` findings must be addressed before release.
    - `warning` findings should be reviewed.
    - Passed checks can be acknowledged briefly.
-4. For each finding, cite the `ruleId`, `path` (if applicable), and `message` verbatim. Suggest concrete tightening in `.axiom.js`:
+4. For each finding, cite the `ruleId`, `path` (if applicable), and `message` verbatim when those fields exist. Build-level warnings may only be plain strings under `securityReport.build.warnings`; quote the warning verbatim in that case. Suggest concrete tightening in `.axiom.js`:
    - `security.build.profile` changes if sandboxing is weak.
    - `security.app.profile` / `security.app.policy` changes if app behavior is flagged.
    - `security.app.violationAction` changes (`warn` → `break`) if the user wants enforcement.
@@ -203,6 +205,7 @@ Key JSON paths:
 
 - **Report absent because no build has run yet** → offer to invoke the `axiom-build` skill.
 - **Report absent even though a build ran** → the intent doesn't declare a `security:` section, so the runtime produces no report (`createSecurityReport(undefined)` returns `undefined`). Do NOT invent findings. Offer to help add a `security:` block to the `.axiom.js` and rebuild.
+- **Build warning with no `ruleId`/`path`** → some build-level findings are plain warning strings under `securityReport.build.warnings` rather than structured app findings. Quote the warning as-is and explain that it describes build sandbox posture, not generated-app code.
 - **`finalStatus: "warning"`** → the app passed with non-blocking findings. Explain each; let the user decide whether to tighten `violationAction` to `"break"`.
 - **AI review unavailable** (`aiReview.status: "not-run"`) → explain that the AI security review did not execute (typically because no AI adapter was configured); the static findings still apply.
 - **Finding on test/verification code** (e.g., a `scripts/verify-*.js` path) — this is a known product gap: the app audit does not distinguish runtime code from test code. Explain this limitation; suggest the user treat such findings as reviewer judgment calls rather than hard blockers.
