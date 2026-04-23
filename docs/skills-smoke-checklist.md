@@ -2,7 +2,7 @@
 
 Walk this checklist once per skill after substantive edits. Run each prompt in Claude Code first, then in Codex (via the `codex` CLI invoked in the Axiom repo root so `AGENTS.md` is loaded).
 
-## axiom-authoring
+## ax-intent
 
 **Prompt:** `help me start an Axiom project for a counter web app`
 

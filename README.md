@@ -80,7 +80,7 @@ When you run `ax build` with `security.build.mode: "docker"`, Axiom will build t
 
 Axiom ships four Claude Code skills under `.claude/skills/` that drive the `ax` CLI conversationally:
 
-- `axiom-authoring` — co-author a new `.axiom.js` file.
+- `ax-intent` — co-author a new `.axiom.js` file.
 - `axiom-build` — run `ax build` and summarize the result.
 - `axiom-analyze` — run `ax analyze` and interpret diagnostics.
 - `axiom-security-review` — read the most recent build's `securityReport` and guide tightening.

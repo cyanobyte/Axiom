@@ -2,45 +2,7 @@
 
 <!-- Generated from .claude/skills/*/SKILL.md by scripts/build-skills.js. Do not edit by hand; run `npm run skills:build`. -->
 
-## axiom-analyze
-
-**When to use:** Use when the user wants to validate, lint, or pre-check an Axiom intent file without building it. Triggers include "analyze my intent file", "what's wrong with this .axiom.js", "before I build, check", "lint the axiom".
-
-# When to use
-
-Trigger this skill when the user wants a pre-build check of their `.axiom.js` — schema errors, readiness gaps, ambiguities, weak verification coverage — without actually running the build.
-
-Do NOT trigger for actual builds (use the `axiom-build` skill) or for authoring a new file (use the `axiom-authoring` skill).
-
-# Instructions
-
-1. Identify the target file. If not specified and there's exactly one `*.axiom.js` in cwd, use it. If multiple or none, ask.
-2. Run `ax analyze <target>` via Bash.
-3. Parse the JSON result:
-   - `errors` — blocking issues that will prevent a build or verification from working.
-   - `warnings` — things the user should know about but that won't block a build.
-   - `suggestions` — improvements proposed by the analyzer (may correspond to `ax fix` actions).
-4. Render findings grouped by severity. For each: cite the `section` and `kind`, explain what the analyzer flagged, and quote `nextAction` verbatim.
-5. If suggestions are safe and mechanical, offer to apply them via `ax fix <file> --apply <id>` (the finding's top-level `id` is the fix id). If they require judgment, walk the user through them.
-6. Do NOT silently modify the intent file. `ax analyze` is read-only by design.
-
-# Output shape
-
-`ax analyze` exits 0 when `status === "passed"` (no errors; warnings/suggestions are non-blocking). Non-zero exit means at least one error. Top-level keys: `status` (`"passed"` or `"invalid"`), `targetFile`, `errors`, `warnings`, `suggestions`.
-
-Key JSON paths:
-- `errors[].{kind, section, message, nextAction}`. Fix-driven entries also include `id` and `fix: { type, label }`.
-- `warnings[].{kind, section, message, nextAction}` plus optional `id` and `fix` as above.
-- `suggestions[].{kind, section, message, nextAction}` plus optional `id` and `fix` as above. There is no `field` or `proposedFix` key — those names are not produced by the analyzer.
-
-# Common failure modes
-
-- **Analyzer reports a schema field the user hand-wrote and expected to be optional** → check the schema cheat sheet in the `axiom-authoring` skill. The analyzer is authoritative about what's recognized.
-- **`ax: command not found` in Codex or another repo-local shell** → this repo exposes the CLI at `node bin/ax.js`. Use `node bin/ax.js analyze <target>` rather than stopping, and mention that it is the repo-local equivalent of `ax analyze`.
-- **Suggestions look wrong** → don't force them. Explain the suggestion and let the user decide.
-- **No `.axiom.js` in cwd** → ask the user where the file is. Do not invent a path.
-
-## axiom-authoring
+## ax-intent
 
 **When to use:** Use when the user wants to create, bootstrap, or refine an Axiom intent file (.axiom.js). Triggers include "help me start an Axiom project", "write an intent file", "turn this codebase into Axiom", "set up Axiom for this repo".
 
@@ -108,6 +70,44 @@ Compact mode: for tiny self-explanatory projects, a small subset (typically `met
 - **`ax init --existing` produces an incomplete file** → the starter is deliberately minimal. Read the file, explain what's missing, and offer to co-author `constraints`, `outcomes`, and `verification` based on what you can see in the repo.
 - **User edits break the schema** → suggest running `ax analyze` via the `axiom-analyze` skill to get specific diagnostics rather than guessing.
 
+## axiom-analyze
+
+**When to use:** Use when the user wants to validate, lint, or pre-check an Axiom intent file without building it. Triggers include "analyze my intent file", "what's wrong with this .axiom.js", "before I build, check", "lint the axiom".
+
+# When to use
+
+Trigger this skill when the user wants a pre-build check of their `.axiom.js` — schema errors, readiness gaps, ambiguities, weak verification coverage — without actually running the build.
+
+Do NOT trigger for actual builds (use the `axiom-build` skill) or for authoring a new file (use the `ax-intent` skill).
+
+# Instructions
+
+1. Identify the target file. If not specified and there's exactly one `*.axiom.js` in cwd, use it. If multiple or none, ask.
+2. Run `ax analyze <target>` via Bash.
+3. Parse the JSON result:
+   - `errors` — blocking issues that will prevent a build or verification from working.
+   - `warnings` — things the user should know about but that won't block a build.
+   - `suggestions` — improvements proposed by the analyzer (may correspond to `ax fix` actions).
+4. Render findings grouped by severity. For each: cite the `section` and `kind`, explain what the analyzer flagged, and quote `nextAction` verbatim.
+5. If suggestions are safe and mechanical, offer to apply them via `ax fix <file> --apply <id>` (the finding's top-level `id` is the fix id). If they require judgment, walk the user through them.
+6. Do NOT silently modify the intent file. `ax analyze` is read-only by design.
+
+# Output shape
+
+`ax analyze` exits 0 when `status === "passed"` (no errors; warnings/suggestions are non-blocking). Non-zero exit means at least one error. Top-level keys: `status` (`"passed"` or `"invalid"`), `targetFile`, `errors`, `warnings`, `suggestions`.
+
+Key JSON paths:
+- `errors[].{kind, section, message, nextAction}`. Fix-driven entries also include `id` and `fix: { type, label }`.
+- `warnings[].{kind, section, message, nextAction}` plus optional `id` and `fix` as above.
+- `suggestions[].{kind, section, message, nextAction}` plus optional `id` and `fix` as above. There is no `field` or `proposedFix` key — those names are not produced by the analyzer.
+
+# Common failure modes
+
+- **Analyzer reports a schema field the user hand-wrote and expected to be optional** → check the schema cheat sheet in the `ax-intent` skill. The analyzer is authoritative about what's recognized.
+- **`ax: command not found` in Codex or another repo-local shell** → this repo exposes the CLI at `node bin/ax.js`. Use `node bin/ax.js analyze <target>` rather than stopping, and mention that it is the repo-local equivalent of `ax analyze`.
+- **Suggestions look wrong** → don't force them. Explain the suggestion and let the user decide.
+- **No `.axiom.js` in cwd** → ask the user where the file is. Do not invent a path.
+
 ## axiom-build
 
 **When to use:** Use when the user wants to build an Axiom intent file or asks about build results. Triggers include "build this", "ax build", "run the axiom build", "did it pass", "build counter-webapp".
@@ -135,7 +135,7 @@ Do NOT trigger for analysis (use the `axiom-analyze` skill) or security review (
 4. If `securityReport` is present, summarize it briefly and offer the `axiom-security-review` skill for depth. If it is absent, say so — it means the intent didn't declare a `security:` section, not that security was skipped silently.
 5. Render a short summary to the user: pass/fail, key counts, and anything that failed.
 6. If anything failed, drill into the failure: cite the specific `verificationId` and `diagnostics` entry verbatim. Do NOT speculate about causes the JSON doesn't show.
-7. Offer follow-up actions: fix the intent with the `axiom-authoring` skill, analyze with the `axiom-analyze` skill, or review security with the `axiom-security-review` skill.
+7. Offer follow-up actions: fix the intent with the `ax-intent` skill, analyze with the `axiom-analyze` skill, or review security with the `axiom-security-review` skill.
 
 # Output shape
 
@@ -168,7 +168,7 @@ Trigger this skill when the user:
 - Wants help tightening `security.build`, `security.app`, or `security.shell` policy in `.axiom.js`.
 - References security findings, policy violations, or compliance concerns.
 
-Do NOT trigger for general build runs (use the `axiom-build` skill) or intent authoring (use the `axiom-authoring` skill).
+Do NOT trigger for general build runs (use the `axiom-build` skill) or intent authoring (use the `ax-intent` skill).
 
 # Instructions
 

@@ -9,9 +9,9 @@ const FIXTURES = path.join(__dirname, '..', 'fixtures', 'skills');
 
 describe('parseFrontmatter', () => {
   it('parses a valid file into frontmatter + body', async () => {
-    const source = await fs.readFile(path.join(FIXTURES, 'valid-pair', 'axiom-authoring', 'SKILL.md'), 'utf8');
-    const parsed = parseFrontmatter(source, 'axiom-authoring/SKILL.md');
-    expect(parsed.frontmatter.name).toBe('axiom-authoring');
+    const source = await fs.readFile(path.join(FIXTURES, 'valid-pair', 'ax-intent', 'SKILL.md'), 'utf8');
+    const parsed = parseFrontmatter(source, 'ax-intent/SKILL.md');
+    expect(parsed.frontmatter.name).toBe('ax-intent');
     expect(parsed.frontmatter.description).toBe('Use when the user wants to create or refine a .axiom.js intent file.');
     expect(parsed.body).toContain('# When to use');
     expect(parsed.body).toContain('Run `ax init`');
@@ -44,8 +44,8 @@ import os from 'node:os';
 describe('readSkills', () => {
   it('reads every subdirectory containing SKILL.md, sorted by directory name', async () => {
     const skills = await readSkills(path.join(FIXTURES, 'valid-pair'));
-    expect(skills.map((skill) => skill.dir)).toEqual(['axiom-authoring', 'axiom-build']);
-    expect(skills[0].frontmatter.name).toBe('axiom-authoring');
+    expect(skills.map((skill) => skill.dir)).toEqual(['ax-intent', 'axiom-build']);
+    expect(skills[0].frontmatter.name).toBe('ax-intent');
     expect(skills[1].frontmatter.name).toBe('axiom-build');
   });
 
@@ -77,9 +77,9 @@ describe('assembleAgentsMd', () => {
     const md = assembleAgentsMd(skills);
     expect(md.startsWith('# Axiom Agent Instructions')).toBe(true);
     expect(md).toContain('<!-- Generated from .claude/skills/*/SKILL.md');
-    expect(md).toContain('## axiom-authoring');
+    expect(md).toContain('## ax-intent');
     expect(md).toContain('**When to use:** Use when the user wants to create or refine a .axiom.js intent file.');
-    expect(md.indexOf('## axiom-authoring')).toBeLessThan(md.indexOf('## axiom-build'));
+    expect(md.indexOf('## ax-intent')).toBeLessThan(md.indexOf('## axiom-build'));
     expect(md.endsWith('\n')).toBe(true);
   });
 
@@ -131,7 +131,7 @@ describe('buildAgentsMd', () => {
     expect(result.skills).toBe(2);
     expect(result.bytes).toBeGreaterThan(0);
     const written = await fs.readFile(target, 'utf8');
-    expect(written).toContain('## axiom-authoring');
+    expect(written).toContain('## ax-intent');
     expect(written).toContain('## axiom-build');
 
     await fs.rm(outDir, { recursive: true, force: true });
@@ -162,7 +162,7 @@ describe('checkAgentsMd', () => {
     await buildAgentsMd({ skillsDir: path.join(FIXTURES, 'valid-pair'), agentsPath: target });
 
     const current = await fs.readFile(target, 'utf8');
-    await fs.writeFile(target, current.replace('axiom-authoring', 'axiom-authoring-OLD'));
+    await fs.writeFile(target, current.replace('ax-intent', 'ax-intent-OLD'));
 
     const result = await checkAgentsMd({
       skillsDir: path.join(FIXTURES, 'valid-pair'),
@@ -171,7 +171,7 @@ describe('checkAgentsMd', () => {
 
     expect(result.ok).toBe(false);
     expect(result.missing).toBeUndefined();
-    expect(result.diff).toContain('axiom-authoring');
+    expect(result.diff).toContain('ax-intent');
 
     await fs.rm(dir, { recursive: true, force: true });
   });

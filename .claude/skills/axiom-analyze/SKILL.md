@@ -7,7 +7,7 @@ description: Use when the user wants to validate, lint, or pre-check an Axiom in
 
 Trigger this skill when the user wants a pre-build check of their `.axiom.js` — schema errors, readiness gaps, ambiguities, weak verification coverage — without actually running the build.
 
-Do NOT trigger for actual builds (use the `axiom-build` skill) or for authoring a new file (use the `axiom-authoring` skill).
+Do NOT trigger for actual builds (use the `axiom-build` skill) or for authoring a new file (use the `ax-intent` skill).
 
 # Instructions
 
@@ -32,7 +32,7 @@ Key JSON paths:
 
 # Common failure modes
 
-- **Analyzer reports a schema field the user hand-wrote and expected to be optional** → check the schema cheat sheet in the `axiom-authoring` skill. The analyzer is authoritative about what's recognized.
+- **Analyzer reports a schema field the user hand-wrote and expected to be optional** → check the schema cheat sheet in the `ax-intent` skill. The analyzer is authoritative about what's recognized.
 - **`ax: command not found` in Codex or another repo-local shell** → this repo exposes the CLI at `node bin/ax.js`. Use `node bin/ax.js analyze <target>` rather than stopping, and mention that it is the repo-local equivalent of `ax analyze`.
 - **Suggestions look wrong** → don't force them. Explain the suggestion and let the user decide.
 - **No `.axiom.js` in cwd** → ask the user where the file is. Do not invent a path.

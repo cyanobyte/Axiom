@@ -11,7 +11,7 @@ Trigger this skill when the user:
 - Wants help tightening `security.build`, `security.app`, or `security.shell` policy in `.axiom.js`.
 - References security findings, policy violations, or compliance concerns.
 
-Do NOT trigger for general build runs (use the `axiom-build` skill) or intent authoring (use the `axiom-authoring` skill).
+Do NOT trigger for general build runs (use the `axiom-build` skill) or intent authoring (use the `ax-intent` skill).
 
 # Instructions
 

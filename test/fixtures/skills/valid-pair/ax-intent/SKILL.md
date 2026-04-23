@@ -1,5 +1,5 @@
 ---
-name: axiom-authoring
+name: ax-intent
 description: Use when the user wants to create or refine a .axiom.js intent file.
 ---
 

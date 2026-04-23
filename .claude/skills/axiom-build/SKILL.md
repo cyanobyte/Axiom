@@ -26,7 +26,7 @@ Do NOT trigger for analysis (use the `axiom-analyze` skill) or security review (
 4. If `securityReport` is present, summarize it briefly and offer the `axiom-security-review` skill for depth. If it is absent, say so — it means the intent didn't declare a `security:` section, not that security was skipped silently.
 5. Render a short summary to the user: pass/fail, key counts, and anything that failed.
 6. If anything failed, drill into the failure: cite the specific `verificationId` and `diagnostics` entry verbatim. Do NOT speculate about causes the JSON doesn't show.
-7. Offer follow-up actions: fix the intent with the `axiom-authoring` skill, analyze with the `axiom-analyze` skill, or review security with the `axiom-security-review` skill.
+7. Offer follow-up actions: fix the intent with the `ax-intent` skill, analyze with the `axiom-analyze` skill, or review security with the `axiom-security-review` skill.
 
 # Output shape
 

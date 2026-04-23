@@ -1,5 +1,5 @@
 ---
-name: axiom-authoring
+name: ax-intent
 description: Use when the user wants to create, bootstrap, or refine an Axiom intent file (.axiom.js). Triggers include "help me start an Axiom project", "write an intent file", "turn this codebase into Axiom", "set up Axiom for this repo".
 ---
 
