@@ -4,7 +4,7 @@ Walk this checklist once per skill after substantive edits. Run each prompt in C
 
 ## ax-intent
 
-**Prompt:** `help me start an Axiom project for a counter web app`
+**Prompt A (create):** `help me start an Axiom project for a counter web app`
 
 Expected:
 - LLM asks whether the target directory has a `package.json` (since `ax init --existing <path>` requires one).
@@ -12,6 +12,16 @@ Expected:
 - If there is no `package.json`, the LLM either offers to `npm init -y` first (with consent) or offers to hand-author a starter `.axiom.js`.
 - After any starter file is produced, the LLM reads it and explains each section; offers to tailor `constraints`, `outcomes`, and `verification`.
 - LLM does NOT run `ax build` unprompted.
+
+**Prompt B (update):** `update this .axiom.js to add a security block and tighten verification`
+
+Expected:
+- LLM recognizes this as an existing-intent edit request rather than a bootstrap request.
+- LLM reads the existing `.axiom.js` first and summarizes only the sections relevant to the requested change.
+- LLM proposes the concrete edits it would make (`security`, `constraints`, `verification`, or similar).
+- LLM asks for approval before modifying the file.
+- After approval, LLM makes the agreed edit and offers `ax analyze` to validate it.
+- LLM does NOT detour into general brainstorming when the requested change is already concrete.
 
 ## axiom-build
 
@@ -69,4 +79,5 @@ Repeat each prompt above in `codex` after Claude Code. Confirm:
 - Codex loads the skill guidance from `AGENTS.md` on startup.
 - Behavior is substantially similar to Claude Code (exact wording will differ).
 - If `ax` is not on `PATH` in the Codex shell, Codex should recover by using the repo-local CLI entry point `node bin/ax.js ...` rather than stopping.
+- For `ax-intent`, Codex should distinguish create vs. update requests in its first response and should ask before editing an existing `.axiom.js`.
 - If a skill's behavior diverges noticeably on Codex, note it inline in the skill's "Common failure modes" section so future readers know about the host-specific quirk.
