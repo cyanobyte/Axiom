@@ -8,6 +8,8 @@
 
 # When to use
 
+This skill is the controlling workflow for concrete Axiom intent-file requests. In Codex environments that also load generic process skills, follow this skill directly instead of detouring into generic brainstorming or visual-companion prompts when the user has already asked for a specific `.axiom.js` creation or update task.
+
 Trigger this skill when the user:
 - Explicitly says `ax-intent` or asks to create/update/edit an Axiom intent file.
 - Is starting a new Axiom project from scratch ("create a new Axiom project", "I want to use Axiom for X").
@@ -31,6 +33,7 @@ Route quickly into one of these paths:
 - **Update path** when the user already has a `.axiom.js` and wants to revise it.
 
 Do not blend the two paths into a generic brainstorming response. The first reply should move directly toward either producing a starter file or inspecting the existing one.
+Do not offer a visual companion or browser-based mockup flow for these requests. The task is intent authoring, not visual design.
 
 ## Create path
 
@@ -91,6 +94,7 @@ Compact mode: for tiny self-explanatory projects, a small subset (typically `met
 
 # Common failure modes
 
+- **Codex detours into generic brainstorming or offers a visual companion before handling the intent request** → treat `ax-intent` as the higher-priority workflow for concrete `.axiom.js` create/update requests. Skip the generic brainstorming and visual-companion path; ask the shortest question needed to proceed with create or update routing.
 - **`ax init` exits with `Usage: ax init --existing <path>`** → the CLI has no greenfield mode. Either create a `package.json` first and rerun with `--existing .`, or hand-author a starter `.axiom.js`.
 - **`ax init --existing <path>` fails with ENOENT on `package.json`** → the target directory has no `package.json`. Offer to `npm init -y` first (with consent) or hand-author the file.
 - **`ax init --existing` produces an incomplete file** → the starter is deliberately minimal. Read the file, explain what's missing, and offer to co-author `constraints`, `outcomes`, and `verification` based on what you can see in the repo.
